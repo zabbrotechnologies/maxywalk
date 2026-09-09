@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getProducts } from '../lib/api.js';
 import ProductCard from '../components/ProductCard.jsx';
-import heroLifestyle from '../assets/hero_lifestyle.jpg';
+import HeroSection from '../components/HeroSection.jsx';
 
 // Intersection Observer hook for fade-in animations
 function useFadeIn() {
@@ -53,7 +53,6 @@ const REVIEWS = [
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  const [scrollY, setScrollY] = useState(0);
 
   const heroRef = useRef(null);
   const cat1 = useFadeIn(); const cat2 = useFadeIn(); const cat3 = useFadeIn(); const cat4 = useFadeIn();
@@ -68,83 +67,14 @@ export default function Home() {
       .catch(() => setFeaturedProducts([]))
       .finally(() => setLoadingProducts(false));
 
-    // Parallax scroll listener
-    const handleScroll = () => {
-      if (window.scrollY < 1200) {
-        setScrollY(window.scrollY);
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
     // Hero fade in
     setTimeout(() => heroRef.current?.classList.add('visible'), 150);
-
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
     <div className="page-enter w-full overflow-hidden">
-      {/* ── Hero ───────────────────────────────────────────── */}
-      <section className="relative min-h-[580px] h-[88vh] max-h-[950px] w-full overflow-hidden flex items-center justify-center">
-        {/* Parallax Background Container */}
-        <div
-          className="absolute inset-0 w-full h-[125%] -top-[10%] transition-transform duration-75 ease-out will-change-transform"
-          style={{ transform: `translateY(${scrollY * 0.32}px) scale(1.04)` }}
-        >
-          <img
-            src={heroLifestyle}
-            alt="MAXYWALK luxury leather modeling lifestyle group collection"
-            className="w-full h-full object-cover object-center brightness-[0.78] contrast-[1.08]"
-            onError={(e) => {
-              e.target.src = 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=1920&q=80';
-            }}
-          />
-        </div>
-
-        {/* Multi-layered cinematic gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/30" />
-        <div className="absolute inset-0 bg-radial-gradient from-transparent via-black/20 to-black/60 pointer-events-none" />
-
-        {/* Hero Content */}
-        <div
-          ref={heroRef}
-          className="relative z-10 fade-in-up flex flex-col items-center text-center px-4 sm:px-6 max-w-3xl w-full"
-        >
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 mb-4">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            <span className="font-sans text-[10px] sm:text-xs text-white/95 tracking-[0.2em] uppercase font-bold">
-              Est. 2010 · Handcrafted in Avadi, TN
-            </span>
-          </div>
-          <h1 className="font-display text-4xl sm:text-6xl md:text-7xl text-white mb-4 leading-tight tracking-tight drop-shadow-lg">
-            CRAFTED IN LEATHER.
-          </h1>
-          <p className="font-sans text-sm sm:text-base md:text-lg text-white/90 mb-8 max-w-lg leading-relaxed px-2 drop-shadow">
-            Explore handcrafted genuine leather slippers, mules, sandals, belts and wallets under the MAXYWALK brand.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-xs sm:max-w-none">
-            <Link to="/shop" className="btn-primary w-full sm:w-auto text-xs sm:text-sm h-12 sm:h-14 shadow-xl">
-              Shop Collection
-            </Link>
-            <a
-              href="https://wa.me/919444743465?text=Hi%20Prabhu%20Traders!%20I%20want%20to%20order%20custom%20footwear."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-hero-glass w-full sm:w-auto text-xs sm:text-sm h-12 sm:h-14"
-            >
-              Custom Orders
-            </a>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/60">
-          <span className="text-[10px] font-sans uppercase tracking-widest">Scroll</span>
-          <div className="w-px h-6 bg-white/30 relative overflow-hidden">
-            <div className="absolute top-0 w-full h-1/2 bg-white/60 animate-bounce" />
-          </div>
-        </div>
-      </section>
+      {/* ── Hero ────────────────────────────────────────── */}
+      <HeroSection />
 
       {/* ── Brand Stats Bar ────────────────────────────────── */}
       <div className="bg-primary text-white py-5 px-4">

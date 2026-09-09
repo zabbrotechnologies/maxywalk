@@ -13,53 +13,53 @@
 
 @theme {
   /* ── Colors ── */
-  --color-primary: #472718;
-  --color-secondary: #A95A2A;
-  --color-tertiary: #321B11;
-  --color-background: #F8F0E2;
-  --color-surface: #F8F0E2;
-  --color-surface-bright: #FCF8F2;
-  --color-surface-dim: #EBDDC6;
-  --color-surface-container-lowest: #FFFFFF;
-  --color-surface-container-low: #F3E8D7;
-  --color-surface-container: #EBDDC6;
-  --color-surface-container-high: #E2D2B8;
-  --color-surface-container-highest: #D9C7AA;
-  --color-surface-tint: #5C3522;
-  --color-surface-variant: #E8DAC4;
-  --color-on-surface: #2D1910;
-  --color-on-surface-variant: #5C4538;
-  --color-outline: #8E7D6F;
-  --color-outline-variant: #D0BEAC;
-  --color-on-background: #2D1910;
-  --color-on-primary: #FFFFFF;
-  --color-on-primary-container: #EAD8CE;
-  --color-primary-container: #321B11;
-  --color-primary-fixed: #EEDCCE;
-  --color-primary-fixed-dim: #D5BDAE;
-  --color-on-primary-fixed: #321B11;
-  --color-on-primary-fixed-variant: #472718;
-  --color-inverse-primary: #D5BDAE;
-  --color-inverse-surface: #2D1910;
-  --color-inverse-on-surface: #F8F0E2;
-  --color-secondary-container: #C87541;
-  --color-secondary-fixed: #F9DEC9;
-  --color-secondary-fixed-dim: #E6BFA6;
-  --color-on-secondary: #FFFFFF;
-  --color-on-secondary-container: #4A1E04;
-  --color-on-secondary-fixed: #321200;
-  --color-on-secondary-fixed-variant: #6E320A;
-  --color-tertiary-container: #24130A;
-  --color-tertiary-fixed: #E8D9D0;
-  --color-tertiary-fixed-dim: #C5B0A4;
-  --color-on-tertiary: #FFFFFF;
-  --color-on-tertiary-container: #D2BEB3;
-  --color-on-tertiary-fixed: #321B11;
-  --color-on-tertiary-fixed-variant: #4A281A;
-  --color-error: #BA1A1A;
-  --color-error-container: #FFDAD6;
-  --color-on-error: #FFFFFF;
-  --color-on-error-container: #93000A;
+  --color-primary: #000000;
+  --color-secondary: #ff632d;
+  --color-tertiary: #1b1b1b;
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-bright: #ffffff;
+  --color-surface-dim: #dadada;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f8f9fa;
+  --color-surface-container: #f3f3f4;
+  --color-surface-container-high: #e8e8e8;
+  --color-surface-container-highest: #e2e2e2;
+  --color-surface-tint: #5e5e5e;
+  --color-surface-variant: #f3f3f4;
+  --color-on-surface: #1a1c1c;
+  --color-on-surface-variant: #4c4546;
+  --color-outline: #7e7576;
+  --color-outline-variant: #e2e2e2;
+  --color-on-background: #1a1c1c;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #848484;
+  --color-primary-container: #1b1b1b;
+  --color-primary-fixed: #e2e2e2;
+  --color-primary-fixed-dim: #c8c6c5;
+  --color-on-primary-fixed: #1c1b1b;
+  --color-on-primary-fixed-variant: #474747;
+  --color-inverse-primary: #c8c6c5;
+  --color-inverse-surface: #2f3131;
+  --color-inverse-on-surface: #ffffff;
+  --color-secondary-container: #ff632d;
+  --color-secondary-fixed: #ffb59e;
+  --color-secondary-fixed-dim: #ff632d;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #ffffff;
+  --color-on-secondary-fixed: #842500;
+  --color-on-secondary-fixed-variant: #842500;
+  --color-tertiary-container: #1c1b1b;
+  --color-tertiary-fixed: #e2e2e2;
+  --color-tertiary-fixed-dim: #c8c6c5;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #858383;
+  --color-on-tertiary-fixed: #1c1b1b;
+  --color-on-tertiary-fixed-variant: #474646;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
 
   /* ── Typography ── */
   --font-display: 'Playfair Display', serif;
@@ -167,7 +167,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: #472718 !important;
+    background-color: #000000 !important;
     color: #FFFFFF !important;
     font-family: var(--font-sans);
     font-size: 0.875rem;
@@ -182,14 +182,14 @@
     transition: all 0.25s ease;
     cursor: pointer;
     text-decoration: none;
-    box-shadow: 0 4px 14px rgba(71, 39, 24, 0.3);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
   }
 
   .btn-primary:hover {
-    background-color: #321B11 !important;
+    background-color: #ff632d !important;
     color: #FFFFFF !important;
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(71, 39, 24, 0.4);
+    box-shadow: 0 6px 20px rgba(255, 99, 45, 0.4);
   }
 
   .btn-primary:active {
@@ -207,8 +207,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: #EBDDC6 !important;
-    color: #472718 !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
     font-family: var(--font-sans);
     font-size: 0.875rem;
     font-weight: 800 !important;
@@ -218,16 +218,16 @@
     padding-right: 1.75rem;
     height: 3.25rem;
     border-radius: 9999px;
-    border: 1.5px solid #AFA090 !important;
+    border: 1.5px solid #000000 !important;
     transition: all 0.25s ease;
     cursor: pointer;
     text-decoration: none;
   }
 
   .btn-secondary:hover {
-    background-color: #DFCEB5 !important;
-    border-color: #472718 !important;
-    color: #472718 !important;
+    background-color: #f3f3f4 !important;
+    border-color: #ff632d !important;
+    color: #ff632d !important;
   }
 
   /* ── Hero Frosted White Button (High-Contrast White on Dark Banner) ── */
@@ -256,7 +256,7 @@
 
   .btn-hero-glass:hover {
     background-color: #FFFFFF !important;
-    color: #472718 !important;
+    color: #000000 !important;
     text-shadow: none;
   }
 
@@ -266,7 +266,7 @@
     align-items: center;
     justify-content: center;
     background-color: transparent !important;
-    color: #472718 !important;
+    color: #000000 !important;
     font-family: var(--font-sans);
     font-size: 0.875rem;
     font-weight: 800 !important;
@@ -276,19 +276,19 @@
     padding-right: 1.75rem;
     height: 3.25rem;
     border-radius: 9999px;
-    border: 2px solid #472718 !important;
+    border: 2px solid #000000 !important;
     transition: all 0.25s ease;
   }
 
   .btn-outlined:hover {
-    background-color: #472718 !important;
+    background-color: #000000 !important;
     color: #FFFFFF !important;
   }
 
   /* ── Icon Button ── */
   .btn-icon {
     padding: 0.5rem;
-    color: #472718;
+    color: #000000;
     background: none;
     border: none;
     border-radius: 9999px;
@@ -297,7 +297,7 @@
   }
 
   .btn-icon:hover {
-    color: #A95A2A;
+    color: #ff632d;
     background-color: var(--color-surface-container);
   }
 
@@ -305,10 +305,10 @@
   .input-hairline {
     width: 100%;
     background-color: #FFFFFF;
-    border: 1.5px solid #D0BEAC;
+    border: 1.5px solid #e2e2e2;
     border-radius: 12px;
     padding: 0.75rem 1rem;
-    color: #2D1910;
+    color: #1a1c1c;
     font-family: var(--font-sans);
     font-size: 0.875rem;
     font-weight: 500;
@@ -316,13 +316,13 @@
   }
 
   .input-hairline::placeholder {
-    color: #8E7D6F;
+    color: #7e7576;
   }
 
   .input-hairline:focus {
     outline: none;
-    border-color: #472718;
-    box-shadow: 0 0 0 3px rgba(71, 39, 24, 0.12);
+    border-color: #000000;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.12);
   }
 
   /* ── Typography helpers ── */
@@ -336,7 +336,7 @@
     font-weight: 800;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: #A95A2A;
+    color: #ff632d;
   }
 
   /* ── Cards ── */
@@ -387,7 +387,7 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    color: #5C4538;
+    color: #4c4546;
     border-radius: 12px;
     transition: all 0.2s ease;
     font-family: var(--font-sans);
@@ -401,11 +401,11 @@
 
   .admin-nav-item:hover {
     background-color: var(--color-surface-container);
-    color: #472718;
+    color: #000000;
   }
 
   .admin-nav-item.active {
-    background-color: #472718;
+    background-color: #000000;
     color: #FFFFFF;
     font-weight: 800;
   }
