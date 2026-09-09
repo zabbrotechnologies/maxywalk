@@ -24,7 +24,7 @@ export default function AdminLayout({ children }) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
-        <Link to="/" className="font-display text-lg tracking-widest text-white">PRABHU TRADERS</Link>
+        <Link to="/" className="font-display text-lg tracking-widest text-white">MAXYWALK</Link>
         <button onClick={() => setSidebarOpen(false)} className="md:hidden text-white/60 hover:text-white">
           <span className="material-symbols-outlined">close</span>
         </button>

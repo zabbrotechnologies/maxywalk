@@ -12,7 +12,7 @@ export default function AdminDashboard() {
   const [dateFilter, setDateFilter] = useState('30 Days');
 
   useEffect(() => {
-    document.title = 'Admin Dashboard | Prabhu Traders';
+    document.title = 'Admin Dashboard | MaxyWalk';
     Promise.all([
       getOrderStats(),
       getAllOrders({ limit: 10 }),
@@ -36,7 +36,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="font-display text-3xl text-primary">Business Overview</h1>
-          <p className="text-on-surface-variant text-sm mt-1">Prabhu Traders · MAXYWALK Brand</p>
+          <p className="text-on-surface-variant text-sm mt-1">MaxyWalk · MAXYWALK Brand</p>
         </div>
         <div className="flex items-center gap-2">
           {DATE_FILTERS.map((f) => (

@@ -21,7 +21,7 @@ export default function Footer() {
           {/* Brand & Address Column */}
           <div className="sm:col-span-2 md:col-span-4 space-y-3">
             <Link to="/" className="font-display text-xl sm:text-2xl font-bold tracking-widest text-primary block">
-              PRABHU TRADERS
+              MAXYWALK
             </Link>
             <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed max-w-sm">
               Leather custom slipper specialist since 2010. Handcrafting genuine leather footwear and accessories under our registered brand <strong>MAXYWALK</strong> in Avadi, Tamil Nadu. Pan-India delivery.
@@ -143,7 +143,7 @@ export default function Footer() {
       <div className="border-t border-outline-variant/30 py-4 px-4 bg-surface-container-high">
         <div className="container-max flex flex-col sm:flex-row justify-between items-center gap-2 text-center">
           <p className="text-[10px] sm:text-xs text-on-surface-variant font-sans uppercase tracking-wider">
-            © {new Date().getFullYear()} PRABHU TRADERS · MAXYWALK LEATHER FOOTWEAR · AVADI
+            © {new Date().getFullYear()} MAXYWALK · MAXYWALK LEATHER FOOTWEAR · AVADI
           </p>
           <div className="flex items-center gap-1.5 text-[10px] text-on-surface-variant">
             <span>Payment Options:</span>

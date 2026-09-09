@@ -10,7 +10,7 @@ export default function AdminCustomers() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    document.title = 'Customers | Admin – Prabhu Traders';
+    document.title = 'Customers | Admin – MaxyWalk';
     Promise.all([getAllCustomers(), getAllOrders({ limit: 500 })])
       .then(([custData, ordersData]) => {
         setCustomers(custData.customers || []);

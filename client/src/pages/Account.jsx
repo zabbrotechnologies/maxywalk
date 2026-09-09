@@ -28,7 +28,7 @@ export default function Account() {
   const [editPhone, setEditPhone] = useState(userProfile?.phone || '');
   const [savingProfile, setSavingProfile] = useState(false);
 
-  useEffect(() => { document.title = 'My Account | PRABHU TRADERS'; }, []);
+  useEffect(() => { document.title = 'My Account | MAXYWALK'; }, []);
 
   useEffect(() => {
     const tab = searchParams.get('tab') || 'overview';

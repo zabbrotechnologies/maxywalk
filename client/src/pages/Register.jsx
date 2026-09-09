@@ -23,7 +23,7 @@ export default function Register() {
     setLoading(true);
     if (!auth) {
       loginAsDemoUser(name || 'Customer', email);
-      toast.success('Account created! Welcome to Prabhu Traders.');
+      toast.success('Account created! Welcome to MaxyWalk.');
       navigate('/');
       setLoading(false);
       return;
@@ -32,12 +32,12 @@ export default function Register() {
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name });
-      toast.success('Account created! Welcome to Prabhu Traders.');
+      toast.success('Account created! Welcome to MaxyWalk.');
       navigate('/');
     } catch (err) {
       console.error('Register error:', err);
       loginAsDemoUser(name || email.split('@')[0], email);
-      toast.success('Account created! Welcome to Prabhu Traders.');
+      toast.success('Account created! Welcome to MaxyWalk.');
       navigate('/');
     } finally {
       setLoading(false);
@@ -87,14 +87,14 @@ export default function Register() {
           <p className="text-white/70 text-xl max-w-xs leading-relaxed italic">
             "We make leather customized slipper, shoe, belt, wallet. We supply all over India under our own brand MAXYWALK."
           </p>
-          <p className="text-secondary mt-4 font-sans text-sm tracking-wider">— Prabhu Traders</p>
+          <p className="text-secondary mt-4 font-sans text-sm tracking-wider">— MaxyWalk</p>
         </div>
       </div>
 
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-16">
         <div className="w-full max-w-md">
           <h1 className="font-display text-3xl text-primary mb-2">Create Account</h1>
-          <p className="text-on-surface-variant mb-8">Join Prabhu Traders for exclusive deals.</p>
+          <p className="text-on-surface-variant mb-8">Join MaxyWalk for exclusive deals.</p>
 
           <button
             onClick={handleGoogle}

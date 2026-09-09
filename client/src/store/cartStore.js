@@ -143,7 +143,7 @@ const useCartStore = create(
       },
     }),
     {
-      name: 'prabhu-user-carts',
+      name: 'maxywalk-user-carts',
     }
   )
 );

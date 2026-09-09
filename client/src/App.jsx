@@ -115,7 +115,7 @@ export default function App() {
     const unsubscribe = init();
 
     const handleStorageChange = (e) => {
-      if (['prabhu-user-carts', 'prabhu-user-wishlists', 'prabhu-my-orders', 'prabhu-auth'].includes(e.key)) {
+      if (['maxywalk-user-carts', 'maxywalk-user-wishlists', 'maxywalk-my-orders', 'maxywalk-auth'].includes(e.key)) {
         const currentUser = useAuthStore.getState().user;
         useCartStore.getState().setActiveUser(currentUser);
         useWishlistStore.getState().syncAccountWishlist(currentUser);

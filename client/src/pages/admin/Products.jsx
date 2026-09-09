@@ -23,7 +23,7 @@ export default function AdminProducts() {
   }, []);
 
   useEffect(() => {
-    document.title = 'Products | Admin – Prabhu Traders';
+    document.title = 'Products | Admin – MaxyWalk';
     fetchProducts();
   }, [fetchProducts]);
 

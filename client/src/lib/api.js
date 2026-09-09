@@ -97,7 +97,7 @@ const FALLBACK_PRODUCTS = [
 
 function getCustomProducts() {
   try {
-    return JSON.parse(localStorage.getItem('prabhu-custom-products') || '[]');
+    return JSON.parse(localStorage.getItem('maxywalk-custom-products') || '[]');
   } catch {
     return [];
   }
@@ -178,7 +178,7 @@ export const createProduct = async (data) => {
       createdAt: new Date().toISOString(),
     };
     const custom = getCustomProducts();
-    localStorage.setItem('prabhu-custom-products', JSON.stringify([newProduct, ...custom]));
+    localStorage.setItem('maxywalk-custom-products', JSON.stringify([newProduct, ...custom]));
     return newProduct;
   }
 };
@@ -192,7 +192,7 @@ export const updateProduct = async (id, data) => {
     console.warn(`Backend API unavailable for updateProduct ${id}, using local storage:`, error.message);
     const custom = getCustomProducts();
     const updatedCustom = custom.map((p) => (p.id === id ? { ...p, ...data } : p));
-    localStorage.setItem('prabhu-custom-products', JSON.stringify(updatedCustom));
+    localStorage.setItem('maxywalk-custom-products', JSON.stringify(updatedCustom));
     return { id, ...data };
   }
 };
@@ -205,7 +205,7 @@ export const deleteProduct = async (id) => {
   } catch (error) {
     console.warn(`Backend API unavailable for deleteProduct ${id}, using local storage:`, error.message);
     const custom = getCustomProducts().filter((p) => p.id !== id);
-    localStorage.setItem('prabhu-custom-products', JSON.stringify(custom));
+    localStorage.setItem('maxywalk-custom-products', JSON.stringify(custom));
     return { message: 'Product deleted' };
   }
 };
@@ -224,8 +224,8 @@ export const placeOrder = async (data) => {
       userEmail: data.shippingAddress?.email?.toLowerCase().trim() || 'guest',
       createdAt: new Date().toISOString(),
     };
-    const saved = JSON.parse(localStorage.getItem('prabhu-my-orders') || '[]');
-    localStorage.setItem('prabhu-my-orders', JSON.stringify([mockOrder, ...saved]));
+    const saved = JSON.parse(localStorage.getItem('maxywalk-my-orders') || '[]');
+    localStorage.setItem('maxywalk-my-orders', JSON.stringify([mockOrder, ...saved]));
     return mockOrder;
   }
 };
@@ -235,7 +235,7 @@ export const getMyOrders = async (user = null) => {
     const res = await api.get('/orders/my');
     return res.data;
   } catch {
-    const localOrders = JSON.parse(localStorage.getItem('prabhu-my-orders') || '[]');
+    const localOrders = JSON.parse(localStorage.getItem('maxywalk-my-orders') || '[]');
     if (!user || !user.email) return { orders: localOrders };
     const userEmail = user.email.toLowerCase().trim();
     const userOrders = localOrders.filter(
@@ -252,7 +252,7 @@ const DEFAULT_DEMO_CUSTOMERS = [
   { id: 'c4', uid: 'user-4', name: 'Gowshigan Venkatesh', email: 'gowshigan.v@example.com', phone: '+91 95000 12345', createdAt: '2026-03-01T11:20:00.000Z' },
 ];
 
-export const getAllOrders = (params = {}) => api.get('/orders', { params }).then((r) => r.data).catch(() => ({ orders: JSON.parse(localStorage.getItem('prabhu-my-orders') || '[]') }));
+export const getAllOrders = (params = {}) => api.get('/orders', { params }).then((r) => r.data).catch(() => ({ orders: JSON.parse(localStorage.getItem('maxywalk-my-orders') || '[]') }));
 export const updateOrderStatus = async (id, status) => {
   clearApiCache();
   try {
@@ -260,9 +260,9 @@ export const updateOrderStatus = async (id, status) => {
     return res.data;
   } catch (error) {
     console.warn(`Backend API unavailable for updateOrderStatus ${id}, updating local storage orders:`, error.message);
-    const localOrders = JSON.parse(localStorage.getItem('prabhu-my-orders') || '[]');
+    const localOrders = JSON.parse(localStorage.getItem('maxywalk-my-orders') || '[]');
     const updatedOrders = localOrders.map((o) => (o.id === id || o.orderId === id ? { ...o, status } : o));
-    localStorage.setItem('prabhu-my-orders', JSON.stringify(updatedOrders));
+    localStorage.setItem('maxywalk-my-orders', JSON.stringify(updatedOrders));
     return { id, status, message: 'Status updated successfully' };
   }
 };
@@ -275,7 +275,7 @@ export const getAllCustomers = async () => {
     console.warn('Backend customers API unavailable, using local registered customers store:', error?.message);
   }
 
-  const registered = JSON.parse(localStorage.getItem('prabhu-registered-customers') || '[]');
+  const registered = JSON.parse(localStorage.getItem('maxywalk-registered-customers') || '[]');
   const emailMap = new Map();
   [...registered, ...DEFAULT_DEMO_CUSTOMERS].forEach((c) => {
     const key = c.email?.toLowerCase().trim();
@@ -295,7 +295,7 @@ export const getOrderStats = async () => {
     console.warn('Backend stats API unavailable, calculating live local stats');
   }
 
-  const localOrders = JSON.parse(localStorage.getItem('prabhu-my-orders') || '[]');
+  const localOrders = JSON.parse(localStorage.getItem('maxywalk-my-orders') || '[]');
   const custRes = await getAllCustomers();
   const totalRev = localOrders.reduce((sum, o) => sum + (o.total || 0), 125800);
   const totalCount = localOrders.length + 42;

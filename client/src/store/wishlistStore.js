@@ -73,7 +73,7 @@ const useWishlistStore = create(
       },
     }),
     {
-      name: 'prabhu-user-wishlists',
+      name: 'maxywalk-user-wishlists',
     }
   )
 );

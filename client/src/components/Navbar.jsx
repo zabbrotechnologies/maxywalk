@@ -124,9 +124,9 @@ export default function Navbar() {
             {/* Brand Logo */}
             <Link
               to="/"
-              className="font-display text-lg sm:text-xl md:text-2xl tracking-[0.15em] text-primary font-bold hover:text-secondary transition-colors text-center"
+              className="flex items-center justify-center h-full hover:opacity-80 transition-opacity"
             >
-              PRABHU TRADERS
+              <img src="/logo.png" alt="MaxyWalk Logo" className="h-10 sm:h-12 md:h-14 object-contain" />
             </Link>
 
             {/* Desktop Nav Links */}
@@ -303,9 +303,7 @@ export default function Navbar() {
             {/* Header */}
             <div className="p-5 border-b border-outline-variant/30 flex items-center justify-between bg-surface-container-low">
               <div>
-                <span className="font-display text-base font-bold tracking-widest text-primary block">
-                  PRABHU TRADERS
-                </span>
+                <img src="/logo.png" alt="MaxyWalk" className="h-8 object-contain mb-1" />
                 <span className="font-sans text-[10px] uppercase tracking-wider text-on-surface-variant block">
                   MAXYWALK Leather
                 </span>

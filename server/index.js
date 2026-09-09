@@ -36,7 +36,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    service: 'Prabhu Traders API',
+    service: 'MaxyWalk API',
     version: '1.0.0',
   });
 });
@@ -64,7 +64,7 @@ app.use((err, req, res, next) => {
 // ── Start Server ────────────────────────────────────────────
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`\n🚀 Prabhu Traders API running at http://localhost:${PORT}`);
+    console.log(`\n🚀 MaxyWalk API running at http://localhost:${PORT}`);
     console.log(`📦 Products: http://localhost:${PORT}/api/products`);
     console.log(`🛒 Orders: http://localhost:${PORT}/api/orders`);
     console.log(`💳 Payments: http://localhost:${PORT}/api/payments`);

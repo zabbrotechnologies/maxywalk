@@ -61,7 +61,7 @@ export default function Home() {
   const reviewRef = useFadeIn();
 
   useEffect(() => {
-    document.title = 'PRABHU TRADERS | MAXYWALK – Handcrafted Leather Footwear';
+    document.title = 'MAXYWALK | MAXYWALK – Handcrafted Leather Footwear';
     getProducts({ featured: true, limit: 4 })
       .then((data) => setFeaturedProducts(data.products || []))
       .catch(() => setFeaturedProducts([]))
@@ -249,7 +249,7 @@ export default function Home() {
                 The MAXYWALK Story
               </h2>
               <p className="text-on-surface-variant text-sm sm:text-base leading-relaxed mb-4">
-                Founded in Avadi, Tamil Nadu, <strong>Prabhu Traders</strong> has been a leather custom slipper specialist for over 15 years. We craft every pair with precision, using genuine full-grain leather.
+                Founded in Avadi, Tamil Nadu, <strong>MaxyWalk</strong> has been a leather custom slipper specialist for over 15 years. We craft every pair with precision, using genuine full-grain leather.
               </p>
               <p className="text-on-surface-variant text-xs sm:text-sm leading-relaxed mb-6">
                 Under our registered brand <strong>MAXYWALK</strong>, we supply premium custom footwear, formal belts, and minimalist wallets across India with direct delivery.

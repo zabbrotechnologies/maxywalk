@@ -29,7 +29,7 @@ export default function Shop() {
   const searchQuery = searchParams.get('search') || '';
 
   useEffect(() => {
-    document.title = 'Shop All Leather Footwear & Goods | PRABHU TRADERS';
+    document.title = 'Shop All Leather Footwear & Goods | MAXYWALK';
   }, []);
 
   // Fetch products
@@ -223,7 +223,7 @@ export default function Shop() {
                 {selectedCategory !== 'all' ? selectedCategory.toUpperCase() : 'LEATHER CATALOGUE'}
               </h1>
               <p className="text-on-surface-variant text-xs sm:text-sm mt-0.5">
-                {searchQuery ? `Search for "${searchQuery}"` : 'Prabhu Traders handcrafted footwear and accessories.'}
+                {searchQuery ? `Search for "${searchQuery}"` : 'MaxyWalk handcrafted footwear and accessories.'}
                 {' '}<span className="text-primary font-bold">({total} items)</span>
               </p>
             </div>

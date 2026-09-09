@@ -13,7 +13,7 @@ const syncUserStores = (user) => {
     useWishlistStore.getState().syncAccountWishlist(user);
 
     if (user && user.email && !user.email.toLowerCase().includes('admin')) {
-      const existing = JSON.parse(localStorage.getItem('prabhu-registered-customers') || '[]');
+      const existing = JSON.parse(localStorage.getItem('maxywalk-registered-customers') || '[]');
       const email = user.email.toLowerCase().trim();
       const isExist = existing.some((c) => c.email?.toLowerCase().trim() === email);
 
@@ -27,7 +27,7 @@ const syncUserStores = (user) => {
           role: 'customer',
           createdAt: new Date().toISOString(),
         };
-        localStorage.setItem('prabhu-registered-customers', JSON.stringify([newCust, ...existing]));
+        localStorage.setItem('maxywalk-registered-customers', JSON.stringify([newCust, ...existing]));
       }
     }
   } catch (e) {
@@ -85,8 +85,8 @@ const useAuthStore = create(
 
       // Demo / Direct login helpers
       loginAsDemoAdmin: () => {
-        const mockAdminUser = { uid: 'admin-demo-id', email: 'admin@prabhutraders.com', displayName: 'Prabhu Admin' };
-        const mockProfile = { name: 'Prabhu Admin', role: 'admin', phone: '+91 94447 43465' };
+        const mockAdminUser = { uid: 'admin-demo-id', email: 'admin@maxywalk.com', displayName: 'MaxyWalk Admin' };
+        const mockProfile = { name: 'MaxyWalk Admin', role: 'admin', phone: '+91 94447 43465' };
         set({ user: mockAdminUser, userProfile: mockProfile, isAdmin: true, isLoading: false });
         syncUserStores(mockAdminUser);
         return mockAdminUser;
@@ -118,7 +118,7 @@ const useAuthStore = create(
       },
     }),
     {
-      name: 'prabhu-auth',
+      name: 'maxywalk-auth',
       partialize: (state) => ({ userProfile: state.userProfile, isAdmin: state.isAdmin }),
     }
   )

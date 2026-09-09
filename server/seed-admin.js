@@ -8,7 +8,7 @@ async function seedAdmin() {
 
   const email = 'admin@prabhu.com';
   const password = 'Admin@12345';
-  const displayName = 'Prabhu Admin';
+  const displayName = 'MaxyWalk Admin';
 
   try {
     let user;

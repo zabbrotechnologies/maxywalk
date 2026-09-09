@@ -1,4 +1,4 @@
-# Prabhu Traders — MAXYWALK Luxury Leather E-Commerce
+# MaxyWalk — MAXYWALK Luxury Leather E-Commerce
 
 Premium handcrafted genuine leather footwear (slippers, mules, sandals) and accessories (belts, wallets) under the registered brand **MAXYWALK**, handcrafted in Avadi, Tamil Nadu, India.
 

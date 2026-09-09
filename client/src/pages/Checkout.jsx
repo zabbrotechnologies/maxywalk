@@ -31,7 +31,7 @@ export default function Checkout() {
   const [shipping, setShipping] = useState('standard');
 
   useEffect(() => {
-    document.title = 'Checkout | PRABHU TRADERS';
+    document.title = 'Checkout | MAXYWALK';
   }, []);
 
   const shippingOption = SHIPPING_OPTIONS.find((o) => o.id === shipping);
@@ -119,7 +119,7 @@ export default function Checkout() {
             <span className="material-symbols-outlined text-4xl text-green-600" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
           </div>
           <h1 className="font-display text-2xl sm:text-3xl text-primary font-bold mb-2">Order Confirmed!</h1>
-          <p className="text-xs sm:text-sm text-on-surface-variant mb-1">Thank you for ordering with Prabhu Traders.</p>
+          <p className="text-xs sm:text-sm text-on-surface-variant mb-1">Thank you for ordering with MaxyWalk.</p>
           <div className="my-4 p-4 bg-surface-container-low rounded-2xl border border-outline-variant/30 text-center">
             <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Your Order ID</p>
             <p className="font-display text-xl font-bold text-secondary my-1">{orderPlaced.orderId}</p>
@@ -145,7 +145,7 @@ export default function Checkout() {
             <span className="material-symbols-outlined text-base">arrow_back</span>
             <span>Back to Store</span>
           </Link>
-          <Link to="/" className="font-display text-base sm:text-lg tracking-widest text-primary font-bold">PRABHU TRADERS</Link>
+          <Link to="/" className="font-display text-base sm:text-lg tracking-widest text-primary font-bold">MAXYWALK</Link>
           <div className="w-16" />
         </header>
 
@@ -163,7 +163,7 @@ export default function Checkout() {
         </div>
 
         <div className="p-4 text-center text-xs text-on-surface-variant border-t border-outline-variant/30">
-          © {new Date().getFullYear()} PRABHU TRADERS · MAXYWALK LEATHER
+          © {new Date().getFullYear()} MAXYWALK · MAXYWALK LEATHER
         </div>
       </div>
     );
@@ -178,7 +178,7 @@ export default function Checkout() {
           <span className="material-symbols-outlined text-base">arrow_back</span>
           <span>Return</span>
         </Link>
-        <Link to="/" className="font-display text-base sm:text-lg tracking-widest text-primary font-bold">PRABHU TRADERS</Link>
+        <Link to="/" className="font-display text-base sm:text-lg tracking-widest text-primary font-bold">MAXYWALK</Link>
         <div className="flex items-center gap-1 text-green-700">
           <span className="material-symbols-outlined text-sm">local_shipping</span>
           <span className="text-[10px] font-sans uppercase tracking-wider font-bold">COD Available</span>

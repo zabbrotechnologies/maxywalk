@@ -105,7 +105,7 @@ export default function Login() {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/50 flex flex-col justify-end p-16">
-          <Link to="/" className="font-display text-3xl tracking-widest text-white mb-4">PRABHU TRADERS</Link>
+          <Link to="/" className="font-display text-3xl tracking-widest text-white mb-4">MAXYWALK</Link>
           <p className="text-white/70 text-lg max-w-xs leading-relaxed">
             Premium leather footwear & accessories. MAXYWALK brand, crafted in Avadi.
           </p>
@@ -116,7 +116,7 @@ export default function Login() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-16">
         <div className="w-full max-w-md">
           <Link to="/" className="font-display text-2xl tracking-widest text-primary block mb-10 lg:hidden">
-            PRABHU TRADERS
+            MAXYWALK
           </Link>
 
           <h1 className="font-display text-3xl text-primary mb-2">Welcome Back</h1>

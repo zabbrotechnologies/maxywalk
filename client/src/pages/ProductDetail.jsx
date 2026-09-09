@@ -37,7 +37,7 @@ export default function ProductDetail() {
         setProduct(data);
         setSelectedColor(data.colors?.[0] || '');
         if (data.sizes?.length > 0) setSelectedSize(data.sizes[0]);
-        document.title = `${data.name} | PRABHU TRADERS`;
+        document.title = `${data.name} | MAXYWALK`;
         return getProducts({ category: data.category, limit: 4 });
       })
       .then((d) => setRelated((d.products || []).filter((p) => p.id !== id).slice(0, 4)))
@@ -307,13 +307,13 @@ export default function ProductDetail() {
           <div className="p-4 sm:p-6 bg-white border border-outline-variant/30">
             {activeTab === 'description' && (
               <p className="text-on-surface-variant text-sm leading-relaxed max-w-2xl">
-                {product.description || 'Premium handcrafted genuine leather product under the MAXYWALK brand from Prabhu Traders, Avadi, Tamil Nadu.'}
+                {product.description || 'Premium handcrafted genuine leather product under the MAXYWALK brand from MaxyWalk, Avadi, Tamil Nadu.'}
               </p>
             )}
             {activeTab === 'details' && (
               <div className="max-w-lg space-y-2 text-xs sm:text-sm">
                 {[
-                  ['Brand', 'MAXYWALK by Prabhu Traders'],
+                  ['Brand', 'MAXYWALK by MaxyWalk'],
                   ['Material', product.material || 'Genuine Full-Grain Leather'],
                   ['Category', product.category?.toUpperCase()],
                   ['Available Sizes', product.sizes?.join(', ') || 'Standard'],
