@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../firebase.js';
+import { supabase } from '../lib/supabaseClient.js';
 import useAuthStore from '../store/authStore.js';
 import toast from 'react-hot-toast';
 
@@ -13,32 +12,39 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const loginAsDemoUser = useAuthStore((s) => s.loginAsDemoUser);
-
   const handleRegister = async (e) => {
     e.preventDefault();
     if (password !== confirm) { toast.error('Passwords do not match.'); return; }
     if (password.length < 6) { toast.error('Password must be at least 6 characters.'); return; }
 
     setLoading(true);
-    if (!auth) {
-      loginAsDemoUser(name || 'Customer', email);
-      toast.success('Account created! Welcome to MaxyWalk.');
-      navigate('/');
-      setLoading(false);
-      return;
-    }
 
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(cred.user, { displayName: name });
-      toast.success('Account created! Welcome to MaxyWalk.');
-      navigate('/');
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+          }
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // If email confirmation is required, session might be null.
+      if (data?.session) {
+        toast.success('Account created! Welcome to MaxyWalk.');
+        navigate('/');
+      } else {
+        toast.success('Account created! Please check your email to verify your account.');
+        navigate('/login');
+      }
     } catch (err) {
       console.error('Register error:', err);
-      loginAsDemoUser(name || email.split('@')[0], email);
-      toast.success('Account created! Welcome to MaxyWalk.');
-      navigate('/');
+      toast.error(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -47,30 +53,16 @@ export default function Register() {
   const handleGoogle = async () => {
     setLoading(true);
     try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({
-        prompt: 'select_account'
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
       });
-
-      if (!auth) {
-        toast.error('Firebase Auth is not initialized.');
-        return;
-      }
-
-      const result = await signInWithPopup(auth, provider);
-      const gUser = result.user;
-      loginAsDemoUser(gUser.displayName || name || 'Customer', gUser.email);
-      toast.success(`Welcome ${gUser.displayName || ''}!`);
-      navigate('/');
+      if (error) throw error;
     } catch (err) {
-      if (err.code === 'auth/popup-closed-by-user') {
-        toast('Google sign-up was cancelled', { icon: 'ℹ️' });
-      } else if (err.code === 'auth/unauthorized-domain') {
-        toast.error('Domain not authorized in Firebase Console. Add this URL under Authentication > Settings > Authorized Domains.', { duration: 6000 });
-      } else {
-        toast.error(err.message || 'Google sign-up failed.');
-      }
-    } finally {
+      console.warn('Google popup error:', err);
+      toast.error(err.message || 'Google sign-up failed.');
       setLoading(false);
     }
   };

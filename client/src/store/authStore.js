@@ -1,34 +1,23 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { auth } from '../firebase.js';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { supabase } from '../lib/supabaseClient.js';
+import { getUserProfile, updateUserProfile } from '../lib/api.js';
 import useCartStore from './cartStore.js';
 import useWishlistStore from './wishlistStore.js';
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5001/api' : '/api');
-
-const syncUserStores = (user) => {
+const syncUserStores = async (user) => {
   try {
     useCartStore.getState().setActiveUser(user);
     useWishlistStore.getState().syncAccountWishlist(user);
 
     if (user && user.email && !user.email.toLowerCase().includes('admin')) {
-      const existing = JSON.parse(localStorage.getItem('maxywalk-registered-customers') || '[]');
-      const email = user.email.toLowerCase().trim();
-      const isExist = existing.some((c) => c.email?.toLowerCase().trim() === email);
-
-      if (!isExist) {
-        const newCust = {
-          id: `cust-${Date.now()}`,
-          uid: user.uid || `uid-${Date.now()}`,
-          name: user.displayName || user.email.split('@')[0],
-          email: email,
-          phone: '+91 98765 43210',
-          role: 'customer',
-          createdAt: new Date().toISOString(),
-        };
-        localStorage.setItem('maxywalk-registered-customers', JSON.stringify([newCust, ...existing]));
-      }
+      // Create or update customer in Supabase customers table
+      await updateUserProfile({
+        uid: user.id,
+        name: user.user_metadata?.name || user.email.split('@')[0],
+        email: user.email.toLowerCase().trim(),
+        phone: user.user_metadata?.phone || '+91 98765 43210'
+      });
     }
   } catch (e) {
     console.error('Account sync error:', e);
@@ -45,54 +34,60 @@ const useAuthStore = create(
 
       // Initialize auth listener
       init: () => {
-        if (!auth) {
-          const currentUser = get().user;
-          if (currentUser) syncUserStores(currentUser);
-          set({ isLoading: false });
-          return () => {};
-        }
-
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-          if (firebaseUser) {
-            try {
-              const token = await firebaseUser.getIdToken();
-              const res = await axios.post(
-                `${API_URL}/auth/verify`,
-                { name: firebaseUser.displayName },
-                { headers: { Authorization: `Bearer ${token}` } }
-              );
-              const profile = res.data;
-              set({
-                user: firebaseUser,
-                userProfile: profile,
-                isAdmin: profile.role === 'admin',
-                isLoading: false,
-              });
-              syncUserStores(firebaseUser);
-            } catch (err) {
-              console.error('Profile sync error:', err);
-              set({ user: firebaseUser, isLoading: false });
-              syncUserStores(firebaseUser);
-            }
+        // Check current session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.user) {
+            get().handleAuthChange(session.user);
           } else {
+            set({ isLoading: false });
+          }
+        });
+
+        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+            if (session?.user) {
+              get().handleAuthChange(session.user);
+            }
+          } else if (event === 'SIGNED_OUT') {
             set({ user: null, userProfile: null, isAdmin: false, isLoading: false });
             syncUserStores(null);
           }
         });
 
-        return unsubscribe;
+        return () => {
+          authListener.subscription.unsubscribe();
+        };
       },
 
-      // Demo / Direct login helpers
+      handleAuthChange: async (supabaseUser) => {
+        try {
+          // Check if admin by metadata or email
+          const isAdmin = supabaseUser.email.toLowerCase().includes('admin');
+          
+          set({
+            user: supabaseUser,
+            userProfile: { name: supabaseUser.user_metadata?.name || 'Customer', role: isAdmin ? 'admin' : 'customer' },
+            isAdmin: isAdmin,
+            isLoading: false,
+          });
+          syncUserStores(supabaseUser);
+        } catch (err) {
+          console.error('Auth change error:', err);
+          set({ user: supabaseUser, isLoading: false });
+          syncUserStores(supabaseUser);
+        }
+      },
+
+      // Demo / Direct login helpers (Fallback/Testing)
       loginAsDemoAdmin: () => {
-        const mockAdminUser = { uid: 'admin-demo-id', email: 'admin@maxywalk.com', displayName: 'MaxyWalk Admin' };
+        const mockAdminUser = { id: 'admin-demo-id', email: 'admin@maxywalk.com', user_metadata: { name: 'MaxyWalk Admin' } };
         const mockProfile = { name: 'MaxyWalk Admin', role: 'admin', phone: '+91 94447 43465' };
         set({ user: mockAdminUser, userProfile: mockProfile, isAdmin: true, isLoading: false });
         syncUserStores(mockAdminUser);
         return mockAdminUser;
       },
       loginAsDemoUser: (name = 'Customer', email = 'user@example.com') => {
-        const mockUser = { uid: `user-${Date.now()}`, email, displayName: name };
+        const mockUser = { id: `user-${Date.now()}`, email, user_metadata: { name } };
         const mockProfile = { name, role: 'customer', phone: '+91 98765 43210' };
         set({ user: mockUser, userProfile: mockProfile, isAdmin: false, isLoading: false });
         syncUserStores(mockUser);
@@ -101,7 +96,7 @@ const useAuthStore = create(
 
       // Sign out
       logout: async () => {
-        if (auth) await signOut(auth);
+        await supabase.auth.signOut();
         set({ user: null, userProfile: null, isAdmin: false });
       },
 
@@ -110,11 +105,10 @@ const useAuthStore = create(
         set({ userProfile: profile, isAdmin: profile?.role === 'admin' });
       },
 
-      // Get auth token
+      // Get auth token (JWT)
       getToken: async () => {
-        const { user } = get();
-        if (!user) return null;
-        return user.getIdToken();
+        const { data: { session } } = await supabase.auth.getSession();
+        return session?.access_token || null;
       },
     }),
     {

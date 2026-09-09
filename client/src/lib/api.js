@@ -1,20 +1,9 @@
 import axios from 'axios';
-import { auth } from '../firebase.js';
 import { supabase } from './supabaseClient.js';
 
 // Legacy Axios configuration (kept for backwards compatibility if needed)
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5001/api' : '/api');
 const api = axios.create({ baseURL: API_URL, timeout: 10000 });
-
-api.interceptors.request.use(async (config) => {
-  try {
-    if (auth?.currentUser) {
-      const token = await auth.currentUser.getIdToken();
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  } catch { }
-  return config;
-});
 
 // Lightweight in-memory cache for speed
 const cache = new Map();

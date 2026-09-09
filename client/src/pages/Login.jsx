@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../firebase.js';
+import { supabase } from '../lib/supabaseClient.js';
 import useAuthStore from '../store/authStore.js';
 import toast from 'react-hot-toast';
 
@@ -16,31 +15,30 @@ export default function Login() {
   const from = location.state?.from?.pathname || '/';
 
   const loginAsDemoAdmin = useAuthStore((s) => s.loginAsDemoAdmin);
-  const loginAsDemoUser = useAuthStore((s) => s.loginAsDemoUser);
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     const isAdminCredentials = email.toLowerCase().includes('admin') || password === 'admin123';
 
-    if (isAdminCredentials) {
+    if (isAdminCredentials && password === 'admin123') {
       loginAsDemoAdmin();
       toast.success('Welcome back, Admin!');
       navigate('/admin', { replace: true });
       return;
     }
 
-    if (!auth) {
-      loginAsDemoUser('Customer', email);
-      toast.success('Signed in successfully!');
-      navigate(from, { replace: true });
-      return;
-    }
-
     setLoading(true);
     try {
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
-      if (userCred.user?.email?.toLowerCase().includes('admin')) {
-        loginAsDemoAdmin();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user?.email?.toLowerCase().includes('admin')) {
         toast.success('Welcome back, Admin!');
         navigate('/admin', { replace: true });
       } else {
@@ -49,9 +47,7 @@ export default function Login() {
       }
     } catch (err) {
       console.error('Login error:', err);
-      loginAsDemoUser(email.split('@')[0], email);
-      toast.success('Signed in successfully!');
-      navigate(from, { replace: true });
+      toast.error(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -60,37 +56,16 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({
-        prompt: 'select_account'
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
       });
-
-      if (!auth) {
-        toast.error('Firebase Auth is not initialized.');
-        return;
-      }
-
-      const result = await signInWithPopup(auth, provider);
-      const gUser = result.user;
-      toast.success(`Welcome ${gUser.displayName || ''}!`);
-
-      if (gUser.email?.toLowerCase().includes('admin')) {
-        loginAsDemoAdmin();
-        navigate('/admin', { replace: true });
-      } else {
-        loginAsDemoUser(gUser.displayName || gUser.email.split('@')[0], gUser.email);
-        navigate(from, { replace: true });
-      }
+      if (error) throw error;
     } catch (err) {
-      console.warn('Google Popup login error:', err);
-      if (err.code === 'auth/popup-closed-by-user') {
-        toast('Google sign-in was cancelled', { icon: 'ℹ️' });
-      } else if (err.code === 'auth/unauthorized-domain') {
-        toast.error('Domain not authorized in Firebase Console. Add this URL under Authentication > Authorized Domains.', { duration: 6000 });
-      } else {
-        toast.error(err.message || 'Google sign-in failed. Please try again.');
-      }
-    } finally {
+      console.warn('Google login error:', err);
+      toast.error(err.message || 'Google sign-in failed. Please try again.');
       setLoading(false);
     }
   };
