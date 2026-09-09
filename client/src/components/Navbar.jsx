@@ -69,12 +69,6 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Top Announcement Bar */}
-      <div className="w-full bg-primary text-white text-center py-2 px-3 overflow-hidden">
-        <p className="font-sans text-[11px] sm:text-xs tracking-wider uppercase truncate">
-          ✨ 100% Cash on Delivery · Free Pan-India Delivery on Orders above ₹1,999
-        </p>
-      </div>
 
       {/* Main Navbar */}
       <nav
