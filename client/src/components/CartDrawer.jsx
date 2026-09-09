@@ -91,7 +91,7 @@ export default function CartDrawer() {
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain drop-shadow-sm p-1"
                       onError={(e) => { e.target.src = 'https://placehold.co/80x100/f4f3f1/7e7576?text=PT'; }}
                     />
                   </div>

@@ -124,7 +124,7 @@ export default function Home() {
               <img
                 src={CATEGORIES[0].image}
                 alt="MAXYWALK leather slippers"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="absolute inset-0 w-full h-full object-contain drop-shadow-md transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 p-5 sm:p-8 w-full flex justify-between items-end">
@@ -152,7 +152,7 @@ export default function Home() {
                 <img
                   src={CATEGORIES[1].image}
                   alt="Leather belts"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-contain drop-shadow-sm transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 p-5 sm:p-6 w-full flex justify-between items-end">
@@ -173,12 +173,12 @@ export default function Home() {
                   <Link
                     key={cat.id}
                     to={`/shop?category=${cat.id}`}
-                    className="relative group overflow-hidden bg-surface-container-lowest shadow-lux h-[200px] sm:h-full min-h-[180px] block rounded-3xl"
+                    className="relative group overflow-hidden shadow-lux h-[200px] sm:h-full min-h-[180px] block rounded-3xl"
                   >
                     <img
                       src={cat.image}
                       alt={cat.label}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="absolute inset-0 w-full h-full object-contain drop-shadow-md transition-transform duration-700 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute bottom-0 left-0 p-4 w-full flex justify-between items-end">
@@ -291,7 +291,7 @@ export default function Home() {
                 <img
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgWFFK86T5gmLGWZHLhUaG1cF0-ZMh12kmFHHkKP8zf8Gr0sMBABlXlgWRmZZ8lkT029uBqswFugHrKL8o1QNCxbY2BzztKfqEDQ0Hm8_Vc8uMpo-LOzP6sn4MUjT24AN81n_N26a6t8sUkceHvom18N9yOOF5jEVzx0xsn7olMhAYpZ-gZSegh9zDny7bZQDQCNxtS3svBYjD1E9keYzC2LTtEyz1j4-5Wr36c7vFQq6aGGEEpHpH"
                   alt="MAXYWALK leather slipper"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain drop-shadow-md"
                 />
               </div>
               <div className="flex flex-col gap-3 sm:gap-4">
@@ -299,14 +299,14 @@ export default function Home() {
                   <img
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkZZLptrzF3_pLJdGwE1D0fzBf9J6BskKwY_creH1fEwQGjpA8E1ZqUMQcf5oG0DPqTdDQOe0jiSWO8xDYWLfLedhMNKW5or3L6QIdT4kNWSpCsGqeM06tYRvuYRe-Y1giC2c_OBy7TTJgqxv_s8CrqRLxmNSIM6YZu8lhceL1wjSjQPg39qPyrz461bIcjc5-OvPVhEnA2eJ7fhvH0yagBHcjNNgrqediDKAK4ax5ilJPk55aRuEG"
                     alt="Leather belt"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain drop-shadow-md"
                   />
                 </div>
                 <div className="aspect-square overflow-hidden bg-surface-container">
                   <img
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuAy9uIBLtM48fYq1AlBrQamS2Dj7jXFNVNX2n814Z51DiV4LuTj-EnP57VbeZkSNwLHeXpomeiGTawYezijQB25UOFsQ4z4E5llsZz_4RLODXSoe-0bpC4GZ8UN0PUA8d29RmafijMqyq25C6Pdca8Od9nyx5o1-57k8n61Bpm2crxPPHHuicw4XKOKeHmOGtyGTPtds5oHpUnohJj3GRBHBU5dHs6JD-782XyvJ6AkrqjGzheuQ10x"
                     alt="Leather wallet"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain drop-shadow-md"
                   />
                 </div>
               </div>

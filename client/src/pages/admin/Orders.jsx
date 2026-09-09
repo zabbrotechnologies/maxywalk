@@ -158,7 +158,7 @@ export default function AdminOrders() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {(order.items || []).map((item, i) => (
                         <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-xl border border-outline-variant/30">
-                          {item.image && <img src={item.image} alt="" className="w-12 h-14 object-cover rounded-lg" />}
+                          {item.image && <img src={item.image} alt="" className="w-12 h-14 object-contain drop-shadow-sm p-1 rounded-lg" />}
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-bold text-primary truncate">{item.name}</p>
                             <p className="text-[11px] text-on-surface-variant">Size {item.size || 'Standard'} {item.color ? `· ${item.color}` : ''}</p>

@@ -108,7 +108,7 @@ export default function ProductDetail() {
               <img
                 src={images[activeImage]}
                 alt={product.name}
-                className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                className="w-full h-full object-contain drop-shadow-2xl transition-transform duration-500 hover:scale-105"
                 onError={(e) => { e.target.src = 'https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK'; }}
               />
               {product.badge && (
@@ -134,7 +134,7 @@ export default function ProductDetail() {
                       activeImage === idx ? 'border-secondary' : 'border-outline-variant/40 hover:border-outline'
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={img} alt="" className="w-full h-full object-contain p-1 drop-shadow-sm" />
                   </button>
                 ))}
               </div>

@@ -203,7 +203,7 @@ export default function Checkout() {
           <div className="pt-4 space-y-3">
             {items.map((item) => (
               <div key={item.cartKey} className="flex gap-2.5 items-center bg-white p-2.5 rounded-xl border border-outline-variant/20">
-                <img src={item.image} alt="" className="w-12 h-14 object-cover rounded-lg" />
+                <img src={item.image} alt="" className="w-12 h-14 object-contain drop-shadow-sm p-1 rounded-lg" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-primary truncate">{item.name}</p>
                   <p className="text-[10px] text-on-surface-variant">Size {item.selectedSize} · Qty {item.qty}</p>
@@ -379,7 +379,7 @@ export default function Checkout() {
                   <div key={item.cartKey} className="flex gap-3 items-center">
                     <div className="w-14 h-16 bg-surface-container relative flex-shrink-0 border border-outline-variant/20 rounded-xl overflow-hidden">
                       <span className="absolute top-1 right-1 w-4 h-4 bg-primary text-white rounded-full flex items-center justify-center text-[9px] font-bold z-10">{item.qty}</span>
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      <img src={item.image} alt={item.name} className="w-full h-full object-contain drop-shadow-sm p-1" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-primary truncate">{item.name}</p>

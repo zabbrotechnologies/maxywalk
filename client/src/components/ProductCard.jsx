@@ -45,7 +45,7 @@ export default function ProductCard({ product }) {
       {/* Image Container */}
       <Link
         to={`/product/${product.id}`}
-        className="relative w-full aspect-[4/5] bg-surface-container-low overflow-hidden mb-3 block rounded-xl"
+        className="relative w-full aspect-[4/5] overflow-hidden mb-3 block rounded-xl flex items-center justify-center p-4"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
@@ -55,7 +55,7 @@ export default function ProductCard({ product }) {
           alt={product.name}
           loading="lazy"
           decoding="async"
-          className={`img-primary absolute inset-0 w-full h-full object-cover transition-all duration-500 ${
+          className={`img-primary absolute w-full h-full object-contain drop-shadow-md transition-all duration-500 ${
             hovered && hasSecondImage ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
           }`}
           onError={(e) => { e.target.src = 'https://placehold.co/400x500/f4f3f1/7e7576?text=MAXYWALK'; }}
@@ -68,7 +68,7 @@ export default function ProductCard({ product }) {
             alt={`${product.name} alternate view`}
             loading="lazy"
             decoding="async"
-            className={`img-secondary absolute inset-0 w-full h-full object-cover transition-all duration-500 ${
+            className={`img-secondary absolute w-full h-full object-contain drop-shadow-md transition-all duration-500 ${
               hovered ? 'opacity-100' : 'opacity-0'
             }`}
             onError={(e) => { e.target.src = 'https://placehold.co/400x500/f4f3f1/7e7576?text=MAXYWALK'; }}

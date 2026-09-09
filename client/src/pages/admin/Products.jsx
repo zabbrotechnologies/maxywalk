@@ -178,7 +178,7 @@ export default function AdminProducts() {
                 <img
                   src={p.images?.[0] || 'https://placehold.co/400x300/efeeec/7e7576?text=No+Image'}
                   alt={p.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-contain drop-shadow-sm p-1 group-hover:scale-105 transition-transform duration-500"
                 />
                 {p.badge && <span className="absolute top-2 left-2 bg-white text-primary text-[10px] font-sans uppercase tracking-wider px-2 py-0.5">{p.badge}</span>}
                 {p.featured && <span className="absolute top-2 right-2 bg-secondary text-white text-[10px] font-sans uppercase tracking-wider px-2 py-0.5">Featured</span>}
@@ -309,7 +309,7 @@ export default function AdminProducts() {
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
                     {form.images.filter(Boolean).map((img, idx) => (
                       <div key={idx} className="relative aspect-square border border-outline-variant rounded-xl overflow-hidden group bg-surface-container">
-                        <img src={img} alt="" className="w-full h-full object-cover" />
+                        <img src={img} alt="" className="w-full h-full object-contain p-1" />
                         {idx === 0 && (
                           <span className="absolute top-1 left-1 bg-primary text-white text-[9px] font-sans uppercase px-1.5 py-0.5 rounded shadow-sm font-bold">Main</span>
                         )}

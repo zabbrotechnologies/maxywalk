@@ -254,7 +254,7 @@ export default function Account() {
                   {wishlistProducts.map((p) => (
                     <Link key={p.id} to={`/product/${p.id}`} className="p-3 bg-white border border-outline-variant/30 flex flex-col gap-2">
                       <div className="aspect-[4/5] bg-surface-container overflow-hidden">
-                        <img src={p.images?.[0]} alt={p.name} className="w-full h-full object-cover" />
+                        <img src={p.images?.[0]} alt={p.name} className="w-full h-full object-contain drop-shadow-sm p-1" />
                       </div>
                       <p className="font-display text-xs font-bold text-primary truncate">{p.name}</p>
                       <p className="text-xs font-bold text-secondary">{formatPrice(p.price)}</p>
