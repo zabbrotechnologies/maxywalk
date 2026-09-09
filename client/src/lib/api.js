@@ -1,29 +1,24 @@
 import axios from 'axios';
 import { auth } from '../firebase.js';
+import { supabase } from './supabaseClient.js';
 
+// Legacy Axios configuration (kept for backwards compatibility if needed)
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5001/api' : '/api');
+const api = axios.create({ baseURL: API_URL, timeout: 10000 });
 
-const api = axios.create({
-  baseURL: API_URL,
-  timeout: 10000,
-});
-
-// Attach auth token to requests
 api.interceptors.request.use(async (config) => {
   try {
     if (auth?.currentUser) {
       const token = await auth.currentUser.getIdToken();
       config.headers.Authorization = `Bearer ${token}`;
     }
-  } catch {
-    // Continue without token
-  }
+  } catch { }
   return config;
 });
 
 // Lightweight in-memory cache for speed
 const cache = new Map();
-const CACHE_TTL_MS = 60 * 1000; // 60 seconds
+const CACHE_TTL_MS = 60 * 1000;
 
 function getCached(key) {
   const item = cache.get(key);
@@ -43,104 +38,41 @@ export function clearApiCache() {
   cache.clear();
 }
 
-// Standalone fallback catalogue for static / offline deployments
-const FALLBACK_PRODUCTS = [
-  {
-    id: '1', name: 'MAXYWALK Handcrafted Leather Slipper', description: 'Premium full-grain leather comfort slipper with cushioned footbed. Handcrafted in Avadi, Tamil Nadu.',
-    category: 'slippers', price: 1299, originalPrice: 1599, sizes: ['6','7','8','9','10','11','12'],
-    colors: ['Cognac Brown', 'Tan'], images: ['/products/slipper.png'],
-    stock: 50, featured: true, material: 'Full-Grain Leather', badge: 'Best Seller', rating: 4.8, reviewCount: 124, createdAt: new Date().toISOString(),
-  },
-  {
-    id: '2', name: 'Architectural Leather Mule', description: 'Minimalist leather mule with clean lines and premium construction.',
-    category: 'slippers', price: 1450, originalPrice: null, sizes: ['6','7','8','9','10','11','12'],
-    colors: ['Onyx Black', 'Deep Brown'], images: ['/products/mule.png'],
-    stock: 30, featured: true, material: 'Full-Grain Leather', badge: 'New Arrival', rating: 4.6, reviewCount: 48, createdAt: new Date().toISOString(),
-  },
-  {
-    id: '3', name: 'Essential Leather Slide', description: 'Effortless everyday slide crafted from premium vegetable-tanned leather.',
-    category: 'sandals', price: 950, originalPrice: 1199, sizes: ['6','7','8','9','10','11','12'],
-    colors: ['Natural Tan', 'Sand'], images: ['/products/sandal.png'],
-    stock: 45, featured: false, material: 'Vegetable-Tanned Leather', badge: null, rating: 4.5, reviewCount: 67, createdAt: new Date().toISOString(),
-  },
-  {
-    id: '4', name: 'Gallery Loafer', description: 'Sophisticated leather loafer with hand-burnished finish. A statement piece for discerning tastes.',
-    category: 'sandals', price: 1800, originalPrice: null, sizes: ['6','7','8','9','10','11','12'],
-    colors: ['Oxblood', 'Midnight Navy'], images: ['/products/slipper.png'],
-    stock: 20, featured: true, material: 'Hand-Burnished Leather', badge: null, rating: 4.9, reviewCount: 32, createdAt: new Date().toISOString(),
-  },
-  {
-    id: '5', name: 'Full-Grain Leather Belt', description: 'Thick, structured full-grain leather belt with solid brass buckle. Built to last a lifetime.',
-    category: 'belts', price: 699, originalPrice: 899, sizes: ['S','M','L','XL','XXL'],
-    colors: ['Rich Brown', 'Classic Black'], images: ['/products/belt.png'],
-    stock: 100, featured: false, material: 'Full-Grain Leather', badge: null, rating: 4.7, reviewCount: 89, createdAt: new Date().toISOString(),
-  },
-  {
-    id: '6', name: 'Minimalist Leather Wallet', description: 'Slim bifold wallet with multiple card slots and a clean, modern silhouette.',
-    category: 'wallets', price: 549, originalPrice: 699, sizes: ['One Size'],
-    colors: ['Matte Black', 'Dark Brown'], images: ['/products/wallet.png'],
-    stock: 75, featured: true, material: 'Matte Leather', badge: null, rating: 4.6, reviewCount: 156, createdAt: new Date().toISOString(),
-  },
-  {
-    id: '7', name: 'MAXYWALK Custom Kolhapuri Slipper', description: 'Traditional Kolhapuri-inspired design with modern MAXYWALK craftsmanship. Customize to your measurements.',
-    category: 'slippers', price: 1599, originalPrice: null, sizes: ['6','7','8','9','10','11','12'],
-    colors: ['Tan', 'Brown', 'Black'], images: ['/products/slipper.png'],
-    stock: 25, featured: true, material: 'Handcrafted Leather', badge: 'Custom Made', rating: 5.0, reviewCount: 18, createdAt: new Date().toISOString(),
-  },
-  {
-    id: '8', name: 'Structured Sandal', description: 'Bold, architectural sandal with thick sole and secure strap system.',
-    category: 'sandals', price: 1099, originalPrice: 1299, sizes: ['6','7','8','9','10','11','12'],
-    colors: ['Desert Sand', 'Cocoa'], images: ['/products/sandal.png'],
-    stock: 40, featured: false, material: 'Vegetable-Tanned Leather', badge: null, rating: 4.4, reviewCount: 45, createdAt: new Date().toISOString(),
-  },
-];
+// -----------------------------------------------------------------
+// SUPABASE MIGRATION: DATA LAYER
+// -----------------------------------------------------------------
 
-function getCustomProducts() {
-  try {
-    return JSON.parse(localStorage.getItem('maxywalk-custom-products') || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function filterFallbackProducts(params = {}) {
-  const custom = getCustomProducts();
-  let list = [...custom, ...FALLBACK_PRODUCTS];
-  const { category, featured, sort } = params;
-
-  if (category && category !== 'all') {
-    list = list.filter((p) => p.category === category);
-  }
-  if (featured === true || featured === 'true') {
-    list = list.filter((p) => p.featured);
-  }
-  if (sort === 'price_asc') {
-    list.sort((a, b) => a.price - b.price);
-  } else if (sort === 'price_desc') {
-    list.sort((a, b) => b.price - a.price);
-  }
-  return { products: list, total: list.length };
-}
-
-// Products API (Cached for instant browsing, with fallback for static/offline hosts)
 export const getProducts = async (params = {}) => {
   const cacheKey = `products_${JSON.stringify(params)}`;
   const cached = getCached(cacheKey);
   if (cached) return cached;
 
-  try {
-    const res = await api.get('/products', { params });
-    if (res.data && Array.isArray(res.data.products) && res.data.products.length > 0) {
-      setCached(cacheKey, res.data);
-      return res.data;
-    }
-  } catch (error) {
-    console.warn('Backend API unavailable, using client fallback catalogue:', error.message);
+  let query = supabase.from('products').select('*');
+  
+  if (params.category && params.category !== 'all') {
+    query = query.eq('category', params.category);
+  }
+  if (params.featured === true || params.featured === 'true') {
+    query = query.eq('featured', true);
   }
 
-  const fallback = filterFallbackProducts(params);
-  setCached(cacheKey, fallback);
-  return fallback;
+  const { data, error } = await query;
+  
+  if (error) {
+    console.error('Supabase getProducts error:', error);
+    return { products: [], total: 0 };
+  }
+
+  let list = [...data];
+  if (params.sort === 'price_asc') {
+    list.sort((a, b) => a.price - b.price);
+  } else if (params.sort === 'price_desc') {
+    list.sort((a, b) => b.price - a.price);
+  }
+
+  const result = { products: list, total: list.length };
+  setCached(cacheKey, result);
+  return result;
 };
 
 export const getProduct = async (id) => {
@@ -148,172 +80,158 @@ export const getProduct = async (id) => {
   const cached = getCached(cacheKey);
   if (cached) return cached;
 
-  try {
-    const res = await api.get(`/products/${id}`);
-    if (res.data) {
-      setCached(cacheKey, res.data);
-      return res.data;
-    }
-  } catch (error) {
-    console.warn(`Backend API unavailable for product ${id}, using fallback:`, error.message);
+  const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
+  if (error) {
+    console.error(`Supabase getProduct ${id} error:`, error);
+    return null;
   }
-
-  const custom = getCustomProducts();
-  const allProds = [...custom, ...FALLBACK_PRODUCTS];
-  const fallback = allProds.find((p) => p.id === id) || allProds[0];
-  setCached(cacheKey, fallback);
-  return fallback;
+  
+  setCached(cacheKey, data);
+  return data;
 };
 
 export const createProduct = async (data) => {
   clearApiCache();
-  try {
-    const res = await api.post('/products', data);
-    return res.data;
-  } catch (error) {
-    console.warn('Backend API unavailable for createProduct, using local storage:', error.message);
-    const newProduct = {
-      id: `custom-${Date.now()}`,
-      ...data,
-      createdAt: new Date().toISOString(),
-    };
-    const custom = getCustomProducts();
-    localStorage.setItem('maxywalk-custom-products', JSON.stringify([newProduct, ...custom]));
-    return newProduct;
+  const newProduct = {
+    id: `custom-${Date.now()}`,
+    ...data,
+    created_at: new Date().toISOString()
+  };
+  
+  const { data: insertedData, error } = await supabase.from('products').insert([newProduct]).select().single();
+  if (error) {
+    console.error('Supabase createProduct error:', error);
+    throw error;
   }
+  return insertedData;
 };
 
 export const updateProduct = async (id, data) => {
   clearApiCache();
-  try {
-    const res = await api.put(`/products/${id}`, data);
-    return res.data;
-  } catch (error) {
-    console.warn(`Backend API unavailable for updateProduct ${id}, using local storage:`, error.message);
-    const custom = getCustomProducts();
-    const updatedCustom = custom.map((p) => (p.id === id ? { ...p, ...data } : p));
-    localStorage.setItem('maxywalk-custom-products', JSON.stringify(updatedCustom));
-    return { id, ...data };
+  const { data: updatedData, error } = await supabase.from('products').update(data).eq('id', id).select().single();
+  if (error) {
+    console.error(`Supabase updateProduct ${id} error:`, error);
+    throw error;
   }
+  return updatedData;
 };
 
 export const deleteProduct = async (id) => {
   clearApiCache();
-  try {
-    const res = await api.delete(`/products/${id}`);
-    return res.data;
-  } catch (error) {
-    console.warn(`Backend API unavailable for deleteProduct ${id}, using local storage:`, error.message);
-    const custom = getCustomProducts().filter((p) => p.id !== id);
-    localStorage.setItem('maxywalk-custom-products', JSON.stringify(custom));
-    return { message: 'Product deleted' };
+  const { error } = await supabase.from('products').delete().eq('id', id);
+  if (error) {
+    console.error(`Supabase deleteProduct ${id} error:`, error);
+    throw error;
   }
+  return { message: 'Product deleted' };
 };
 
 export const placeOrder = async (data) => {
-  try {
-    const res = await api.post('/orders', data);
-    return res.data;
-  } catch (error) {
-    console.warn('Backend order API unavailable, using offline fallback:', error.message);
-    const orderId = `PT-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
-    const mockOrder = {
-      id: `mock-${Date.now()}`,
-      orderId,
-      ...data,
-      userEmail: data.shippingAddress?.email?.toLowerCase().trim() || 'guest',
-      createdAt: new Date().toISOString(),
-    };
-    const saved = JSON.parse(localStorage.getItem('maxywalk-my-orders') || '[]');
-    localStorage.setItem('maxywalk-my-orders', JSON.stringify([mockOrder, ...saved]));
-    return mockOrder;
+  const orderId = `MW-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
+  const newOrder = {
+    id: `order-${Date.now()}`,
+    order_id: orderId,
+    user_email: data.shippingAddress?.email?.toLowerCase().trim() || 'guest',
+    items: data.items || [],
+    total: data.total || 0,
+    shipping_address: data.shippingAddress || {},
+    payment_method: data.paymentMethod || 'cod',
+    status: 'pending',
+    created_at: new Date().toISOString()
+  };
+
+  const { data: insertedOrder, error } = await supabase.from('orders').insert([newOrder]).select().single();
+  if (error) {
+    console.error('Supabase placeOrder error:', error);
+    throw error;
   }
+  return insertedOrder;
 };
 
 export const getMyOrders = async (user = null) => {
-  try {
-    const res = await api.get('/orders/my');
-    return res.data;
-  } catch {
-    const localOrders = JSON.parse(localStorage.getItem('maxywalk-my-orders') || '[]');
-    if (!user || !user.email) return { orders: localOrders };
-    const userEmail = user.email.toLowerCase().trim();
-    const userOrders = localOrders.filter(
-      (o) => !o.userEmail || o.userEmail === userEmail || o.shippingAddress?.email?.toLowerCase().trim() === userEmail
-    );
-    return { orders: userOrders };
+  if (!user || !user.email) return { orders: [] };
+  
+  const userEmail = user.email.toLowerCase().trim();
+  const { data, error } = await supabase.from('orders').select('*').eq('user_email', userEmail).order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Supabase getMyOrders error:', error);
+    return { orders: [] };
   }
+  
+  return { orders: data };
 };
 
-const DEFAULT_DEMO_CUSTOMERS = [
-  { id: 'c1', uid: 'user-1', name: 'Hemavathi Abisekar', email: 'hemavathi@gmail.com', phone: '+91 98401 23456', createdAt: '2026-01-15T10:00:00.000Z' },
-  { id: 'c2', uid: 'user-2', name: 'Sukarman Gupta', email: 'sukarman@yahoo.com', phone: '+91 97102 34567', createdAt: '2026-02-01T14:30:00.000Z' },
-  { id: 'c3', uid: 'user-3', name: 'Rajkumar S', email: 'rajkumar.s@gmail.com', phone: '+91 94441 98765', createdAt: '2026-02-18T09:15:00.000Z' },
-  { id: 'c4', uid: 'user-4', name: 'Gowshigan Venkatesh', email: 'gowshigan.v@example.com', phone: '+91 95000 12345', createdAt: '2026-03-01T11:20:00.000Z' },
-];
+export const getAllOrders = async (params = {}) => {
+  const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+  if (error) {
+    console.error('Supabase getAllOrders error:', error);
+    return { orders: [] };
+  }
+  return { orders: data };
+};
 
-export const getAllOrders = (params = {}) => api.get('/orders', { params }).then((r) => r.data).catch(() => ({ orders: JSON.parse(localStorage.getItem('maxywalk-my-orders') || '[]') }));
 export const updateOrderStatus = async (id, status) => {
   clearApiCache();
-  try {
-    const res = await api.put(`/orders/${id}/status`, { status });
-    return res.data;
-  } catch (error) {
-    console.warn(`Backend API unavailable for updateOrderStatus ${id}, updating local storage orders:`, error.message);
-    const localOrders = JSON.parse(localStorage.getItem('maxywalk-my-orders') || '[]');
-    const updatedOrders = localOrders.map((o) => (o.id === id || o.orderId === id ? { ...o, status } : o));
-    localStorage.setItem('maxywalk-my-orders', JSON.stringify(updatedOrders));
-    return { id, status, message: 'Status updated successfully' };
+  // Using both id or order_id to be safe since previous architecture used order_id interchangeably
+  const { data, error } = await supabase.from('orders').update({ status }).or(`id.eq.${id},order_id.eq.${id}`).select();
+  if (error) {
+    console.error(`Supabase updateOrderStatus ${id} error:`, error);
+    throw error;
   }
+  return { id, status, message: 'Status updated successfully' };
 };
 
 export const getAllCustomers = async () => {
-  try {
-    const res = await api.get('/auth/customers');
-    if (res.data?.customers?.length > 0) return res.data;
-  } catch (error) {
-    console.warn('Backend customers API unavailable, using local registered customers store:', error?.message);
+  const { data, error } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
+  if (error) {
+    console.error('Supabase getAllCustomers error:', error);
+    return { customers: [] };
   }
-
-  const registered = JSON.parse(localStorage.getItem('maxywalk-registered-customers') || '[]');
-  const emailMap = new Map();
-  [...registered, ...DEFAULT_DEMO_CUSTOMERS].forEach((c) => {
-    const key = c.email?.toLowerCase().trim();
-    if (key && !emailMap.has(key)) {
-      emailMap.set(key, c);
-    }
-  });
-
-  return { customers: Array.from(emailMap.values()) };
+  return { customers: data };
 };
 
 export const getOrderStats = async () => {
-  try {
-    const res = await api.get('/orders/stats/overview');
-    if (res.data) return res.data;
-  } catch {
-    console.warn('Backend stats API unavailable, calculating live local stats');
+  const { data: orders, error: ordersError } = await supabase.from('orders').select('total, status');
+  const { count: totalCust, error: custError } = await supabase.from('customers').select('*', { count: 'exact', head: true });
+  
+  if (ordersError || custError) {
+    console.error('Supabase getOrderStats error:', ordersError || custError);
+    return { totalRevenue: 0, totalOrders: 0, activeOrders: 0, totalCustomers: 0, avgOrderValue: 0 };
   }
-
-  const localOrders = JSON.parse(localStorage.getItem('maxywalk-my-orders') || '[]');
-  const custRes = await getAllCustomers();
-  const totalRev = localOrders.reduce((sum, o) => sum + (o.total || 0), 125800);
-  const totalCount = localOrders.length + 42;
-  const activeCount = localOrders.filter((o) => !['delivered', 'cancelled'].includes(o.status)).length + 8;
-  const totalCust = custRes.customers.length;
-  const avgVal = Math.round(totalRev / Math.max(1, totalCount));
+  
+  const totalRev = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const totalCount = orders.length;
+  const activeCount = orders.filter((o) => !['delivered', 'cancelled'].includes(o.status)).length;
+  const avgVal = totalCount > 0 ? Math.round(totalRev / totalCount) : 0;
 
   return {
     totalRevenue: totalRev,
     totalOrders: totalCount,
     activeOrders: activeCount,
-    totalCustomers: totalCust,
+    totalCustomers: totalCust || 0,
     avgOrderValue: avgVal,
   };
 };
 
-// Auth & Profiles
-export const getUserProfile = () => api.get('/auth/profile').then((r) => r.data).catch(() => ({ name: 'Customer' }));
-export const updateUserProfile = (data) => api.put('/auth/profile', data).then((r) => r.data).catch(() => data);
+// Auth & Profiles (Leaving stubbed since Firebase handles auth, just connecting to Supabase customers table)
+export const getUserProfile = async () => {
+  if (auth?.currentUser?.email) {
+    const { data } = await supabase.from('customers').select('*').eq('email', auth.currentUser.email).single();
+    if (data) return data;
+  }
+  return { name: 'Customer' };
+};
+
+export const updateUserProfile = async (data) => {
+  if (data.email) {
+    const { data: updated, error } = await supabase.from('customers').upsert([
+      { id: `cust-${Date.now()}`, uid: data.uid || `u-${Date.now()}`, name: data.name, email: data.email, phone: data.phone, created_at: new Date().toISOString() }
+    ], { onConflict: 'email' }).select().single();
+    
+    if (!error) return updated;
+  }
+  return data;
+};
 
 export default api;
