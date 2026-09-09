@@ -20,15 +20,22 @@ export default function Account() {
   const [orders, setOrders] = useState([]);
   const [wishlistProducts, setWishlistProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { user, userProfile, setUserProfile, logout } = useAuthStore();
+  const { user, userProfile, setUserProfile, logout, isAdmin: storeIsAdmin } = useAuthStore();
+  const isAdmin = storeIsAdmin || (user?.email && user.email.toLowerCase().includes('admin'));
   const getWishlist = useWishlistStore((s) => s.getWishlist);
   const wishlistIds = getWishlist(user);
   const wishlistKey = wishlistIds.join(',');
-  const [editName, setEditName] = useState(userProfile?.name || user?.displayName || '');
-  const [editPhone, setEditPhone] = useState(userProfile?.phone || '');
+  const [editName, setEditName] = useState(userProfile?.name || user?.user_metadata?.name || '');
+  const [editPhone, setEditPhone] = useState(userProfile?.phone || user?.user_metadata?.phone || '');
   const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => { document.title = 'My Account | MAXYWALK'; }, []);
+
+  useEffect(() => {
+    if (userProfile?.name) setEditName(userProfile.name);
+    else if (user?.user_metadata?.name) setEditName(user.user_metadata.name);
+    if (userProfile?.phone) setEditPhone(userProfile.phone);
+  }, [userProfile, user]);
 
   useEffect(() => {
     const tab = searchParams.get('tab') || 'overview';
@@ -38,7 +45,7 @@ export default function Account() {
   useEffect(() => {
     if (activeTab === 'orders' || activeTab === 'overview') {
       setLoading(true);
-      getMyOrders(user).then((d) => setOrders(d.orders || [])).catch(() => setOrders([])).finally(() => setLoading(false));
+      getMyOrders(user).then((d) => setOrders(Array.isArray(d?.orders) ? d.orders : [])).catch(() => setOrders([])).finally(() => setLoading(false));
     }
     if (activeTab === 'wishlist' && wishlistIds.length > 0) {
       getProducts({ limit: 50 }).then((d) => setWishlistProducts((d.products || []).filter((p) => wishlistIds.includes(p.id)))).catch(() => setWishlistProducts([]));
@@ -51,14 +58,20 @@ export default function Account() {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      const updated = await updateUserProfile({ name: editName, phone: editPhone });
+      const updated = await updateUserProfile({
+        uid: user?.id,
+        email: user?.email,
+        name: editName,
+        phone: editPhone
+      });
       setUserProfile(updated);
       toast.success('Profile updated!');
     } catch { toast.error('Failed to update profile.'); }
     finally { setSavingProfile(false); }
   };
 
-  const activeOrder = orders.find((o) => !['delivered', 'cancelled'].includes(o.status));
+  const orderList = Array.isArray(orders) ? orders : [];
+  const activeOrder = orderList.find((o) => !['delivered', 'cancelled'].includes(o?.status));
 
   return (
     <div className="page-enter w-full overflow-hidden">
@@ -127,8 +140,8 @@ export default function Account() {
               {/* Stat Cards - 1 by 1 on Mobile */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
-                  { label: 'Total Orders', value: orders.length, icon: 'shopping_bag' },
-                  { label: 'Active Orders', value: orders.filter((o) => !['delivered', 'cancelled'].includes(o.status)).length, icon: 'local_shipping', accent: true },
+                  { label: 'Total Orders', value: orderList.length, icon: 'shopping_bag' },
+                  { label: 'Active Orders', value: orderList.filter((o) => !['delivered', 'cancelled'].includes(o?.status)).length, icon: 'local_shipping', accent: true },
                   { label: 'Wishlist Items', value: wishlistIds.length, icon: 'favorite_border' },
                 ].map((s) => (
                   <div key={s.label} className={`border border-outline-variant/40 p-5 flex flex-col justify-between h-32 ${s.accent ? 'bg-surface-container-low border-secondary/40' : 'bg-white'}`}>
@@ -147,7 +160,7 @@ export default function Account() {
                   <div className="flex justify-between items-center pb-3 border-b border-outline-variant/20">
                     <div>
                       <span className="text-[10px] text-on-surface-variant uppercase tracking-wider block">Active Order</span>
-                      <span className="font-bold text-primary text-sm">{activeOrder.orderId}</span>
+                      <span className="font-bold text-primary text-sm">{activeOrder.order_id || activeOrder.orderId || activeOrder.id}</span>
                     </div>
                     <span className="text-sm font-bold text-secondary">{formatPrice(activeOrder.total)}</span>
                   </div>
@@ -172,25 +185,28 @@ export default function Account() {
               )}
 
               {/* Recent Orders List */}
-              {orders.length > 0 && (
+              {orderList.length > 0 && (
                 <div>
                   <div className="flex justify-between items-center mb-3">
                     <h3 className="font-display text-lg font-bold text-primary">Recent Orders</h3>
                     <button onClick={() => handleTabChange('orders')} className="text-xs text-secondary font-bold hover:underline">View All</button>
                   </div>
                   <div className="space-y-2.5">
-                    {orders.slice(0, 3).map((order) => (
-                      <div key={order.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-outline-variant/30 bg-white gap-2">
-                        <div>
-                          <p className="text-xs font-bold text-primary">{order.orderId}</p>
-                          <p className="text-[11px] text-on-surface-variant">{formatDate(order.createdAt?.toDate?.() || order.createdAt)} · {order.items?.length || 0} item(s)</p>
+                    {orderList.slice(0, 3).map((order) => {
+                      const items = Array.isArray(order.items) ? order.items : typeof order.items === 'string' ? JSON.parse(order.items || '[]') : [];
+                      return (
+                        <div key={order.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-outline-variant/30 bg-white gap-2">
+                          <div>
+                            <p className="text-xs font-bold text-primary">{order.order_id || order.orderId || order.id}</p>
+                            <p className="text-[11px] text-on-surface-variant">{formatDate(order.created_at || order.createdAt?.toDate?.() || order.createdAt)} · {items.length} item(s)</p>
+                          </div>
+                          <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-0 border-outline-variant/20">
+                            <span className={`px-2 py-0.5 text-[10px] font-sans uppercase tracking-wider font-bold ${getStatusColor(order.status)}`}>{order.status}</span>
+                            <span className="font-bold text-xs text-primary">{formatPrice(order.total)}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-0 border-outline-variant/20">
-                          <span className={`px-2 py-0.5 text-[10px] font-sans uppercase tracking-wider font-bold ${getStatusColor(order.status)}`}>{order.status}</span>
-                          <span className="font-bold text-xs text-primary">{formatPrice(order.total)}</span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -203,7 +219,7 @@ export default function Account() {
               <h1 className="font-display text-2xl font-bold text-primary">My Orders</h1>
               {loading ? (
                 <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-20 skeleton" />)}</div>
-              ) : orders.length === 0 ? (
+              ) : orderList.length === 0 ? (
                 <div className="text-center py-16 bg-white border border-outline-variant/30 p-6">
                   <span className="material-symbols-outlined text-4xl text-outline-variant mb-2">shopping_bag</span>
                   <p className="text-xs text-on-surface-variant mb-4">You haven't placed any orders yet.</p>
@@ -211,29 +227,32 @@ export default function Account() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {orders.map((order) => (
-                    <div key={order.id} className="border border-outline-variant/30 bg-white p-4 space-y-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-bold text-xs sm:text-sm text-primary">{order.orderId}</p>
-                          <p className="text-[10px] text-on-surface-variant">{formatDate(order.createdAt?.toDate?.() || order.createdAt)}</p>
-                        </div>
-                        <span className={`px-2 py-0.5 text-[10px] font-sans uppercase tracking-wider font-bold ${getStatusColor(order.status)}`}>{order.status}</span>
-                      </div>
-                      <div className="space-y-1.5 pt-2 border-t border-outline-variant/20">
-                        {(order.items || []).map((item, i) => (
-                          <div key={i} className="flex justify-between text-xs">
-                            <span className="text-on-surface truncate max-w-[200px]">{item.name} {item.size && `(Size ${item.size})`} × {item.qty}</span>
-                            <span className="font-bold text-primary">{formatPrice(item.price * item.qty)}</span>
+                  {orderList.map((order) => {
+                    const items = Array.isArray(order.items) ? order.items : typeof order.items === 'string' ? JSON.parse(order.items || '[]') : [];
+                    return (
+                      <div key={order.id} className="border border-outline-variant/30 bg-white p-4 space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-bold text-xs sm:text-sm text-primary">{order.order_id || order.orderId || order.id}</p>
+                            <p className="text-[10px] text-on-surface-variant">{formatDate(order.created_at || order.createdAt?.toDate?.() || order.createdAt)}</p>
                           </div>
-                        ))}
+                          <span className={`px-2 py-0.5 text-[10px] font-sans uppercase tracking-wider font-bold ${getStatusColor(order.status)}`}>{order.status}</span>
+                        </div>
+                        <div className="space-y-1.5 pt-2 border-t border-outline-variant/20">
+                          {items.map((item, i) => (
+                            <div key={i} className="flex justify-between text-xs">
+                              <span className="text-on-surface truncate max-w-[200px]">{item.name} {item.size && `(Size ${item.size})`} × {item.qty}</span>
+                              <span className="font-bold text-primary">{formatPrice(item.price * item.qty)}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex justify-between items-center pt-2 border-t border-outline-variant/20">
+                          <span className="text-xs text-on-surface-variant uppercase font-bold">Total Paid</span>
+                          <span className="font-display text-base font-bold text-primary">{formatPrice(order.total)}</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center pt-2 border-t border-outline-variant/20">
-                        <span className="text-xs text-on-surface-variant uppercase font-bold">Total Paid</span>
-                        <span className="font-display text-base font-bold text-primary">{formatPrice(order.total)}</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

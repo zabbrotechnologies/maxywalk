@@ -59,4 +59,30 @@ test.describe('MaxyWalk E2E Tests', () => {
     await expect(page.getByText('Products').first()).toBeVisible();
   });
 
+  test('User Account panel renders correctly without error', async ({ page }) => {
+    // Seed authenticated customer user in localStorage
+    await page.addInitScript(() => {
+      localStorage.setItem('maxywalk-auth', JSON.stringify({
+        state: {
+          user: { id: 'cust-123', email: 'customer@test.com', user_metadata: { name: 'Gowshigan' } },
+          userProfile: { name: 'Gowshigan', role: 'customer', phone: '+91 98765 43210' },
+          isAdmin: false,
+          isLoading: false
+        },
+        version: 0
+      }));
+    });
+
+    await page.goto('/account');
+
+    // Verify Error Boundary was NOT triggered
+    await expect(page.getByText('Something went wrong')).not.toBeVisible();
+
+    // Verify Account page loaded
+    await expect(page.getByRole('heading', { name: /My Account/i })).toBeVisible();
+    await expect(page.getByText(/Welcome back/i)).toBeVisible();
+    await expect(page.getByText('Total Orders')).toBeVisible();
+    await expect(page.getByText('Active Orders')).toBeVisible();
+  });
+
 });
