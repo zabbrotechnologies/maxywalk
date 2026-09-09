@@ -46,11 +46,11 @@ export default function ProductDetail() {
   }, [id]);
 
   const handleAddToCart = () => {
-    if (!selectedSize && product?.sizes?.length > 0) {
-      toast.error('Please choose a size', { duration: 2000 });
-      return;
-    }
-    addItem(product, selectedSize, selectedColor, qty, user);
+    if (!product) return;
+    const effectiveSize = selectedSize || (product.sizes?.length ? product.sizes[0] : 'Standard');
+    const effectiveColor = selectedColor || (product.colors?.length ? product.colors[0] : 'Default');
+    
+    addItem(product, effectiveSize, effectiveColor, qty, user);
     openCart();
     toast.success('Added to your shopping bag!', { duration: 2000 });
   };

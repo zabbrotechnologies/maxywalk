@@ -154,6 +154,18 @@ const useCartStore = create(
     }),
     {
       name: 'maxywalk-user-carts',
+      merge: (persistedState, currentState) => {
+        const key = persistedState?.activeUserKey || currentState?.activeUserKey || 'guest';
+        const userCarts = persistedState?.userCarts || currentState?.userCarts || {};
+        const activeItems = userCarts[key] || persistedState?.items || [];
+        return {
+          ...currentState,
+          ...persistedState,
+          activeUserKey: key,
+          userCarts,
+          items: activeItems,
+        };
+      },
       onRehydrateStorage: () => (state) => {
         if (state) {
           const key = state.activeUserKey || 'guest';

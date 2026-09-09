@@ -123,6 +123,7 @@ export default function CartDrawer() {
                       <div className="flex items-center border border-outline-variant bg-white">
                         <button
                           onClick={() => updateQty(item.cartKey, item.qty - 1)}
+                          aria-label="Decrease quantity"
                           className="w-7 h-7 flex items-center justify-center text-on-surface text-sm font-bold"
                         >
                           −
@@ -130,6 +131,7 @@ export default function CartDrawer() {
                         <span className="w-7 text-center text-xs font-bold">{item.qty}</span>
                         <button
                           onClick={() => updateQty(item.cartKey, item.qty + 1)}
+                          aria-label="Increase quantity"
                           className="w-7 h-7 flex items-center justify-center text-on-surface text-sm font-bold"
                         >
                           +

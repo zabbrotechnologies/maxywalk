@@ -43,13 +43,17 @@ export default function AdminOrders() {
 
   const filtered = orders.filter((o) => {
     const q = search.toLowerCase();
+    const orderId = o.order_id || o.orderId || o.id || '';
+    const email = o.user_email || o.userEmail || '';
+    const addr = o.shipping_address || o.shippingAddress || {};
     const matchSearch =
       !q ||
-      o.orderId?.toLowerCase().includes(q) ||
-      o.userEmail?.toLowerCase().includes(q) ||
-      o.userName?.toLowerCase().includes(q) ||
-      o.shippingAddress?.fullName?.toLowerCase().includes(q) ||
-      o.shippingAddress?.phone?.includes(q);
+      orderId.toLowerCase().includes(q) ||
+      email.toLowerCase().includes(q) ||
+      addr.fullName?.toLowerCase()?.includes(q) ||
+      addr.firstName?.toLowerCase()?.includes(q) ||
+      addr.lastName?.toLowerCase()?.includes(q) ||
+      addr.phone?.includes(q);
     const matchStatus = statusFilter === 'all' || o.status === statusFilter;
     return matchSearch && matchStatus;
   });
@@ -124,13 +128,13 @@ export default function AdminOrders() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-primary">{order.orderId}</span>
+                      <span className="font-bold text-sm text-primary">{order.order_id || order.orderId || order.id}</span>
                       <span className={`px-2 py-0.5 text-[9px] font-sans uppercase tracking-wider font-bold rounded-full ${getStatusColor(order.status)}`}>
                         {order.status}
                       </span>
                     </div>
                     <p className="text-xs text-on-surface-variant mt-0.5">
-                      {order.shippingAddress?.fullName || order.userName || 'Customer'} · {order.shippingAddress?.phone || 'No phone'} · {formatDate(order.createdAt?.toDate?.() || order.createdAt)}
+                      {order.shipping_address?.fullName || order.shipping_address?.firstName || order.shippingAddress?.fullName || order.userName || 'Customer'} · {order.shipping_address?.phone || order.shippingAddress?.phone || 'No phone'} · {formatDate(order.created_at || order.createdAt?.toDate?.() || order.createdAt)}
                     </p>
                   </div>
                 </div>
@@ -138,7 +142,7 @@ export default function AdminOrders() {
                 <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 pt-2 sm:pt-0 border-t sm:border-0 border-outline-variant/20">
                   <div className="text-left sm:text-right">
                     <span className="font-bold text-sm sm:text-base text-primary block">{formatPrice(order.total)}</span>
-                    <span className="text-[10px] text-green-700 font-bold uppercase tracking-wider">COD</span>
+                    <span className="text-[10px] text-green-700 font-bold uppercase tracking-wider">{order.payment_method?.toUpperCase() || 'COD'}</span>
                   </div>
                   <button className="text-secondary flex items-center gap-0.5 text-xs font-bold">
                     <span>{expandedId === order.id ? 'Close' : 'Manage'}</span>
@@ -152,56 +156,62 @@ export default function AdminOrders() {
                 <div className="p-4 sm:p-6 bg-surface-container-low border-t border-outline-variant/30 space-y-6">
                   {/* Ordered Products */}
                   <div>
-                    <h4 className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-3">
-                      Ordered Products ({order.items?.length || 0})
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {(order.items || []).map((item, i) => (
-                        <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-xl border border-outline-variant/30">
-                          {item.image && <img src={item.image} alt="" className="w-12 h-14 object-contain drop-shadow-sm p-1 rounded-lg" />}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-primary truncate">{item.name}</p>
-                            <p className="text-[11px] text-on-surface-variant">Size {item.size || 'Standard'} {item.color ? `· ${item.color}` : ''}</p>
-                            <p className="text-xs font-bold text-secondary">{formatPrice(item.price)} × {item.qty}</p>
+                    {(() => {
+                      const items = Array.isArray(order.items) ? order.items : typeof order.items === 'string' ? JSON.parse(order.items || '[]') : [];
+                      const shippingAddr = order.shipping_address || order.shippingAddress || {};
+                      const orderCode = order.order_id || order.orderId || order.id;
+                      return (
+                        <>
+                          <h4 className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-3">
+                            Ordered Products ({items.length})
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                            {items.map((item, i) => (
+                              <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-xl border border-outline-variant/30">
+                                {item.image && <img src={item.image} alt="" className="w-12 h-14 object-contain drop-shadow-sm p-1 rounded-lg" />}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-bold text-primary truncate">{item.name}</p>
+                                  <p className="text-[11px] text-on-surface-variant">Size {item.size || item.selectedSize || 'Standard'} {item.color || item.selectedColor ? `· ${item.color || item.selectedColor}` : ''}</p>
+                                  <p className="text-xs font-bold text-secondary">{formatPrice(item.price)} × {item.qty}</p>
+                                </div>
+                                <span className="text-xs font-bold text-primary">{formatPrice(item.price * item.qty)}</span>
+                              </div>
+                            ))}
                           </div>
-                          <span className="text-xs font-bold text-primary">{formatPrice(item.price * item.qty)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
 
-                  {/* Customer Contact & Delivery Address */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="bg-white p-4 rounded-xl border border-outline-variant/30">
-                      <h4 className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-2">Customer & Contact</h4>
-                      <p className="text-xs font-bold text-primary">{order.shippingAddress?.fullName || order.userName}</p>
-                      <p className="text-xs text-on-surface-variant mt-0.5">📞 Phone: <a href={`tel:${order.shippingAddress?.phone}`} className="text-secondary font-bold hover:underline">{order.shippingAddress?.phone || 'N/A'}</a></p>
-                      <p className="text-xs text-on-surface-variant">✉️ Email: {order.userEmail || 'N/A'}</p>
-                      <div className="mt-2 pt-2 border-t border-outline-variant/20 flex gap-2">
-                        {order.shippingAddress?.phone && (
-                          <a
-                            href={`https://wa.me/${order.shippingAddress.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(order.shippingAddress.fullName || '')},%20regarding%20your%20Prabhu%20Traders%20order%20${order.orderId}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2.5 py-1 rounded-full border border-green-200 hover:bg-green-100"
-                          >
-                            <span className="material-symbols-outlined text-sm">chat</span>
-                            <span>WhatsApp Customer</span>
-                          </a>
-                        )}
-                      </div>
-                    </div>
+                          {/* Customer Contact & Delivery Address */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="bg-white p-4 rounded-xl border border-outline-variant/30">
+                              <h4 className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-2">Customer & Contact</h4>
+                              <p className="text-xs font-bold text-primary">{shippingAddr.fullName || (shippingAddr.firstName ? `${shippingAddr.firstName} ${shippingAddr.lastName || ''}`.trim() : order.userName || 'Customer')}</p>
+                              <p className="text-xs text-on-surface-variant mt-0.5">📞 Phone: <a href={`tel:${shippingAddr.phone}`} className="text-secondary font-bold hover:underline">{shippingAddr.phone || 'N/A'}</a></p>
+                              <p className="text-xs text-on-surface-variant">✉️ Email: {order.user_email || order.userEmail || 'N/A'}</p>
+                              <div className="mt-2 pt-2 border-t border-outline-variant/20 flex gap-2">
+                                {shippingAddr.phone && (
+                                  <a
+                                    href={`https://wa.me/${shippingAddr.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(shippingAddr.fullName || shippingAddr.firstName || '')},%20regarding%20your%20MaxyWalk%20order%20${orderCode}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2.5 py-1 rounded-full border border-green-200 hover:bg-green-100"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">chat</span>
+                                    <span>WhatsApp Customer</span>
+                                  </a>
+                                )}
+                              </div>
+                            </div>
 
-                    <div className="bg-white p-4 rounded-xl border border-outline-variant/30">
-                      <h4 className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-2">Shipping Destination</h4>
-                      <p className="text-xs text-on-surface leading-relaxed">
-                        {order.shippingAddress?.address}<br />
-                        {order.shippingAddress?.city}, {order.shippingAddress?.state} - <strong>{order.shippingAddress?.pincode}</strong>
-                      </p>
-                      <p className="text-[11px] text-on-surface-variant mt-2">
-                        Payment: <strong>Cash on Delivery (COD)</strong>
-                      </p>
-                    </div>
+                            <div className="bg-white p-4 rounded-xl border border-outline-variant/30">
+                              <h4 className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-2">Shipping Destination</h4>
+                              <p className="text-xs text-on-surface leading-relaxed">
+                                {shippingAddr.address}<br />
+                                {shippingAddr.city}, {shippingAddr.state} - <strong>{shippingAddr.pincode}</strong>
+                              </p>
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
 
                   {/* Update Order Status Buttons */}

@@ -113,7 +113,12 @@ const useAuthStore = create(
     }),
     {
       name: 'maxywalk-auth',
-      partialize: (state) => ({ userProfile: state.userProfile, isAdmin: state.isAdmin }),
+      partialize: (state) => ({ user: state.user, userProfile: state.userProfile, isAdmin: state.isAdmin }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.isLoading = false;
+        }
+      },
     }
   )
 );

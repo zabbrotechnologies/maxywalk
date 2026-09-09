@@ -181,33 +181,43 @@ export const getAllCustomers = async () => {
 };
 
 export const getOrderStats = async () => {
-  const { data: orders, error: ordersError } = await supabase.from('orders').select('total, status');
-  const { count: totalCust, error: custError } = await supabase.from('customers').select('*', { count: 'exact', head: true });
-  
-  if (ordersError || custError) {
-    console.error('Supabase getOrderStats error:', ordersError || custError);
+  try {
+    const { data: orders, error: ordersError } = await supabase.from('orders').select('total, status');
+    const { count: totalCust, error: custError } = await supabase.from('customers').select('*', { count: 'exact', head: true });
+    
+    if (ordersError || custError) {
+      console.warn('Supabase getOrderStats warning:', ordersError || custError);
+    }
+    
+    const orderList = Array.isArray(orders) ? orders : [];
+    const totalRev = orderList.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+    const totalCount = orderList.length;
+    const activeCount = orderList.filter((o) => !['delivered', 'cancelled'].includes(o?.status)).length;
+    const avgVal = totalCount > 0 ? Math.round(totalRev / totalCount) : 0;
+
+    return {
+      totalRevenue: totalRev,
+      totalOrders: totalCount,
+      activeOrders: activeCount,
+      totalCustomers: totalCust || 0,
+      avgOrderValue: avgVal,
+    };
+  } catch (err) {
+    console.error('getOrderStats error:', err);
     return { totalRevenue: 0, totalOrders: 0, activeOrders: 0, totalCustomers: 0, avgOrderValue: 0 };
   }
-  
-  const totalRev = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-  const totalCount = orders.length;
-  const activeCount = orders.filter((o) => !['delivered', 'cancelled'].includes(o.status)).length;
-  const avgVal = totalCount > 0 ? Math.round(totalRev / totalCount) : 0;
-
-  return {
-    totalRevenue: totalRev,
-    totalOrders: totalCount,
-    activeOrders: activeCount,
-    totalCustomers: totalCust || 0,
-    avgOrderValue: avgVal,
-  };
 };
 
-// Auth & Profiles (Leaving stubbed since Firebase handles auth, just connecting to Supabase customers table)
+// Auth & Profiles
 export const getUserProfile = async () => {
-  if (auth?.currentUser?.email) {
-    const { data } = await supabase.from('customers').select('*').eq('email', auth.currentUser.email).single();
-    if (data) return data;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.email) {
+      const { data } = await supabase.from('customers').select('*').eq('email', user.email.toLowerCase().trim()).single();
+      if (data) return data;
+    }
+  } catch (err) {
+    console.warn('getUserProfile error:', err);
   }
   return { name: 'Customer' };
 };

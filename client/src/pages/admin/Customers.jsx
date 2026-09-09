@@ -24,13 +24,16 @@ export default function AdminCustomers() {
   const enrichedCustomers = customers.map((c) => {
     const custEmail = c.email?.toLowerCase().trim();
     const custOrders = orders.filter(
-      (o) => (c.uid && o.userId === c.uid) || (custEmail && o.userEmail?.toLowerCase().trim() === custEmail) || (custEmail && o.shippingAddress?.email?.toLowerCase().trim() === custEmail)
+      (o) =>
+        (c.uid && (o.userId === c.uid || o.uid === c.uid)) ||
+        (custEmail && (o.user_email?.toLowerCase().trim() === custEmail || o.userEmail?.toLowerCase().trim() === custEmail)) ||
+        (custEmail && (o.shipping_address?.email?.toLowerCase().trim() === custEmail || o.shippingAddress?.email?.toLowerCase().trim() === custEmail))
     );
     return {
       ...c,
       orderCount: custOrders.length,
-      totalSpend: custOrders.reduce((s, o) => s + (o.total || 0), 0),
-      lastOrder: custOrders[0]?.createdAt,
+      totalSpend: custOrders.reduce((s, o) => s + (Number(o.total) || 0), 0),
+      lastOrder: custOrders[0]?.created_at || custOrders[0]?.createdAt,
     };
   });
 
