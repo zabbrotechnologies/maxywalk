@@ -52,25 +52,85 @@ export default function AdminProducts() {
     setModalOpen(true);
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-    files.forEach((file) => {
+    for (const file of files) {
       if (!file.type.startsWith('image/')) {
         toast.error(`${file.name} is not an image file.`);
-        return;
+        continue;
       }
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64Url = event.target.result;
+      
+      try {
+        // Compress image using Canvas to prevent Supabase 1MB payload size limits
+        const compressedBase64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              const MAX_SIZE = 800; // max width or height
+
+              if (width > height && width > MAX_SIZE) {
+                height *= MAX_SIZE / width;
+                width = MAX_SIZE;
+              } else if (height > MAX_SIZE) {
+                width *= MAX_SIZE / height;
+                height = MAX_SIZE;
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              
+              // Compress to JPEG at 80% quality
+              resolve(canvas.toDataURL('image/jpeg', 0.8));
+            };
+            img.src = event.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+
         setForm((prev) => {
           const currentImgs = prev.images.filter(Boolean);
-          return { ...prev, images: [...currentImgs, base64Url] };
+          return { ...prev, images: [...currentImgs, compressedBase64] };
         });
-        toast.success(`Uploaded ${file.name}!`);
+        toast.success(`Uploaded & Compressed ${file.name}!`);
+      } catch (err) {
+        console.error('Image compression failed', err);
+        toast.error(`Failed to process ${file.name}`);
+      }
+    }
+  };
+
+  const compressBase64String = (base64Str) => {
+    return new Promise((resolve) => {
+      if (!base64Str.startsWith('data:image/')) return resolve(base64Str);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const MAX_SIZE = 800;
+        if (width > height && width > MAX_SIZE) {
+          height *= MAX_SIZE / width;
+          width = MAX_SIZE;
+        } else if (height > MAX_SIZE) {
+          width *= MAX_SIZE / height;
+          height = MAX_SIZE;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
       };
-      reader.readAsDataURL(file);
+      img.onerror = () => resolve(base64Str);
+      img.src = base64Str;
     });
   };
 
@@ -89,7 +149,13 @@ export default function AdminProducts() {
     setSaving(true);
     try {
       const validImages = form.images.filter((img) => img && img.trim() !== '');
-      const finalImages = validImages.length > 0 ? validImages : ['https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK'];
+      
+      // Compress any pasted base64 strings to prevent payload limit errors
+      const compressedImages = await Promise.all(
+        validImages.map((img) => compressBase64String(img))
+      );
+
+      const finalImages = compressedImages.length > 0 ? compressedImages : ['https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK'];
 
       const data = {
         ...form,
