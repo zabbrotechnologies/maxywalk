@@ -158,12 +158,11 @@ export default function AdminProducts() {
       const finalImages = compressedImages.length > 0 ? compressedImages : ['https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK'];
 
       const data = {
-        ...form,
         name: form.name.trim(),
         description: form.description?.trim() || 'Handcrafted luxury leather product from MAXYWALK.',
         category: form.category || 'slippers',
         price: parseFloat(form.price),
-        originalPrice: form.originalPrice ? parseFloat(form.originalPrice) : null,
+        original_price: form.originalPrice ? parseFloat(form.originalPrice) : null,
         colors: typeof form.colors === 'string' ? form.colors.split(',').map((c) => c.trim()).filter(Boolean) : (form.colors || ['Black']),
         sizes: form.sizes?.length ? form.sizes : ['6', '7', '8', '9', '10'],
         images: finalImages,
