@@ -380,11 +380,16 @@ export default function HeroSection() {
           }
           .hero-left {
             max-width: 100%;
-            gap: 1rem;
-            order: 1;
+            gap: 1.25rem;
+            order: 2;
+            text-align: center;
+            align-items: center;
+          }
+          .hero-divider, .hero-ctas, .hero-counter {
+            justify-content: center;
           }
           .hero-right {
-            order: 2;
+            order: 1;
             justify-content: center;
             padding-right: 0;
             height: auto;
@@ -411,8 +416,9 @@ export default function HeroSection() {
 
         /* ── SMALL MOBILE ───────────────────────────────────── */
         @media (max-width: 390px) {
-          .hero-card-btn { min-width: 120px; }
-          .hero-product-img { width: clamp(180px, 80vw, 300px); }
+          .hero-card-btn { min-width: 120px; padding: 0.5rem 0.75rem; }
+          .hero-product-wrap { width: clamp(200px, 85vw, 280px); height: clamp(200px, 85vw, 280px); }
+          .hero-product-img { width: 100%; }
         }
       `}</style>
 
@@ -473,7 +479,7 @@ export default function HeroSection() {
               </div>
 
               {/* divider */}
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <div className="hero-divider" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                 <div style={{ width: "3rem", height: "1px", background: "rgba(255,255,255,0.15)" }} />
                 <div style={{ width: "1.25rem", height: "2px", background: ORANGE, borderRadius: "9999px" }} />
               </div>
@@ -487,7 +493,7 @@ export default function HeroSection() {
               }}>{slide.desc}</p>
 
               {/* CTAs */}
-              <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
+              <div className="hero-ctas" style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
                 <Link
                   to="/shop"
                   style={{
@@ -520,7 +526,7 @@ export default function HeroSection() {
               </div>
 
               {/* slide counter */}
-              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <div className="hero-counter" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                 <span style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: ORANGE, fontWeight: 900, lineHeight: 1 }}>
                   {slide.num}
                 </span>
