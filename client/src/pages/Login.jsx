@@ -47,7 +47,11 @@ export default function Login() {
       }
     } catch (err) {
       console.error('Login error:', err);
-      toast.error(err.message || 'Login failed. Please check your credentials.');
+      if (err.message?.toLowerCase().includes('email not confirmed')) {
+        toast.error('Email not confirmed! Supabase Dashboard -> Authentication -> Providers -> Email-ல் "Confirm email" OFF செய்யவும்.', { duration: 6000 });
+      } else {
+        toast.error(err.message || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }

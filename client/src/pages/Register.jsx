@@ -34,12 +34,25 @@ export default function Register() {
         throw error;
       }
       
-      // If email confirmation is required, session might be null.
+      // If email confirmation is disabled in Supabase, session is returned immediately
       if (data?.session) {
         toast.success('Account created! Welcome to MaxyWalk.');
         navigate('/');
       } else {
-        toast.success('Account created! Please check your email to verify your account.');
+        // Try logging in directly if auto-confirmation worked
+        try {
+          const { data: loginData } = await supabase.auth.signInWithPassword({ email, password });
+          if (loginData?.session) {
+            toast.success('Account created! Welcome to MaxyWalk.');
+            navigate('/');
+            return;
+          }
+        } catch (_) {}
+
+        toast('Account created! Supabase Dashboard-ல் "Confirm email" OFF செய்தால் register செய்த உடனே தானாக login ஆகும்.', {
+          icon: 'ℹ️',
+          duration: 6000
+        });
         navigate('/login');
       }
     } catch (err) {
