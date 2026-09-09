@@ -33,10 +33,9 @@ test.describe('MaxyWalk E2E Tests', () => {
     // Click Add to Cart
     await page.getByRole('button', { name: /Add to Cart/i }).first().click();
 
-    // Verify Cart opens/updates (Assuming there's a cart indicator or toast)
-    // The cart sheet should slide in
-    await expect(page.getByText('Your Cart')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Checkout/i })).toBeVisible();
+    // Verify Cart opens/updates
+    await expect(page.getByRole('heading', { name: /Shopping Bag/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /PROCEED TO CHECKOUT/i })).toBeVisible();
   });
 
   test('Admin Login and Dashboard rendering', async ({ page }) => {
