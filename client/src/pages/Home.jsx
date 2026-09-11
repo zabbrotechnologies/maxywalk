@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getProducts } from '../lib/api.js';
 import ProductCard from '../components/ProductCard.jsx';
 import HeroSection from '../components/HeroSection.jsx';
+import ExclusiveProductSection from '../components/ExclusiveProductSection.jsx';
 
 // Intersection Observer hook for fade-in animations
 function useFadeIn() {
@@ -94,6 +95,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* ── Our Exclusive Products ──────────────────────────── */}
+      <ExclusiveProductSection />
 
       {/* ── Categories Section (Stacked 1 by 1 on Mobile) ───────────────────────────────── */}
       <section className="py-12 md:py-24">
