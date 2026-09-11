@@ -87,10 +87,12 @@ const DETAIL_CARDS = [
 ];
 
 export default function ExclusiveProductSection() {
-  const [selectedVariant, setSelectedVariant] = useState(COLOR_VARIANTS[0]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   const { addItem, openCart } = useCartStore();
   const { user } = useAuthStore();
+
+  const selectedVariant = COLOR_VARIANTS[selectedIndex];
   const isWishlisted = useWishlistStore((s) => s.isWishlisted('urbanedge-pro', user));
   const toggleWishlist = useWishlistStore((s) => s.toggle);
 
@@ -122,7 +124,7 @@ export default function ExclusiveProductSection() {
   return (
     <section className="relative w-full bg-[#FAF7F2] py-14 sm:py-20 lg:py-24 overflow-hidden border-b border-[#E8E2D8]">
       {/* Subtle Warm Background Radial Glow */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] sm:w-[800px] h-[450px] sm:h-[550px] bg-gradient-radial from-[#FCEEE1]/90 via-[#F7E6D4]/30 to-transparent blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] sm:w-[850px] h-[450px] sm:h-[600px] bg-gradient-radial from-[#FCEEE1]/90 via-[#F7E6D4]/30 to-transparent blur-3xl pointer-events-none -z-10" />
 
       <div className="container-max px-4 sm:px-6 lg:px-8">
         {/* ── Top Section Header ────────────────────────────────────────── */}
@@ -155,15 +157,15 @@ export default function ExclusiveProductSection() {
               </span>
             </div>
 
-            {COLOR_VARIANTS.map((v) => {
-              const isSelected = selectedVariant.id === v.id;
+            {COLOR_VARIANTS.map((v, idx) => {
+              const isSelected = selectedIndex === idx;
               return (
                 <button
                   key={v.id}
-                  onClick={() => setSelectedVariant(v)}
+                  onClick={() => setSelectedIndex(idx)}
                   className={`relative flex items-center gap-3 p-2 sm:p-2.5 rounded-2xl transition-all duration-300 text-left group flex-shrink-0 min-w-[150px] lg:min-w-0 lg:w-full cursor-pointer bg-white border ${
                     isSelected
-                      ? 'border-[#171412] shadow-[0_4px_20px_rgba(211,91,34,0.22)] scale-[1.03] ring-1 ring-[#D35B22]'
+                      ? 'border-[#D35B22] shadow-[0_4px_20px_rgba(211,91,34,0.18)] scale-[1.03]'
                       : 'border-[#E8E2D8] hover:border-[#D35B22]/50 hover:shadow-sm opacity-85 hover:opacity-100'
                   }`}
                 >
@@ -184,22 +186,17 @@ export default function ExclusiveProductSection() {
                     </p>
                     <span className="text-[10px] text-[#78716C] font-medium block mt-0.5">Handcrafted</span>
                   </div>
-
-                  {/* Selected Active Indicator */}
-                  {isSelected && (
-                    <span className="absolute right-2 top-2 w-2 h-2 rounded-full bg-[#D35B22]" />
-                  )}
                 </button>
               );
             })}
           </div>
 
-          {/* CENTER COLUMN: Supplied Product Showcase & 360° Turntable */}
-          <div className="lg:col-span-6 relative flex flex-col items-center justify-center min-h-[360px] sm:min-h-[440px] lg:min-h-[500px] order-1 lg:order-2 px-2 sm:px-4">
+          {/* CENTER COLUMN: Supplied Product Showcase & Realistic Turntable Base */}
+          <div className="lg:col-span-6 relative flex flex-col items-center justify-center min-h-[420px] sm:min-h-[500px] lg:min-h-[560px] order-1 lg:order-2 px-2 sm:px-4">
             
             {/* 4 Connected Feature Callouts (Desktop / Large Tablet Only) */}
             {/* 1. Top Left: Premium Leather */}
-            <div className="hidden xl:flex absolute top-2 left-[-10px] z-20 items-start gap-2.5 max-w-[150px] text-left">
+            <div className="hidden xl:flex absolute top-4 left-[-20px] z-20 items-start gap-2.5 max-w-[150px] text-left">
               <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
@@ -212,7 +209,7 @@ export default function ExclusiveProductSection() {
             </div>
 
             {/* 2. Top Right: Lightweight Design */}
-            <div className="hidden xl:flex absolute top-2 right-[-10px] z-20 items-start gap-2.5 max-w-[150px] text-right flex-row-reverse">
+            <div className="hidden xl:flex absolute top-4 right-[-20px] z-20 items-start gap-2.5 max-w-[150px] text-right flex-row-reverse">
               <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/>
@@ -227,7 +224,7 @@ export default function ExclusiveProductSection() {
             </div>
 
             {/* 3. Bottom Left: All-Day Comfort */}
-            <div className="hidden xl:flex absolute bottom-24 left-[-10px] z-20 items-start gap-2.5 max-w-[150px] text-left">
+            <div className="hidden xl:flex absolute bottom-28 left-[-20px] z-20 items-start gap-2.5 max-w-[150px] text-left">
               <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polygon points="12 2 2 7 12 12 22 7 12 2"/>
@@ -242,7 +239,7 @@ export default function ExclusiveProductSection() {
             </div>
 
             {/* 4. Bottom Right: Durable Outsole */}
-            <div className="hidden xl:flex absolute bottom-24 right-[-10px] z-20 items-start gap-2.5 max-w-[150px] text-right flex-row-reverse">
+            <div className="hidden xl:flex absolute bottom-28 right-[-20px] z-20 items-start gap-2.5 max-w-[150px] text-right flex-row-reverse">
               <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -254,37 +251,43 @@ export default function ExclusiveProductSection() {
               </div>
             </div>
 
-            {/* Central Showcase Product Image Container */}
-            {/* Maintaining object-fit: contain and exact product proportions without clipping */}
-            <div className="relative z-10 w-full max-w-[320px] sm:max-w-[400px] lg:max-w-[440px] aspect-[4/3] flex items-center justify-center p-4">
-              <img
-                key={selectedVariant.id}
-                src={selectedVariant.image}
-                alt={`UrbanEdge Pro ${selectedVariant.name}`}
-                className="w-full h-full object-contain filter drop-shadow-[0_20px_25px_rgba(0,0,0,0.18)] transition-all duration-500 hover:scale-[1.03] animate-fade-in"
-                draggable={false}
-              />
-            </div>
-
-            {/* Premium Circular Turntable Platform & Ambient Shadow */}
-            <div className="relative -mt-12 sm:-mt-16 w-[280px] sm:w-[360px] md:w-[420px] h-[80px] flex items-center justify-center pointer-events-none">
-              {/* Floor Warm Glow */}
-              <div className="absolute inset-0 bg-[#D35B22]/15 rounded-full blur-2xl" />
-
-              {/* Metallic Podium Base Ring */}
-              <div className="relative w-full h-[52px] rounded-[100%] bg-gradient-to-b from-[#2B2724] via-[#1A1816] to-[#0A0908] border-2 border-[#D35B22]/70 shadow-[0_16px_32px_rgba(0,0,0,0.5)] flex items-center justify-center">
-                {/* Glowing Core Ring */}
-                <div className="w-[88%] h-[38px] rounded-[100%] border border-[#E9A174]/60 bg-gradient-to-b from-[#1C1A18] to-[#080706] flex items-center justify-center">
-                  <div className="w-[70%] h-[20px] rounded-[100%] bg-gradient-to-t from-[#D35B22]/50 to-transparent blur-[1px]" />
-                </div>
+            {/* Floating Animation Wrapper & Smooth Slide Track */}
+            <div className="relative z-10 w-full max-w-[420px] sm:max-w-[500px] lg:max-w-[560px] aspect-[4/3] flex items-center justify-center overflow-hidden animate-[float_4s_easeInOut_infinite]">
+              <div
+                className="w-full h-full flex transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
+                style={{ transform: `translateX(-${selectedIndex * 100}%)` }}
+              >
+                {COLOR_VARIANTS.map((v) => (
+                  <div key={v.id} className="w-full h-full flex-shrink-0 flex items-center justify-center p-2">
+                    <img
+                      src={v.image}
+                      alt={`UrbanEdge Pro ${v.name}`}
+                      className="w-full h-full object-contain filter drop-shadow-[0_24px_30px_rgba(0,0,0,0.22)]"
+                      draggable={false}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* 360° Control Badge */}
-            <div className="relative z-20 mt-3 flex items-center gap-1.5 px-4 py-1.5 bg-[#171412] text-[#FAF7F2] rounded-full border border-[#D35B22]/50 shadow-md">
-              <span className="text-[#E9A174] text-[11px] font-bold font-sans tracking-widest flex items-center gap-2">
-                <span>&#8592;</span> 360° <span>&#8594;</span>
-              </span>
+            {/* Realistic Turntable Platform Base from Reference Image 5 */}
+            <div className="relative -mt-16 sm:-mt-22 w-[340px] sm:w-[440px] md:w-[500px] h-[100px] flex items-center justify-center pointer-events-none">
+              {/* Floor Neon Ambient Glow */}
+              <div className="absolute inset-0 bg-[#D35B22]/20 rounded-full blur-2xl animate-pulse" />
+
+              {/* Realistic Turntable Base Image */}
+              <img
+                src="/products/exclusive/realistic_turntable_base.png"
+                alt="360 Turntable Base"
+                className="w-full h-full object-contain filter drop-shadow-[0_16px_28px_rgba(0,0,0,0.45)]"
+              />
+
+              {/* 360° Text Badge Overlay inside turntable center */}
+              <div className="absolute top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-auto">
+                <span className="text-[#FAF7F2] text-[11px] sm:text-xs font-bold font-sans tracking-widest flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-0.5 rounded-full border border-white/20 shadow-md">
+                  <span>&#8592;</span> 360° <span>&#8594;</span>
+                </span>
+              </div>
             </div>
           </div>
 
