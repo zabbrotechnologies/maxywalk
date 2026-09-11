@@ -92,7 +92,7 @@ export default function Account() {
   const activeOrder = orderList.find((o) => !['delivered', 'cancelled'].includes(o?.status));
 
   return (
-    <div className="page-enter w-full overflow-hidden">
+    <div className="page-enter w-full overflow-hidden bg-white min-h-screen">
       <div className="flex max-w-container mx-auto min-h-screen">
         {/* Desktop Sidebar */}
         <aside className="hidden md:flex flex-col w-60 flex-shrink-0 border-r border-outline-variant/30 py-8 px-4 sticky top-0 h-screen overflow-y-auto bg-white">

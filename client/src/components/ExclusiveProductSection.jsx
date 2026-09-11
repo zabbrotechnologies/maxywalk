@@ -194,6 +194,17 @@ export default function ExclusiveProductSection() {
           {/* CENTER COLUMN: Supplied Product Showcase & Realistic Turntable Base */}
           <div className="lg:col-span-6 relative flex flex-col items-center justify-center min-h-[420px] sm:min-h-[500px] lg:min-h-[560px] order-1 lg:order-2 px-2 sm:px-4">
             
+            {/* STATIC ORANGE FEATURE CIRCLE BACKDROP (Stays static while products slide left/right) */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+              <div className="relative w-[340px] sm:w-[440px] md:w-[480px] aspect-square rounded-full border border-[#D35B22]/50 shadow-[0_0_25px_rgba(211,91,34,0.12)]">
+                {/* 4 Orange Node Dots on Perimeter */}
+                <div className="absolute top-[22%] left-[9%] -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md" />
+                <div className="absolute top-[22%] right-[9%] translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md" />
+                <div className="absolute bottom-[30%] left-[6%] -translate-x-1/2 translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md" />
+                <div className="absolute bottom-[30%] right-[6%] translate-x-1/2 translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md" />
+              </div>
+            </div>
+
             {/* 4 Connected Feature Callouts (Desktop / Large Tablet Only) */}
             {/* 1. Top Left: Premium Leather */}
             <div className="hidden xl:flex absolute top-4 left-[-20px] z-20 items-start gap-2.5 max-w-[150px] text-left">
@@ -252,7 +263,7 @@ export default function ExclusiveProductSection() {
             </div>
 
             {/* Floating Animation Wrapper & Smooth Slide Track */}
-            <div className="relative z-10 w-full max-w-[420px] sm:max-w-[500px] lg:max-w-[560px] aspect-[4/3] flex items-center justify-center overflow-hidden animate-[float_4s_easeInOut_infinite]">
+            <div className="relative z-10 w-full max-w-[420px] sm:max-w-[500px] lg:max-w-[560px] aspect-[4/3] flex items-center justify-center overflow-hidden animate-float">
               <div
                 className="w-full h-full flex transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
                 style={{ transform: `translateX(-${selectedIndex * 100}%)` }}
