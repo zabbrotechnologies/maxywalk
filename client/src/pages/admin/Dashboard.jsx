@@ -150,8 +150,8 @@ export default function AdminDashboard() {
               <tbody>
                 {recentOrders.map((order) => (
                   <tr key={order.id} className="border-b border-outline-variant/10 hover:bg-surface-container-low/50">
-                    <td className="py-3 px-4 font-medium text-primary">{order.orderId}</td>
-                    <td className="py-3 px-4 text-on-surface-variant truncate max-w-[120px]">{order.userEmail}</td>
+                    <td className="py-3 px-4 font-medium text-primary">{order.order_id || order.orderId || order.id}</td>
+                    <td className="py-3 px-4 text-on-surface-variant truncate max-w-[120px]">{order.user_email || order.userEmail || order.shipping_address?.email || 'Guest'}</td>
                     <td className="py-3 px-4 text-on-surface-variant">{order.items?.length || 0}</td>
                     <td className="py-3 px-4">
                       <span className={`px-2 py-0.5 text-[10px] font-sans uppercase tracking-wider ${getStatusColor(order.status)}`}>
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
                       </span>
                     </td>
                     <td className="py-3 px-4 font-medium text-primary">{formatPrice(order.total)}</td>
-                    <td className="py-3 px-4 text-on-surface-variant">{formatDate(order.createdAt?.toDate?.() || order.createdAt)}</td>
+                    <td className="py-3 px-4 text-on-surface-variant">{formatDate(order.created_at || order.createdAt?.toDate?.() || order.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>

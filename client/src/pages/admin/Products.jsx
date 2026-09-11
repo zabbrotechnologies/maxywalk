@@ -254,7 +254,7 @@ export default function AdminProducts() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <span className="font-medium text-primary text-sm">{formatPrice(p.price)}</span>
-                    {p.originalPrice && <span className="text-xs text-on-surface-variant line-through ml-2">{formatPrice(p.originalPrice)}</span>}
+                    {(p.original_price || p.originalPrice) && <span className="text-xs text-on-surface-variant line-through ml-2">{formatPrice(p.original_price || p.originalPrice)}</span>}
                   </div>
                   <span className={`text-xs px-2 py-0.5 ${p.stock > 0 ? 'text-green-700 bg-green-50' : 'text-error bg-error-container'}`}>
                     {p.stock > 0 ? `Stock: ${p.stock}` : 'Out of Stock'}

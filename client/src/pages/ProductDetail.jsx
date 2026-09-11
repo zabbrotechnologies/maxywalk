@@ -168,10 +168,10 @@ export default function ProductDetail() {
             {/* Price */}
             <div className="flex items-baseline gap-3 p-3 bg-surface-container-low border border-outline-variant/30">
               <span className="font-display text-2xl sm:text-3xl text-primary font-bold">{formatPrice(product.price)}</span>
-              {product.originalPrice && (
+              {origPrice && (
                 <>
-                  <span className="text-base text-on-surface-variant line-through">{formatPrice(product.originalPrice)}</span>
-                  <span className="text-xs bg-secondary text-white px-2 py-0.5 font-bold uppercase tracking-wider">Save {formatPrice(product.originalPrice - product.price)}</span>
+                  <span className="text-base text-on-surface-variant line-through">{formatPrice(origPrice)}</span>
+                  <span className="text-xs bg-secondary text-white px-2 py-0.5 font-bold uppercase tracking-wider">Save {formatPrice(origPrice - product.price)}</span>
                 </>
               )}
             </div>

@@ -13,6 +13,115 @@ const SORT_OPTIONS = [
 
 const MATERIALS = ['Genuine Leather', 'Full-Grain Leather', 'Vegetable-Tanned', 'Genuine Cowhide'];
 
+function Sidebar({
+  selectedCategory,
+  setSelectedCategory,
+  setSearchParams,
+  selectedSizes,
+  toggleSize,
+  priceRange,
+  setPriceRange,
+  selectedMaterials,
+  toggleMaterial,
+}) {
+  return (
+    <div className="space-y-6">
+      {/* Category */}
+      <div className="border-b border-outline-variant/30 pb-5">
+        <h3 className="font-sans text-xs uppercase tracking-wider text-primary font-bold mb-3">
+          Category
+        </h3>
+        <ul className="space-y-2.5">
+          {CATEGORIES.map((cat) => (
+            <li key={cat.value}>
+              <button
+                onClick={() => { setSelectedCategory(cat.value); setSearchParams(cat.value !== 'all' ? { category: cat.value } : {}); }}
+                className={`flex items-center gap-2.5 w-full text-left text-xs sm:text-sm transition-colors ${
+                  selectedCategory === cat.value ? 'text-secondary font-bold' : 'text-on-surface-variant hover:text-primary'
+                }`}
+              >
+                <span className={`w-4 h-4 border flex items-center justify-center flex-shrink-0 ${selectedCategory === cat.value ? 'border-secondary bg-secondary' : 'border-outline'}`}>
+                  {selectedCategory === cat.value && (
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </span>
+                {cat.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Size */}
+      <div className="border-b border-outline-variant/30 pb-5">
+        <h3 className="font-sans text-xs uppercase tracking-wider text-primary font-bold mb-3">Shoe Size</h3>
+        <div className="grid grid-cols-4 gap-1.5">
+          {SHOE_SIZES.map((size) => (
+            <button
+              key={size}
+              onClick={() => toggleSize(size)}
+              className={`border py-1.5 text-xs font-sans transition-colors ${
+                selectedSizes.includes(size)
+                  ? 'border-primary bg-primary text-white font-bold'
+                  : 'border-outline-variant text-on-surface hover:border-primary'
+              }`}
+            >
+              {size}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Range */}
+      <div className="border-b border-outline-variant/30 pb-5">
+        <h3 className="font-sans text-xs uppercase tracking-wider text-primary font-bold mb-3">Max Price: {formatPrice(priceRange[1])}</h3>
+        <div className="space-y-2">
+          <input
+            type="range"
+            min={0}
+            max={5000}
+            step={100}
+            value={priceRange[1]}
+            onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+            className="w-full accent-secondary"
+          />
+          <div className="flex justify-between text-xs text-on-surface-variant">
+            <span>{formatPrice(0)}</span>
+            <span>{formatPrice(5000)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Material */}
+      <div>
+        <h3 className="font-sans text-xs uppercase tracking-wider text-primary font-bold mb-3">Leather Type</h3>
+        <div className="space-y-2">
+          {MATERIALS.map((mat) => (
+            <button
+              key={mat}
+              onClick={() => toggleMaterial(mat)}
+              className={`flex items-center gap-2.5 w-full text-left text-xs sm:text-sm transition-colors ${
+                selectedMaterials.includes(mat) ? 'text-secondary font-bold' : 'text-on-surface-variant hover:text-primary'
+              }`}
+            >
+              <span className={`w-4 h-4 border flex items-center justify-center flex-shrink-0 ${selectedMaterials.includes(mat) ? 'border-secondary bg-secondary' : 'border-outline'}`}>
+                {selectedMaterials.includes(mat) && (
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </span>
+              {mat}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
@@ -109,102 +218,17 @@ export default function Shop() {
     searchQuery && { label: `"${searchQuery}"`, onRemove: () => setSearchParams({}) },
   ].filter(Boolean);
 
-  const Sidebar = () => (
-    <div className="space-y-6">
-      {/* Category */}
-      <div className="border-b border-outline-variant/30 pb-5">
-        <h3 className="font-sans text-xs uppercase tracking-wider text-primary font-bold mb-3">
-          Category
-        </h3>
-        <ul className="space-y-2.5">
-          {CATEGORIES.map((cat) => (
-            <li key={cat.value}>
-              <button
-                onClick={() => { setSelectedCategory(cat.value); setSearchParams(cat.value !== 'all' ? { category: cat.value } : {}); }}
-                className={`flex items-center gap-2.5 w-full text-left text-xs sm:text-sm transition-colors ${
-                  selectedCategory === cat.value ? 'text-secondary font-bold' : 'text-on-surface-variant hover:text-primary'
-                }`}
-              >
-                <span className={`w-4 h-4 border flex items-center justify-center flex-shrink-0 ${selectedCategory === cat.value ? 'border-secondary bg-secondary' : 'border-outline'}`}>
-                  {selectedCategory === cat.value && (
-                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </span>
-                {cat.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Size */}
-      <div className="border-b border-outline-variant/30 pb-5">
-        <h3 className="font-sans text-xs uppercase tracking-wider text-primary font-bold mb-3">Shoe Size</h3>
-        <div className="grid grid-cols-4 gap-1.5">
-          {SHOE_SIZES.map((size) => (
-            <button
-              key={size}
-              onClick={() => toggleSize(size)}
-              className={`border py-1.5 text-xs font-sans transition-colors ${
-                selectedSizes.includes(size)
-                  ? 'border-primary bg-primary text-white font-bold'
-                  : 'border-outline-variant text-on-surface hover:border-primary'
-              }`}
-            >
-              {size}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Price Range */}
-      <div className="border-b border-outline-variant/30 pb-5">
-        <h3 className="font-sans text-xs uppercase tracking-wider text-primary font-bold mb-3">Max Price: {formatPrice(priceRange[1])}</h3>
-        <div className="space-y-2">
-          <input
-            type="range"
-            min={0}
-            max={5000}
-            step={100}
-            value={priceRange[1]}
-            onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-            className="w-full accent-secondary"
-          />
-          <div className="flex justify-between text-xs text-on-surface-variant">
-            <span>{formatPrice(0)}</span>
-            <span>{formatPrice(5000)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Material */}
-      <div>
-        <h3 className="font-sans text-xs uppercase tracking-wider text-primary font-bold mb-3">Leather Type</h3>
-        <div className="space-y-2">
-          {MATERIALS.map((mat) => (
-            <button
-              key={mat}
-              onClick={() => toggleMaterial(mat)}
-              className={`flex items-center gap-2.5 w-full text-left text-xs sm:text-sm transition-colors ${
-                selectedMaterials.includes(mat) ? 'text-secondary font-bold' : 'text-on-surface-variant hover:text-primary'
-              }`}
-            >
-              <span className={`w-4 h-4 border flex items-center justify-center flex-shrink-0 ${selectedMaterials.includes(mat) ? 'border-secondary bg-secondary' : 'border-outline'}`}>
-                {selectedMaterials.includes(mat) && (
-                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </span>
-              {mat}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+  const sidebarProps = {
+    selectedCategory,
+    setSelectedCategory,
+    setSearchParams,
+    selectedSizes,
+    toggleSize,
+    priceRange,
+    setPriceRange,
+    selectedMaterials,
+    toggleMaterial,
+  };
 
   return (
     <div className="page-enter min-h-screen w-full overflow-hidden">
@@ -276,7 +300,7 @@ export default function Shop() {
           {/* Desktop Sidebar */}
           <aside className="hidden md:block w-56 flex-shrink-0">
             <div className="sticky top-24 bg-white p-5 border border-outline-variant/30">
-              <Sidebar />
+              <Sidebar {...sidebarProps} />
             </div>
           </aside>
 
@@ -322,7 +346,7 @@ export default function Shop() {
               </div>
 
               <div className="flex-1">
-                <Sidebar />
+                <Sidebar {...sidebarProps} />
               </div>
 
               <div className="pt-4 mt-4 border-t border-outline-variant/30 flex gap-2">
