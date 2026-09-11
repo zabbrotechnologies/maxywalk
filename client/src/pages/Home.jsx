@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { getProducts } from '../lib/api.js';
 import ProductCard from '../components/ProductCard.jsx';
 import HeroSection from '../components/HeroSection.jsx';
-import ExclusiveProductSection from '../components/ExclusiveProductSection.jsx';
 
 // Intersection Observer hook for fade-in animations
 function useFadeIn() {
@@ -76,9 +75,6 @@ export default function Home() {
     <div className="page-enter w-full overflow-hidden">
       {/* ── Hero ────────────────────────────────────────── */}
       <HeroSection />
-
-      {/* ── Our Exclusive Product ──────────────────────────── */}
-      <ExclusiveProductSection />
 
       {/* ── Brand Stats Bar ────────────────────────────────── */}
       <div className="bg-primary text-white py-5 px-4">
