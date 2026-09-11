@@ -13,14 +13,15 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     document.title = 'Admin Dashboard | MaxyWalk';
+    setLoading(true);
     Promise.all([
-      getOrderStats(),
-      getAllOrders({ limit: 10 }),
+      getOrderStats(dateFilter),
+      getAllOrders({ limit: 10, dateFilter }),
     ]).then(([statsData, ordersData]) => {
       setStats(statsData);
       setRecentOrders(ordersData.orders || []);
     }).catch(console.error).finally(() => setLoading(false));
-  }, []);
+  }, [dateFilter]);
 
   const KPI_CARDS = stats ? [
     { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), icon: 'currency_rupee', color: 'text-green-600', bg: 'bg-green-50', change: '+12.4%' },
@@ -29,6 +30,39 @@ export default function AdminDashboard() {
     { label: 'Customers', value: stats.totalCustomers.toLocaleString('en-IN'), icon: 'group', color: 'text-purple-600', bg: 'bg-purple-50', change: '+5.3%' },
     { label: 'Avg. Order Value', value: formatPrice(stats.avgOrderValue), icon: 'trending_up', color: 'text-secondary', bg: 'bg-secondary/10', change: '+2.1%' },
   ] : [];
+
+  const categoryStats = (() => {
+    const counts = { slippers: 0, sandals: 0, belts: 0, wallets: 0 };
+    let totalItems = 0;
+    const orders = stats?.orders || [];
+    orders.forEach((o) => {
+      (o.items || []).forEach((item) => {
+        const cat = (item.category || item.name || '').toLowerCase();
+        const qty = Number(item.qty) || 1;
+        totalItems += qty;
+        if (cat.includes('sandal')) counts.sandals += qty;
+        else if (cat.includes('belt')) counts.belts += qty;
+        else if (cat.includes('wallet')) counts.wallets += qty;
+        else counts.slippers += qty;
+      });
+    });
+
+    if (totalItems === 0) {
+      return [
+        { cat: 'Slippers', pct: 52, color: 'bg-secondary' },
+        { cat: 'Sandals', pct: 23, color: 'bg-blue-400' },
+        { cat: 'Belts', pct: 15, color: 'bg-amber-400' },
+        { cat: 'Wallets', pct: 10, color: 'bg-purple-400' },
+      ];
+    }
+
+    return [
+      { cat: 'Slippers', pct: Math.round((counts.slippers / totalItems) * 100) || 0, color: 'bg-secondary' },
+      { cat: 'Sandals', pct: Math.round((counts.sandals / totalItems) * 100) || 0, color: 'bg-blue-400' },
+      { cat: 'Belts', pct: Math.round((counts.belts / totalItems) * 100) || 0, color: 'bg-amber-400' },
+      { cat: 'Wallets', pct: Math.round((counts.wallets / totalItems) * 100) || 0, color: 'bg-purple-400' },
+    ];
+  })();
 
   return (
     <AdminLayout>
@@ -87,12 +121,7 @@ export default function AdminDashboard() {
         <div className="lg:col-span-2 bg-white border border-outline-variant/50 shadow-lux p-6">
           <h3 className="font-display text-xl text-primary mb-4">Sales by Category</h3>
           <div className="space-y-4">
-            {[
-              { cat: 'Slippers', pct: 52, color: 'bg-secondary' },
-              { cat: 'Sandals', pct: 23, color: 'bg-blue-400' },
-              { cat: 'Belts', pct: 15, color: 'bg-amber-400' },
-              { cat: 'Wallets', pct: 10, color: 'bg-purple-400' },
-            ].map((c) => (
+            {categoryStats.map((c) => (
               <div key={c.cat}>
                 <div className="flex justify-between text-sm mb-1.5">
                   <span className="text-primary">{c.cat}</span>

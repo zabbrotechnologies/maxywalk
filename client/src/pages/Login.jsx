@@ -18,9 +18,9 @@ export default function Login() {
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
-    const isAdminCredentials = email.toLowerCase().includes('admin') || password === 'admin123';
+    const isAdminCredentials = email.toLowerCase().trim() === 'admin@maxywalk.com' && password === 'admin123';
 
-    if (isAdminCredentials && password === 'admin123') {
+    if (isAdminCredentials) {
       loginAsDemoAdmin();
       toast.success('Welcome back, Admin!');
       navigate('/admin', { replace: true });

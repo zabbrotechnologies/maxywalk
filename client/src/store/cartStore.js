@@ -63,11 +63,13 @@ const useCartStore = create(
         const currentCarts = get().userCarts || {};
         const currentCart = currentCarts[key] || [];
         const existing = currentCart.find((i) => i.cartKey === cartKey);
+        const addQty = Math.max(1, Math.min(10, parseInt(qty) || 1));
+        const maxStock = typeof product.stock === 'number' && product.stock > 0 ? product.stock : 10;
 
         let updatedCart;
         if (existing) {
           updatedCart = currentCart.map((i) =>
-            i.cartKey === cartKey ? { ...i, qty: i.qty + qty } : i
+            i.cartKey === cartKey ? { ...i, qty: Math.min(maxStock, i.qty + addQty) } : i
           );
         } else {
           updatedCart = [
@@ -80,7 +82,7 @@ const useCartStore = create(
               image: product.images?.[0] || product.image || '',
               selectedSize: size,
               selectedColor: color,
-              qty: Math.max(1, qty),
+              qty: Math.min(maxStock, addQty),
             },
           ];
         }
@@ -114,7 +116,8 @@ const useCartStore = create(
 
       // Update quantity
       updateQty: (cartKey, qty) => {
-        if (qty < 1) {
+        const parsed = parseInt(qty);
+        if (isNaN(parsed) || parsed < 1) {
           get().removeItem(cartKey);
           return;
         }
@@ -122,7 +125,7 @@ const useCartStore = create(
         const currentCarts = get().userCarts || {};
         const currentCart = currentCarts[key] || [];
         const updatedCart = currentCart.map((i) =>
-          i.cartKey === cartKey ? { ...i, qty } : i
+          i.cartKey === cartKey ? { ...i, qty: Math.min(10, parsed) } : i
         );
 
         set({

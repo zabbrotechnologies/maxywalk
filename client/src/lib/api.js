@@ -23,8 +23,35 @@ function setCached(key, data) {
   cache.set(key, { data, time: Date.now() });
 }
 
+function getDateCutoff(filterName) {
+  if (!filterName || filterName === 'all' || filterName === 'All') return null;
+  const now = new Date();
+  if (filterName === 'Today') {
+    now.setHours(0, 0, 0, 0);
+    return now.toISOString();
+  }
+  if (filterName === '7 Days') {
+    now.setDate(now.getDate() - 7);
+    return now.toISOString();
+  }
+  if (filterName === '30 Days') {
+    now.setDate(now.getDate() - 30);
+    return now.toISOString();
+  }
+  if (filterName === '1 Year') {
+    now.setFullYear(now.getFullYear() - 1);
+    return now.toISOString();
+  }
+  return null;
+}
+
 export function clearApiCache() {
   cache.clear();
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('maxywalk-cache-sync', Date.now().toString());
+    }
+  } catch {}
 }
 
 // -----------------------------------------------------------------
@@ -116,6 +143,7 @@ export const deleteProduct = async (id) => {
 };
 
 export const placeOrder = async (data) => {
+  clearApiCache();
   const orderId = `MW-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
   const newOrder = {
     id: `order-${Date.now()}`,
@@ -134,6 +162,25 @@ export const placeOrder = async (data) => {
     console.error('Supabase placeOrder error:', error);
     throw error;
   }
+
+  // Silently decrement stock for ordered items
+  if (Array.isArray(data.items) && data.items.length > 0) {
+    Promise.all(data.items.map(async (item) => {
+      try {
+        const prodId = item.productId || item.id;
+        const qty = Number(item.qty) || 1;
+        if (!prodId) return;
+        const { data: prod } = await supabase.from('products').select('stock').eq('id', prodId).single();
+        if (prod && typeof prod.stock === 'number') {
+          const newStock = Math.max(0, prod.stock - qty);
+          await supabase.from('products').update({ stock: newStock }).eq('id', prodId);
+        }
+      } catch (err) {
+        console.warn('Stock decrement notice:', err);
+      }
+    })).catch((e) => console.warn('Stock batch notice:', e));
+  }
+
   return insertedOrder;
 };
 
@@ -152,7 +199,15 @@ export const getMyOrders = async (user = null) => {
 };
 
 export const getAllOrders = async (params = {}) => {
-  const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+  let query = supabase.from('orders').select('*').order('created_at', { ascending: false });
+  const cutoff = getDateCutoff(params.dateFilter);
+  if (cutoff) {
+    query = query.gte('created_at', cutoff);
+  }
+  if (params.limit && typeof params.limit === 'number') {
+    query = query.limit(params.limit);
+  }
+  const { data, error } = await query;
   if (error) {
     console.error('Supabase getAllOrders error:', error);
     return { orders: [] };
@@ -180,9 +235,14 @@ export const getAllCustomers = async () => {
   return { customers: data };
 };
 
-export const getOrderStats = async () => {
+export const getOrderStats = async (dateRange = null) => {
   try {
-    const { data: orders, error: ordersError } = await supabase.from('orders').select('total, status');
+    let ordersQuery = supabase.from('orders').select('total, status, items, created_at');
+    const cutoff = getDateCutoff(dateRange);
+    if (cutoff) {
+      ordersQuery = ordersQuery.gte('created_at', cutoff);
+    }
+    const { data: orders, error: ordersError } = await ordersQuery;
     const { count: totalCust, error: custError } = await supabase.from('customers').select('*', { count: 'exact', head: true });
     
     if (ordersError || custError) {
@@ -201,10 +261,11 @@ export const getOrderStats = async () => {
       activeOrders: activeCount,
       totalCustomers: totalCust || 0,
       avgOrderValue: avgVal,
+      orders: orderList,
     };
   } catch (err) {
     console.error('getOrderStats error:', err);
-    return { totalRevenue: 0, totalOrders: 0, activeOrders: 0, totalCustomers: 0, avgOrderValue: 0 };
+    return { totalRevenue: 0, totalOrders: 0, activeOrders: 0, totalCustomers: 0, avgOrderValue: 0, orders: [] };
   }
 };
 
