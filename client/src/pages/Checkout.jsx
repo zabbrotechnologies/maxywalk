@@ -122,7 +122,7 @@ export default function Checkout() {
           <p className="text-xs sm:text-sm text-on-surface-variant mb-1">Thank you for ordering with MaxyWalk.</p>
           <div className="my-4 p-4 bg-surface-container-low rounded-2xl border border-outline-variant/30 text-center">
             <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Your Order ID</p>
-            <p className="font-display text-xl font-bold text-secondary my-1">{orderPlaced.orderId}</p>
+            <p className="font-display text-xl font-bold text-secondary my-1">{orderPlaced.order_id || orderPlaced.orderId}</p>
             <p className="text-[11px] text-green-800 font-bold bg-green-100/70 inline-block px-2.5 py-0.5 rounded-full">Payment: Cash on Delivery (₹{total})</p>
           </div>
           <p className="text-xs text-on-surface-variant mb-6 leading-relaxed">

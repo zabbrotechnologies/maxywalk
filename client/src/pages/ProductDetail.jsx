@@ -55,8 +55,9 @@ export default function ProductDetail() {
     toast.success('Added to your shopping bag!', { duration: 2000 });
   };
 
-  const discount = product?.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  const origPrice = product?.originalPrice || product?.original_price;
+  const discount = origPrice
+    ? Math.round(((origPrice - product.price) / origPrice) * 100)
     : 0;
 
   if (loading) {

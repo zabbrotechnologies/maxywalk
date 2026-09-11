@@ -126,7 +126,7 @@ export default function ProductCard({ product }) {
                 </span>
               ))}
             </div>
-            <span className="text-[10px] text-on-surface-variant">({product.reviewCount || 0})</span>
+            <span className="text-[10px] text-on-surface-variant">({product.reviewCount || product.review_count || 0})</span>
           </div>
         )}
 
@@ -136,9 +136,9 @@ export default function ProductCard({ product }) {
             <span className="font-sans text-sm sm:text-base font-bold text-primary block">
               {formatPrice(product.price)}
             </span>
-            {product.originalPrice && (
+            {(product.originalPrice || product.original_price) && (
               <span className="text-[11px] text-on-surface-variant line-through block">
-                {formatPrice(product.originalPrice)}
+                {formatPrice(product.originalPrice || product.original_price)}
               </span>
             )}
           </div>

@@ -47,6 +47,7 @@ export const getStatusColor = (status) => {
     placed: 'bg-blue-50 text-blue-700',
     confirmed: 'bg-indigo-50 text-indigo-700',
     crafting: 'bg-amber-50 text-amber-700',
+    dispatched: 'bg-purple-50 text-purple-700',
     shipped: 'bg-purple-50 text-purple-700',
     delivered: 'bg-green-50 text-green-700',
     cancelled: 'bg-red-50 text-red-700',
@@ -57,9 +58,12 @@ export const getStatusColor = (status) => {
 /**
  * Order status steps for timeline
  */
-export const ORDER_STEPS = ['placed', 'confirmed', 'crafting', 'shipped', 'delivered'];
+export const ORDER_STEPS = ['placed', 'confirmed', 'crafting', 'dispatched', 'delivered'];
 
-export const getStepIndex = (status) => ORDER_STEPS.indexOf(status);
+export const getStepIndex = (status) => {
+  if (status === 'shipped' || status === 'dispatched') return 3;
+  return ORDER_STEPS.indexOf(status);
+};
 
 /**
  * Indian states list

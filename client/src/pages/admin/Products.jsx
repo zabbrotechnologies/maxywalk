@@ -40,7 +40,7 @@ export default function AdminProducts() {
       description: p.description || '',
       category: p.category || 'slippers',
       price: p.price || '',
-      originalPrice: p.originalPrice || '',
+      originalPrice: p.original_price || p.originalPrice || '',
       sizes: p.sizes || [],
       colors: p.colors ? p.colors.join(', ') : '',
       images: p.images?.length ? p.images : [''],

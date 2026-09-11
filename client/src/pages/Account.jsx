@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
 import { getMyOrders, updateUserProfile, getProducts } from '../lib/api.js';
-import { formatPrice, formatDate, getStatusColor, ORDER_STEPS } from '../lib/utils.js';
+import { formatPrice, formatDate, getStatusColor, ORDER_STEPS, getStepIndex } from '../lib/utils.js';
 import toast from 'react-hot-toast';
 
 const NAV_ITEMS = [
@@ -15,12 +15,18 @@ const NAV_ITEMS = [
 ];
 
 export default function Account() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [orders, setOrders] = useState([]);
   const [wishlistProducts, setWishlistProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const { user, userProfile, setUserProfile, logout, isAdmin: storeIsAdmin } = useAuthStore();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
   const isAdmin = storeIsAdmin || (user?.email && user.email.toLowerCase().includes('admin'));
   const getWishlist = useWishlistStore((s) => s.getWishlist);
   const wishlistIds = getWishlist(user);
@@ -94,7 +100,7 @@ export default function Account() {
             ))}
           </nav>
           <div className="mt-auto pt-4 border-t border-outline-variant/30 px-3">
-            <button onClick={logout} className="flex items-center gap-2 text-xs text-error font-medium hover:text-error/80 transition-colors">
+            <button onClick={handleLogout} className="flex items-center gap-2 text-xs text-error font-medium hover:text-error/80 transition-colors">
               <span className="material-symbols-outlined text-base">logout</span> Sign Out
             </button>
           </div>
@@ -168,7 +174,7 @@ export default function Account() {
                   <div className="relative pt-2 pb-2">
                     <div className="flex justify-between relative z-10">
                       {ORDER_STEPS.map((step, i) => {
-                        const currentIdx = ORDER_STEPS.indexOf(activeOrder.status);
+                        const currentIdx = getStepIndex(activeOrder.status);
                         const done = i <= currentIdx;
                         return (
                           <div key={step} className="flex flex-col items-center text-center gap-1 flex-1">

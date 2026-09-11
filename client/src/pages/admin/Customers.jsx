@@ -93,7 +93,7 @@ export default function AdminCustomers() {
                 <div className="text-sm text-on-surface-variant truncate">{customer.email}</div>
                 <div className="text-sm text-primary font-medium">{customer.orderCount}</div>
                 <div className="text-sm font-medium text-primary">{formatPrice(customer.totalSpend)}</div>
-                <div className="text-xs text-on-surface-variant">{formatDate(customer.createdAt?.toDate?.() || customer.createdAt)}</div>
+                <div className="text-xs text-on-surface-variant">{formatDate(customer.created_at || customer.createdAt?.toDate?.() || customer.createdAt)}</div>
               </div>
             ))}
           </>

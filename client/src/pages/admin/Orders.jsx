@@ -32,8 +32,8 @@ export default function AdminOrders() {
     setUpdating(targetId);
     try {
       await updateOrderStatus(targetId, newStatus);
-      setOrders((prev) => prev.map((o) => (o.id === targetId || o.orderId === orderId ? { ...o, status: newStatus } : o)));
-      toast.success(`Order ${orderId} status set to: ${newStatus}`);
+      setOrders((prev) => prev.map((o) => (o.id === targetId || o.order_id === targetId || o.orderId === targetId ? { ...o, status: newStatus } : o)));
+      toast.success(`Order ${orderId || targetId} status set to: ${newStatus}`);
     } catch {
       toast.error('Failed to update status.');
     } finally {
@@ -223,7 +223,7 @@ export default function AdminOrders() {
                       {STATUS_OPTIONS.map((s) => (
                         <button
                           key={s}
-                          onClick={() => handleStatusUpdate(order.orderId, order.id, s)}
+                          onClick={() => handleStatusUpdate(order.order_id || order.orderId || order.id, order.id, s)}
                           disabled={order.status === s || updating === order.id}
                           className={`px-3 py-1.5 text-xs font-sans uppercase tracking-wider font-bold rounded-full transition-colors ${
                             order.status === s
