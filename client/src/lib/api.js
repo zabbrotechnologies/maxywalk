@@ -274,22 +274,51 @@ export const getUserProfile = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (user?.email) {
-      const { data } = await supabase.from('customers').select('*').eq('email', user.email.toLowerCase().trim()).single();
-      if (data) return data;
+      const email = user.email.toLowerCase().trim();
+      const { data } = await supabase.from('customers').select('*').eq('email', email).maybeSingle();
+      if (data) {
+        return {
+          id: data.id,
+          uid: data.uid || user.id,
+          name: data.name || user.user_metadata?.full_name || user.user_metadata?.name || email.split('@')[0],
+          email: email,
+          phone: data.phone || '',
+          role: email.includes('admin') ? 'admin' : 'customer'
+        };
+      }
     }
   } catch (err) {
     console.warn('getUserProfile error:', err);
   }
-  return { name: 'Customer' };
+  return null;
 };
 
 export const updateUserProfile = async (data) => {
-  if (data.email) {
-    const { data: updated, error } = await supabase.from('customers').upsert([
-      { id: `cust-${Date.now()}`, uid: data.uid || `u-${Date.now()}`, name: data.name, email: data.email, phone: data.phone, created_at: new Date().toISOString() }
-    ], { onConflict: 'email' }).select().single();
-    
-    if (!error) return updated;
+  if (data?.email) {
+    const email = data.email.toLowerCase().trim();
+    try {
+      const { data: existing } = await supabase.from('customers').select('*').eq('email', email).maybeSingle();
+
+      const payload = {
+        id: existing?.id || data.id || `cust-${Date.now()}`,
+        uid: data.uid || existing?.uid || `u-${Date.now()}`,
+        name: data.name || existing?.name || 'Customer',
+        email: email,
+        phone: data.phone !== undefined ? data.phone : (existing?.phone || ''),
+        created_at: existing?.created_at || new Date().toISOString()
+      };
+
+      const { data: updated, error } = await supabase.from('customers').upsert([payload], { onConflict: 'email' }).select().single();
+      
+      if (!error && updated) {
+        return {
+          ...updated,
+          role: email.includes('admin') ? 'admin' : 'customer'
+        };
+      }
+    } catch (err) {
+      console.warn('updateUserProfile error:', err);
+    }
   }
   return data;
 };

@@ -11,14 +11,25 @@ const syncUserStores = async (user) => {
     useWishlistStore.getState().syncAccountWishlist(user);
 
     if (user && user.email && !user.email.toLowerCase().includes('admin')) {
-      // Create or update customer in Supabase customers table
-      const displayName = user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0];
-      await updateUserProfile({
+      const email = user.email.toLowerCase().trim();
+      const { data: existing } = await supabase.from('customers').select('*').eq('email', email).maybeSingle();
+      
+      const displayName = user.user_metadata?.full_name || user.user_metadata?.name || existing?.name || user.email.split('@')[0];
+      const phone = existing?.phone || user.user_metadata?.phone || '';
+
+      const updated = await updateUserProfile({
         uid: user.id,
         name: displayName,
-        email: user.email.toLowerCase().trim(),
-        phone: user.user_metadata?.phone || ''
+        email: email,
+        phone: phone
       });
+
+      if (updated) {
+        useAuthStore.getState().setUserProfile({
+          ...updated,
+          role: email.includes('admin') ? 'admin' : 'customer'
+        });
+      }
     }
   } catch (e) {
     console.error('Account sync error:', e);
@@ -63,11 +74,24 @@ const useAuthStore = create(
       handleAuthChange: async (supabaseUser) => {
         try {
           const isAdmin = supabaseUser.email.toLowerCase().includes('admin');
-          const displayName = supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'Customer';
+          const email = supabaseUser.email.toLowerCase().trim();
+
+          const { data: existingProfile } = await supabase.from('customers').select('*').eq('email', email).maybeSingle();
+
+          const displayName = existingProfile?.name || supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'Customer';
+          const phone = existingProfile?.phone || supabaseUser.user_metadata?.phone || '';
+
+          const profile = {
+            id: existingProfile?.id,
+            name: displayName,
+            email: email,
+            phone: phone,
+            role: isAdmin ? 'admin' : 'customer'
+          };
           
           set({
             user: supabaseUser,
-            userProfile: { name: displayName, role: isAdmin ? 'admin' : 'customer' },
+            userProfile: profile,
             isAdmin: isAdmin,
             isLoading: false,
           });

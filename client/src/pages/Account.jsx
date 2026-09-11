@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
-import { getMyOrders, updateUserProfile, getProducts } from '../lib/api.js';
+import { getMyOrders, updateUserProfile, getUserProfile, getProducts } from '../lib/api.js';
 import { formatPrice, formatDate, getStatusColor, ORDER_STEPS, getStepIndex } from '../lib/utils.js';
 import toast from 'react-hot-toast';
 
@@ -38,9 +38,21 @@ export default function Account() {
   useEffect(() => { document.title = 'My Account | MAXYWALK'; }, []);
 
   useEffect(() => {
+    if (user?.email) {
+      getUserProfile().then((p) => {
+        if (p) {
+          setUserProfile(p);
+          if (p.name) setEditName(p.name);
+          if (p.phone !== undefined) setEditPhone(p.phone);
+        }
+      });
+    }
+  }, [user?.email]);
+
+  useEffect(() => {
     if (userProfile?.name) setEditName(userProfile.name);
     else if (user?.user_metadata?.name) setEditName(user.user_metadata.name);
-    if (userProfile?.phone) setEditPhone(userProfile.phone);
+    if (userProfile?.phone !== undefined) setEditPhone(userProfile.phone);
   }, [userProfile, user]);
 
   useEffect(() => {
