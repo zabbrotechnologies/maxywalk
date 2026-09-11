@@ -12,11 +12,12 @@ const syncUserStores = async (user) => {
 
     if (user && user.email && !user.email.toLowerCase().includes('admin')) {
       // Create or update customer in Supabase customers table
+      const displayName = user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0];
       await updateUserProfile({
         uid: user.id,
-        name: user.user_metadata?.name || user.email.split('@')[0],
+        name: displayName,
         email: user.email.toLowerCase().trim(),
-        phone: user.user_metadata?.phone || '+91 98765 43210'
+        phone: user.user_metadata?.phone || ''
       });
     }
   } catch (e) {
@@ -61,12 +62,12 @@ const useAuthStore = create(
 
       handleAuthChange: async (supabaseUser) => {
         try {
-          // Check if admin by metadata or email
           const isAdmin = supabaseUser.email.toLowerCase().includes('admin');
+          const displayName = supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'Customer';
           
           set({
             user: supabaseUser,
-            userProfile: { name: supabaseUser.user_metadata?.name || 'Customer', role: isAdmin ? 'admin' : 'customer' },
+            userProfile: { name: displayName, role: isAdmin ? 'admin' : 'customer' },
             isAdmin: isAdmin,
             isLoading: false,
           });
