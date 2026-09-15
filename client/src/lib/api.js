@@ -58,6 +58,53 @@ export function clearApiCache() {
 // SUPABASE MIGRATION: DATA LAYER
 // -----------------------------------------------------------------
 
+export const DEFAULT_EXCLUSIVE_PRODUCT = {
+  id: 'urbanedge-pro',
+  name: 'UrbanEdge Pro',
+  tagline: 'STEP INTO EXCLUSIVITY',
+  description: 'A refined blend of style, comfort and durability — made for those who choose more.',
+  price: 4999,
+  original_price: 6499,
+  category: 'sandals',
+  stock: 8,
+  material: 'Full-Grain Leather',
+  badge: 'LIMITED EDITION',
+  featured: true,
+  is_exclusive: true,
+  isExclusive: true,
+  images: [
+    '/products/exclusive/black.png',
+    '/products/exclusive/maroon.png',
+    '/products/exclusive/sandal_wood.png',
+    '/products/exclusive/lightblue.png',
+    '/products/exclusive/gray.png',
+    '/products/exclusive/olivegreen.png',
+    '/products/exclusive/rose.png',
+    '/products/exclusive/lightpink.png',
+  ],
+  sizes: ['6', '7', '8', '9', '10', '11'],
+  colors: [
+    'Black',
+    'Maroon',
+    'Sandal / Wood',
+    'Light Blue',
+    'Grey',
+    'Olive Green',
+    'Rose',
+    'Light Pink'
+  ],
+  variants: [
+    { id: 'black', name: 'Black', image: '/products/exclusive/black.png', colorHex: '#1F1E1D' },
+    { id: 'maroon', name: 'Maroon', image: '/products/exclusive/maroon.png', colorHex: '#5A2328' },
+    { id: 'sandal-wood', name: 'Sandal / Wood', image: '/products/exclusive/sandal_wood.png', colorHex: '#C28B53' },
+    { id: 'lightblue', name: 'Light Blue', image: '/products/exclusive/lightblue.png', colorHex: '#88A0B5' },
+    { id: 'grey', name: 'Grey', image: '/products/exclusive/gray.png', colorHex: '#6E6C6B' },
+    { id: 'olivegreen', name: 'Olive Green', image: '/products/exclusive/olivegreen.png', colorHex: '#535D4A' },
+    { id: 'rose', name: 'Rose', image: '/products/exclusive/rose.png', colorHex: '#B85B64' },
+    { id: 'lightpink', name: 'Light Pink', image: '/products/exclusive/lightpink.png', colorHex: '#D6A29C' }
+  ]
+};
+
 export const getProducts = async (params = {}) => {
   const cacheKey = `products_${JSON.stringify(params)}`;
   const cached = getCached(cacheKey);
@@ -71,15 +118,30 @@ export const getProducts = async (params = {}) => {
   if (params.featured === true || params.featured === 'true') {
     query = query.eq('featured', true);
   }
+  if (params.exclusive === true || params.exclusive === 'true') {
+    query = query.eq('is_exclusive', true);
+  }
 
   const { data, error } = await query;
   
+  let list = Array.isArray(data) ? [...data] : [];
+
   if (error) {
-    console.error('Supabase getProducts error:', error);
-    return { products: [], total: 0 };
+    console.warn('Supabase getProducts error/fallback:', error);
   }
 
-  let list = [...data];
+  // Ensure urbanedge-pro exclusive product exists in list if not returned by database
+  const hasExclusive = list.some((p) => p.id === 'urbanedge-pro' || p.is_exclusive || p.isExclusive);
+  if (!hasExclusive) {
+    if (!params.category || params.category === 'all' || params.category === 'sandals') {
+      list.unshift(DEFAULT_EXCLUSIVE_PRODUCT);
+    }
+  }
+
+  if (params.exclusive === true || params.exclusive === 'true') {
+    list = list.filter((p) => p.is_exclusive || p.isExclusive || p.id === 'urbanedge-pro');
+  }
+
   if (params.sort === 'price_asc') {
     list.sort((a, b) => a.price - b.price);
   } else if (params.sort === 'price_desc') {
@@ -92,6 +154,12 @@ export const getProducts = async (params = {}) => {
 };
 
 export const getProduct = async (id) => {
+  if (id === 'urbanedge-pro') {
+    const { data } = await supabase.from('products').select('*').eq('id', id).maybeSingle();
+    if (data) return { ...DEFAULT_EXCLUSIVE_PRODUCT, ...data };
+    return DEFAULT_EXCLUSIVE_PRODUCT;
+  }
+
   const cacheKey = `product_${id}`;
   const cached = getCached(cacheKey);
   if (cached) return cached;

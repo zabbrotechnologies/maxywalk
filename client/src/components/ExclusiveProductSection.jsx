@@ -1,132 +1,67 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useCartStore from '../store/cartStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
 import useAuthStore from '../store/authStore.js';
+import { getProduct, DEFAULT_EXCLUSIVE_PRODUCT } from '../lib/api.js';
 import toast from 'react-hot-toast';
 
-const COLOR_VARIANTS = [
-  {
-    id: 'black',
-    name: 'Black',
-    label: 'Black',
-    image: '/products/exclusive/black.png',
-    colorHex: '#1F1E1D',
-  },
-  {
-    id: 'maroon',
-    name: 'Maroon',
-    label: 'Maroon',
-    image: '/products/exclusive/maroon.png',
-    colorHex: '#5A2328',
-  },
-  {
-    id: 'sandal-wood',
-    name: 'Sandal / Wood',
-    label: 'Sandal / Wood',
-    image: '/products/exclusive/sandal_wood.png',
-    colorHex: '#C28B53',
-  },
-  {
-    id: 'lightblue',
-    name: 'Light Blue',
-    label: 'Light Blue',
-    image: '/products/exclusive/lightblue.png',
-    colorHex: '#88A0B5',
-  },
-  {
-    id: 'grey',
-    name: 'Grey',
-    label: 'Grey',
-    image: '/products/exclusive/gray.png',
-    colorHex: '#6E6C6B',
-  },
-  {
-    id: 'olivegreen',
-    name: 'Olive Green',
-    label: 'Olive Green',
-    image: '/products/exclusive/olivegreen.png',
-    colorHex: '#535D4A',
-  },
-  {
-    id: 'rose',
-    name: 'Rose',
-    label: 'Rose',
-    image: '/products/exclusive/rose.png',
-    colorHex: '#B85B64',
-  },
-  {
-    id: 'lightpink',
-    name: 'Light Pink',
-    label: 'Light Pink',
-    image: '/products/exclusive/lightpink.png',
-    colorHex: '#D6A29C',
-  },
-];
-
-const DETAIL_CARDS = [
-  {
-    title: 'Premium Finish',
-    desc: 'Rich textures. Lasting impression.',
-    image: '/products/exclusive/detail_premium_finish.jpg',
-  },
-  {
-    title: 'Grip & Stability',
-    desc: 'Engineered for every step.',
-    image: '/products/exclusive/detail_grip_stability.jpg',
-  },
-  {
-    title: 'All-Day Comfort',
-    desc: "Cushioned for what's next.",
-    image: '/products/exclusive/detail_allday_comfort.jpg',
-  },
-  {
-    title: 'Signature Detail',
-    desc: 'Subtle branding. Bold identity.',
-    image: '/products/exclusive/detail_signature_detail.jpg',
-  },
-];
-
 export default function ExclusiveProductSection() {
+  const [product, setProduct] = useState(DEFAULT_EXCLUSIVE_PRODUCT);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const { addItem, openCart } = useCartStore();
   const { user } = useAuthStore();
-
-  const selectedVariant = COLOR_VARIANTS[selectedIndex];
-  const isWishlisted = useWishlistStore((s) => s.isWishlisted('urbanedge-pro', user));
+  
+  const isWishlisted = useWishlistStore((s) => s.isWishlisted(product.id, user));
   const toggleWishlist = useWishlistStore((s) => s.toggle);
 
+  useEffect(() => {
+    // Fetch live product data from database/catalog
+    getProduct('urbanedge-pro').then((data) => {
+      if (data) setProduct(data);
+    }).catch(() => setProduct(DEFAULT_EXCLUSIVE_PRODUCT));
+  }, []);
+
+  const variants = product.variants && product.variants.length > 0
+    ? product.variants
+    : DEFAULT_EXCLUSIVE_PRODUCT.variants;
+
+  const selectedVariant = variants[selectedIndex] || variants[0];
+
   const handleAddToCart = () => {
-    const productData = {
-      id: 'urbanedge-pro',
-      name: `UrbanEdge Pro (${selectedVariant.name})`,
-      price: 4999,
-      original_price: 6499,
-      image: selectedVariant.image,
-      sizes: ['6', '7', '8', '9', '10', '11'],
+    const itemToAdd = {
+      id: product.id,
+      name: `${product.name} (${selectedVariant.name})`,
+      price: product.price,
+      original_price: product.original_price,
+      image: selectedVariant.image || product.images?.[0],
+      sizes: product.sizes || ['6', '7', '8', '9', '10', '11'],
       colors: [selectedVariant.name],
-      category: 'sandals',
-      stock: 8,
+      category: product.category || 'sandals',
+      stock: product.stock ?? 8,
     };
 
-    addItem(productData, '8', selectedVariant.name, 1, user);
+    addItem(itemToAdd, '8', selectedVariant.name, 1, user);
     openCart();
-    toast.success('UrbanEdge Pro added to your bag!');
+    toast.success(`${product.name} added to your bag!`);
   };
 
   const handleSaveForLater = () => {
-    toggleWishlist('urbanedge-pro', user);
+    toggleWishlist(product.id, user);
     if (!isWishlisted) {
       toast.success('Saved to wishlist!');
+    } else {
+      toast.success('Removed from wishlist.');
     }
   };
 
   return (
-    <section className="relative w-full bg-[#FAF7F2] py-14 sm:py-20 lg:py-24 overflow-hidden border-b border-[#E8E2D8]">
-      {/* Subtle Warm Background Radial Glow */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] sm:w-[850px] h-[450px] sm:h-[600px] bg-gradient-radial from-[#FCEEE1]/90 via-[#F7E6D4]/30 to-transparent blur-3xl pointer-events-none -z-10" />
+    <section className="relative z-10 w-full bg-[#FAF7F2] py-14 sm:py-20 lg:py-24 overflow-hidden border-b border-[#E8E2D8]">
+      {/* Soft Radial Ambient Background Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] sm:w-[850px] h-[450px] sm:h-[600px] bg-gradient-radial from-[#FCEEE1]/90 via-[#F7E6D4]/30 to-transparent blur-3xl pointer-events-none z-0" />
 
-      <div className="container-max px-4 sm:px-6 lg:px-8">
+      <div className="container-max px-4 sm:px-6 lg:px-8 relative z-10">
+        
         {/* ── Top Section Header ────────────────────────────────────────── */}
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14 lg:mb-16">
           <div className="inline-flex items-center justify-center gap-3 mb-3">
@@ -149,19 +84,19 @@ export default function ExclusiveProductSection() {
         {/* ── Main 3-Column Composition ────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 items-center mb-16 lg:mb-20">
           
-          {/* LEFT COLUMN: Color Selector (Desktop Vertical, Mobile/Tablet Horizontal Scroll) */}
-          <div className="lg:col-span-3 flex lg:flex-col flex-row flex-nowrap overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 gap-2.5 sm:gap-3 order-2 lg:order-1 scrollbar-none">
+          {/* LEFT COLUMN: Color Selector */}
+          <div className="lg:col-span-3 flex lg:flex-col flex-row flex-nowrap overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 gap-2.5 sm:gap-3 order-2 lg:order-1 scrollbar-none z-20">
             <div className="w-full hidden lg:block mb-1">
               <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-[#78716C] font-bold">
-                AVAILABLE FINISHES ({COLOR_VARIANTS.length})
+                AVAILABLE FINISHES ({variants.length})
               </span>
             </div>
 
-            {COLOR_VARIANTS.map((v, idx) => {
+            {variants.map((v, idx) => {
               const isSelected = selectedIndex === idx;
               return (
                 <button
-                  key={v.id}
+                  key={v.id || v.name}
                   onClick={() => setSelectedIndex(idx)}
                   className={`relative flex items-center gap-3 p-2 sm:p-2.5 rounded-2xl transition-all duration-300 text-left group flex-shrink-0 min-w-[150px] lg:min-w-0 lg:w-full cursor-pointer bg-white border ${
                     isSelected
@@ -182,7 +117,7 @@ export default function ExclusiveProductSection() {
                   {/* Label */}
                   <div className="min-w-0 pr-1">
                     <p className={`font-sans text-xs font-bold leading-tight truncate ${isSelected ? 'text-[#D35B22]' : 'text-[#171412]'}`}>
-                      {v.label}
+                      {v.name}
                     </p>
                     <span className="text-[10px] text-[#78716C] font-medium block mt-0.5">Handcrafted</span>
                   </div>
@@ -191,143 +126,131 @@ export default function ExclusiveProductSection() {
             })}
           </div>
 
-          {/* CENTER COLUMN: Supplied Product Showcase & Realistic Turntable Base */}
-          <div className="lg:col-span-6 relative flex flex-col items-center justify-center min-h-[420px] sm:min-h-[500px] lg:min-h-[560px] order-1 lg:order-2 px-2 sm:px-4">
+          {/* CENTER COLUMN: DEDICATED RELATIVE CENTRAL SHOWCASE CONTAINER */}
+          <div className="lg:col-span-6 order-1 lg:order-2 flex items-center justify-center px-2 sm:px-4">
             
-            {/* STATIC ORANGE FEATURE CIRCLE BACKDROP (Stays static while products slide left/right) */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-              <div className="relative w-[340px] sm:w-[440px] md:w-[480px] aspect-square rounded-full border border-[#D35B22]/50 shadow-[0_0_25px_rgba(211,91,34,0.12)]">
-                {/* 4 Orange Node Dots on Perimeter */}
-                <div className="absolute top-[22%] left-[9%] -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md" />
-                <div className="absolute top-[22%] right-[9%] translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md" />
-                <div className="absolute bottom-[30%] left-[6%] -translate-x-1/2 translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md" />
-                <div className="absolute bottom-[30%] right-[6%] translate-x-1/2 translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md" />
-              </div>
-            </div>
+            {/* Central Showcase Parent Container */}
+            <div className="relative w-full max-w-[440px] sm:max-w-[500px] lg:max-w-[540px] aspect-square mx-auto flex items-center justify-center">
+              
+              {/* Soft Product Shadow (Layer 1) */}
+              <div className="absolute bottom-[18%] left-1/2 -translate-x-1/2 w-[75%] h-[40px] bg-black/15 rounded-full blur-xl pointer-events-none z-[1]" />
 
-            {/* 4 Connected Feature Callouts (Desktop / Large Tablet Only) */}
-            {/* 1. Top Left: Premium Leather */}
-            <div className="hidden xl:flex absolute top-4 left-[-20px] z-20 items-start gap-2.5 max-w-[150px] text-left">
-              <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
-              </div>
-              <div>
-                <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">Premium Leather</h4>
-                <p className="font-sans text-[10px] text-[#78716C] leading-snug">Luxury that lasts</p>
-              </div>
-            </div>
+              {/* Orange Circular Showcase Frame (Layer 2) */}
+              <div className="absolute inset-[6%] sm:inset-[8%] rounded-full border border-[#D35B22]/50 shadow-[0_0_25px_rgba(211,91,34,0.12)] pointer-events-none z-[2]" />
 
-            {/* 2. Top Right: Lightweight Design */}
-            <div className="hidden xl:flex absolute top-4 right-[-20px] z-20 items-start gap-2.5 max-w-[150px] text-right flex-row-reverse">
-              <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/>
-                  <line x1="16" y1="8" x2="2" y2="22"/>
-                  <line x1="17.5" y1="15" x2="9" y2="15"/>
-                </svg>
-              </div>
-              <div>
-                <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">Lightweight Design</h4>
-                <p className="font-sans text-[10px] text-[#78716C] leading-snug">Airy feel without limits</p>
-              </div>
-            </div>
+              {/* 4 Small Orange Circle Node Dots on the Circle Perimeter (Layer 2) */}
+              <div className="absolute top-[21%] left-[14%] z-[2] -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md pointer-events-none" />
+              <div className="absolute top-[21%] right-[14%] z-[2] translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md pointer-events-none" />
+              <div className="absolute bottom-[23%] left-[14%] z-[2] -translate-x-1/2 translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md pointer-events-none" />
+              <div className="absolute bottom-[23%] right-[14%] z-[2] translate-x-1/2 translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md pointer-events-none" />
 
-            {/* 3. Bottom Left: All-Day Comfort */}
-            <div className="hidden xl:flex absolute bottom-28 left-[-20px] z-20 items-start gap-2.5 max-w-[150px] text-left">
-              <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                  <polyline points="2 17 12 22 22 17"/>
-                  <polyline points="2 12 12 17 22 12"/>
-                </svg>
+              {/* 4 Connected Feature Callouts (Desktop / Large Screen - Layer 20) */}
+              {/* 1. Top Left: Premium Leather */}
+              <div className="hidden xl:flex absolute top-[12%] left-[-35px] z-20 items-start gap-2.5 max-w-[160px] text-left pointer-events-auto">
+                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">Premium Leather</h4>
+                  <p className="font-sans text-[10px] text-[#78716C] leading-snug">Luxury that lasts</p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">All-Day Comfort</h4>
-                <p className="font-sans text-[10px] text-[#78716C] leading-snug">Built for every journey</p>
-              </div>
-            </div>
 
-            {/* 4. Bottom Right: Durable Outsole */}
-            <div className="hidden xl:flex absolute bottom-28 right-[-20px] z-20 items-start gap-2.5 max-w-[150px] text-right flex-row-reverse">
-              <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
+              {/* 2. Top Right: Lightweight Design */}
+              <div className="hidden xl:flex absolute top-[12%] right-[-35px] z-20 items-start gap-2.5 max-w-[160px] text-right flex-row-reverse pointer-events-auto">
+                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/>
+                    <line x1="16" y1="8" x2="2" y2="22"/>
+                    <line x1="17.5" y1="15" x2="9" y2="15"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">Lightweight Design</h4>
+                  <p className="font-sans text-[10px] text-[#78716C] leading-snug">Airy feel without limits</p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">Durable Outsole</h4>
-                <p className="font-sans text-[10px] text-[#78716C] leading-snug">Made for everyday terrain</p>
+
+              {/* 3. Bottom Left: All-Day Comfort */}
+              <div className="hidden xl:flex absolute bottom-[14%] left-[-35px] z-20 items-start gap-2.5 max-w-[160px] text-left pointer-events-auto">
+                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                    <polyline points="2 17 12 22 22 17"/>
+                    <polyline points="2 12 12 17 22 12"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">All-Day Comfort</h4>
+                  <p className="font-sans text-[10px] text-[#78716C] leading-snug">Built for every journey</p>
+                </div>
               </div>
-            </div>
 
-            {/* Floating Animation Wrapper & Smooth Slide Track */}
-            <div className="relative z-10 w-full max-w-[420px] sm:max-w-[500px] lg:max-w-[560px] aspect-[4/3] flex items-center justify-center overflow-hidden animate-float">
-              <div
-                className="w-full h-full flex transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
-                style={{ transform: `translateX(-${selectedIndex * 100}%)` }}
-              >
-                {COLOR_VARIANTS.map((v) => (
-                  <div key={v.id} className="w-full h-full flex-shrink-0 flex items-center justify-center p-2">
-                    <img
-                      src={v.image}
-                      alt={`UrbanEdge Pro ${v.name}`}
-                      className="w-full h-full object-contain filter drop-shadow-[0_24px_30px_rgba(0,0,0,0.22)]"
-                      draggable={false}
-                    />
-                  </div>
-                ))}
+              {/* 4. Bottom Right: Durable Outsole */}
+              <div className="hidden xl:flex absolute bottom-[14%] right-[-35px] z-20 items-start gap-2.5 max-w-[160px] text-right flex-row-reverse pointer-events-auto">
+                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">Durable Outsole</h4>
+                  <p className="font-sans text-[10px] text-[#78716C] leading-snug">Made for everyday terrain</p>
+                </div>
               </div>
-            </div>
 
-            {/* Realistic Turntable Platform Base from Reference Image 5 */}
-            <div className="relative -mt-16 sm:-mt-22 w-[340px] sm:w-[440px] md:w-[500px] h-[100px] flex items-center justify-center pointer-events-none">
-              {/* Floor Neon Ambient Glow */}
-              <div className="absolute inset-0 bg-[#D35B22]/20 rounded-full blur-2xl animate-pulse" />
-
-              {/* Realistic Turntable Base Image */}
-              <img
-                src="/products/exclusive/realistic_turntable_base.png"
-                alt="360 Turntable Base"
-                className="w-full h-full object-contain filter drop-shadow-[0_16px_28px_rgba(0,0,0,0.45)]"
-              />
-
-              {/* 360° Text Badge Overlay inside turntable center */}
-              <div className="absolute top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-auto">
-                <span className="text-[#FAF7F2] text-[11px] sm:text-xs font-bold font-sans tracking-widest flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-0.5 rounded-full border border-white/20 shadow-md">
-                  <span>&#8592;</span> 360° <span>&#8594;</span>
-                </span>
+              {/* FLOATING PRODUCT IMAGE SLIDER (Layer 10 - Sits above circle, below callouts) */}
+              <div className="relative z-10 w-[80%] h-[80%] flex items-center justify-center overflow-hidden animate-float">
+                <div
+                  className="w-full h-full flex transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
+                  style={{ transform: `translateX(-${selectedIndex * 100}%)` }}
+                >
+                  {variants.map((v) => (
+                    <div key={v.id || v.name} className="w-full h-full flex-shrink-0 flex items-center justify-center p-2">
+                      <img
+                        src={v.image}
+                        alt={`${product.name} ${v.name}`}
+                        className="w-full h-full object-contain filter drop-shadow-[0_20px_25px_rgba(0,0,0,0.2)]"
+                        draggable={false}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
+
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Product Information & Cart Action Panel */}
-          <div className="lg:col-span-3 flex flex-col items-center lg:items-start text-center lg:text-left order-3">
+          {/* RIGHT COLUMN: Real Catalog Product Information & Purchase Panel */}
+          <div className="lg:col-span-3 flex flex-col items-center lg:items-start text-center lg:text-left order-3 z-20">
             <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-[#D35B22] font-bold mb-1.5">
-              LIMITED EDITION
+              {product.badge || 'LIMITED EDITION'}
             </span>
 
             <h3 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#171412] tracking-tight mb-1">
-              UrbanEdge <span className="text-[#D35B22]">Pro</span>
+              {product.name}
             </h3>
 
             <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-[#D35B22] font-bold mb-3">
-              STEP INTO EXCLUSIVITY
+              {product.tagline || 'STEP INTO EXCLUSIVITY'}
             </p>
 
             <p className="font-sans text-xs sm:text-sm text-[#78716C] leading-relaxed mb-6 max-w-sm">
-              A refined blend of style, comfort and durability — made for those who choose more.
+              {product.description || 'A refined blend of style, comfort and durability — made for those who choose more.'}
             </p>
 
             {/* Price Display */}
             <div className="mb-6 flex items-baseline gap-2.5">
               <span className="font-sans text-3xl sm:text-4xl font-extrabold text-[#171412]">
-                ₹ 4,999
+                ₹ {product.price?.toLocaleString()}
               </span>
-              <span className="font-sans text-sm text-[#A8A29E] line-through">
-                ₹ 6,499
-              </span>
+              {product.original_price && (
+                <span className="font-sans text-sm text-[#A8A29E] line-through">
+                  ₹ {product.original_price?.toLocaleString()}
+                </span>
+              )}
             </div>
 
             {/* Add to Cart Button */}
@@ -344,7 +267,7 @@ export default function ExclusiveProductSection() {
               <span className="text-base">&#8594;</span>
             </button>
 
-            {/* Save for Later Button */}
+            {/* Save for Later Wishlist Button */}
             <button
               onClick={handleSaveForLater}
               className="w-full sm:w-auto flex items-center justify-center gap-2 text-xs font-semibold text-[#78716C] hover:text-[#171412] transition-colors py-2 cursor-pointer"
@@ -366,7 +289,7 @@ export default function ExclusiveProductSection() {
             <div className="flex items-center justify-center lg:justify-start gap-2.5 mt-5 pt-5 border-t border-[#E8E2D8] w-full sm:w-auto">
               <span className="w-8 h-px bg-[#D5CFC7]" />
               <span className="font-sans text-[10px] uppercase tracking-[0.22em] text-[#934B19] font-bold">
-                LIMITED STOCK
+                LIMITED STOCK ({product.stock ?? 8} LEFT)
               </span>
               <span className="w-8 h-px bg-[#D5CFC7]" />
             </div>
@@ -395,27 +318,6 @@ export default function ExclusiveProductSection() {
           ))}
         </div>
 
-        {/* ── Bottom 4 Detail Cards Grid ────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 pt-8 border-t border-[#E8E2D8]">
-          {DETAIL_CARDS.map((card) => (
-            <div
-              key={card.title}
-              className="bg-white rounded-2xl p-4 border border-[#E8E2D8] shadow-sm hover:shadow-md hover:border-[#D35B22]/50 transition-all duration-300 group flex flex-col"
-            >
-              <div className="w-full h-36 rounded-xl overflow-hidden mb-3 bg-[#FAF7F2] relative">
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
-              </div>
-              <h4 className="font-display text-sm font-bold text-[#171412] mb-0.5">{card.title}</h4>
-              <p className="font-sans text-xs text-[#78716C]">{card.desc}</p>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
