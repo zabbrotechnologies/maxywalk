@@ -37,7 +37,7 @@ const COLOR_VARIANTS = [
     id: 'grey',
     name: 'Grey',
     label: 'Grey',
-    image: '/products/exclusive/grey.png',
+    image: '/products/exclusive/gray.png',
     colorHex: '#6E6C6B',
   },
   {
