@@ -189,7 +189,7 @@ export default function Shop() {
 
   useEffect(() => {
     const cat = searchParams.get('category');
-    if (cat) setSelectedCategory(cat);
+    setSelectedCategory(cat || 'all');
   }, [searchParams]);
 
   const toggleSize = (size) =>
@@ -212,7 +212,15 @@ export default function Shop() {
   };
 
   const activeFilters = [
-    selectedCategory !== 'all' && { label: CATEGORIES.find((c) => c.value === selectedCategory)?.label, onRemove: () => setSelectedCategory('all') },
+    selectedCategory !== 'all' && {
+      label: CATEGORIES.find((c) => c.value === selectedCategory)?.label || selectedCategory,
+      onRemove: () => {
+        setSelectedCategory('all');
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete('category');
+        setSearchParams(nextParams);
+      },
+    },
     ...selectedSizes.map((s) => ({ label: `Size ${s}`, onRemove: () => toggleSize(s) })),
     ...selectedMaterials.map((m) => ({ label: m, onRemove: () => toggleMaterial(m) })),
     searchQuery && { label: `"${searchQuery}"`, onRemove: () => setSearchParams({}) },
