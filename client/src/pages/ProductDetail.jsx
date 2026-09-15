@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getProduct, getProducts } from '../lib/api.js';
+import { getProduct, getProducts, DEFAULT_EXCLUSIVE_PRODUCT } from '../lib/api.js';
 import useCartStore from '../store/cartStore.js';
 import useAuthStore from '../store/authStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
@@ -21,11 +21,11 @@ export default function ProductDetail() {
 
   const { addItem, openCart } = useCartStore();
   const { user } = useAuthStore();
-  const toggle = useWishlistStore((s) => s.toggle);
+  const toggleWishlist = useWishlistStore((s) => s.toggle);
   const isWishlisted = useWishlistStore((s) => s.isWishlisted);
-  const uid = user?.uid || 'guest';
 
   useEffect(() => {
+    if (!id) return;
     setLoading(true);
     setActiveImage(0);
     setSelectedSize('');
@@ -35,73 +35,25 @@ export default function ProductDetail() {
     getProduct(id)
       .then((data) => {
         setProduct(data);
-        setSelectedColor(data.colors?.[0] || '');
-        if (data.sizes?.length > 0) setSelectedSize(data.sizes[0]);
-        document.title = `${data.name} | MAXYWALK`;
-        return getProducts({ category: data.category, limit: 4 });
+        if (data) {
+          setSelectedColor(data.colors?.[0] || '');
+          if (data.sizes?.length > 0) setSelectedSize(data.sizes[0]);
+          document.title = `${data.name || 'Product'} | MAXYWALK`;
+          return getProducts({ category: data.category, limit: 4 });
+        }
+        return { products: [] };
       })
-      .then((d) => setRelated((d.products || []).filter((p) => p.id !== id).slice(0, 4)))
-      .catch(console.error)
+      .then((d) => {
+        if (d?.products) {
+          setRelated(d.products.filter((p) => p.id !== id).slice(0, 4));
+        }
+      })
+      .catch((err) => {
+        console.error('Error loading product details:', err);
+        setProduct(null);
+      })
       .finally(() => setLoading(false));
   }, [id]);
-
-  const variants = product?.variants || DEFAULT_EXCLUSIVE_PRODUCT.variants;
-  const currentVariant = variants?.find((v) => v.name?.toLowerCase() === selectedColor?.toLowerCase() || v.id?.toLowerCase() === selectedColor?.toLowerCase()) || variants?.[0];
-  const currentVariantId = currentVariant?.id || (selectedColor ? selectedColor.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);
-  const currentVariantImage = currentVariant?.image || product?.images?.[activeImage] || product?.images?.[0];
-
-  const handleColorSelect = (color) => {
-    setSelectedColor(color);
-    const matchedIdx = product?.variants?.findIndex((v) => v.name?.toLowerCase() === color.toLowerCase() || v.id?.toLowerCase() === color.toLowerCase());
-    if (matchedIdx !== undefined && matchedIdx >= 0) {
-      setActiveImage(matchedIdx);
-    } else if (product?.images?.length > 0) {
-      const idx = product.colors?.findIndex((c) => c.toLowerCase() === color.toLowerCase());
-      if (idx !== undefined && idx >= 0 && idx < product.images.length) {
-        setActiveImage(idx);
-      }
-    }
-  };
-
-  const handleAddToCart = () => {
-    if (!product) return;
-    const effectiveSize = selectedSize || (product.sizes?.length ? product.sizes[0] : 'Standard');
-    const effectiveColor = selectedColor || (product.colors?.length ? product.colors[0] : 'Default');
-    
-    const productWithVariantImage = {
-      ...product,
-      image: currentVariantImage
-    };
-
-    addItem(productWithVariantImage, effectiveSize, effectiveColor, qty, user);
-    openCart();
-    toast.success('Added to your shopping bag!', { duration: 2000 });
-  };
-
-  const handleToggleWishlist = () => {
-    const isAdded = toggle(
-      product.id,
-      currentVariantId,
-      {
-        variantName: selectedColor || currentVariant?.name || 'Default',
-        image: currentVariantImage,
-        price: product.price,
-        name: product.name,
-      },
-      user
-    );
-
-    if (isAdded) {
-      toast.success(`Saved ${product.name} (${selectedColor || 'Default'}) to wishlist!`);
-    } else {
-      toast.success(`Removed from wishlist.`);
-    }
-  };
-
-  const origPrice = product?.originalPrice || product?.original_price;
-  const discount = origPrice
-    ? Math.round(((origPrice - product.price) / origPrice) * 100)
-    : 0;
 
   if (loading) {
     return (
@@ -129,8 +81,72 @@ export default function ProductDetail() {
     );
   }
 
-  const images = product.images?.length > 0 ? product.images : [currentVariantImage || 'https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK'];
+  // Safely compute variant and price properties NOW that product is guaranteed to exist
+  const variants = product.variants || (product.id === 'urbanedge-pro' ? DEFAULT_EXCLUSIVE_PRODUCT.variants : []);
+  const currentVariant = variants.length > 0
+    ? (variants.find((v) => v.name?.toLowerCase() === selectedColor?.toLowerCase() || v.id?.toLowerCase() === selectedColor?.toLowerCase()) || variants[0])
+    : null;
+  const currentVariantId = currentVariant?.id || (selectedColor ? selectedColor.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);
+  const currentVariantImage = currentVariant?.image || product.images?.[activeImage] || product.images?.[0] || product.image || null;
+
+  const images = product.images?.length > 0 ? product.images : [currentVariantImage || product.image || 'https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK'];
   const displayedImage = currentVariantImage || images[activeImage] || images[0];
+
+  const origPrice = product.originalPrice || product.original_price;
+  const discount = (origPrice && origPrice > product.price)
+    ? Math.round(((origPrice - product.price) / origPrice) * 100)
+    : 0;
+
+  const handleColorSelect = (color) => {
+    setSelectedColor(color);
+    if (variants.length > 0) {
+      const matchedIdx = variants.findIndex((v) => v.name?.toLowerCase() === color.toLowerCase() || v.id?.toLowerCase() === color.toLowerCase());
+      if (matchedIdx >= 0 && product.images?.length > matchedIdx) {
+        setActiveImage(matchedIdx);
+      }
+    } else if (product.images?.length > 0 && product.colors?.length > 0) {
+      const idx = product.colors.findIndex((c) => c.toLowerCase() === color.toLowerCase());
+      if (idx >= 0 && idx < product.images.length) {
+        setActiveImage(idx);
+      }
+    }
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    const effectiveSize = selectedSize || (product.sizes?.length ? product.sizes[0] : 'Standard');
+    const effectiveColor = selectedColor || (product.colors?.length ? product.colors[0] : 'Default');
+    
+    const productWithVariantImage = {
+      ...product,
+      image: currentVariantImage || product.images?.[0] || product.image || ''
+    };
+
+    addItem(productWithVariantImage, effectiveSize, effectiveColor, qty, user);
+    openCart();
+    toast.success('Added to your shopping bag!', { duration: 2000 });
+  };
+
+  const handleToggleWishlist = () => {
+    if (!product) return;
+    const isAdded = toggleWishlist(
+      product.id,
+      currentVariantId,
+      {
+        variantName: selectedColor || currentVariant?.name || 'Default',
+        image: currentVariantImage || product.images?.[0] || product.image || '',
+        price: product.price,
+        name: product.name,
+      },
+      user
+    );
+
+    if (isAdded) {
+      toast.success(`Saved ${product.name} (${selectedColor || 'Default'}) to wishlist!`);
+    } else {
+      toast.success(`Removed from wishlist.`);
+    }
+  };
 
   return (
     <div className="page-enter w-full overflow-hidden">
@@ -204,7 +220,7 @@ export default function ProductDetail() {
                       <span key={s} className="material-symbols-outlined text-sm" style={{ fontVariationSettings: s <= Math.round(product.rating) ? "'FILL' 1" : "'FILL' 0" }}>star</span>
                     ))}
                   </div>
-                  <span className="text-xs text-on-surface-variant font-medium">{product.rating} ({product.reviewCount || 0} reviews)</span>
+                  <span className="text-xs text-on-surface-variant font-medium">{product.rating} ({product.reviewCount || product.review_count || 0} reviews)</span>
                 </div>
               )}
             </div>
@@ -212,7 +228,7 @@ export default function ProductDetail() {
             {/* Price */}
             <div className="flex items-baseline gap-3 p-3 bg-surface-container-low border border-outline-variant/30">
               <span className="font-display text-2xl sm:text-3xl text-primary font-bold">{formatPrice(product.price)}</span>
-              {origPrice && (
+              {origPrice && origPrice > product.price && (
                 <>
                   <span className="text-base text-on-surface-variant line-through">{formatPrice(origPrice)}</span>
                   <span className="text-xs bg-secondary text-white px-2 py-0.5 font-bold uppercase tracking-wider">Save {formatPrice(origPrice - product.price)}</span>
