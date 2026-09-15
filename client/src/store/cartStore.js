@@ -79,7 +79,7 @@ const useCartStore = create(
               id: product.id,
               name: product.name,
               price: Number(product.price) || 0,
-              image: product.images?.[0] || product.image || '',
+              image: product.image || product.images?.[0] || '',
               selectedSize: size,
               selectedColor: color,
               qty: Math.min(maxStock, addQty),

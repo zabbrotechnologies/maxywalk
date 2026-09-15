@@ -28,9 +28,11 @@ export default function Account() {
     navigate('/login', { replace: true });
   };
   const isAdmin = storeIsAdmin || (user?.email && user.email.toLowerCase().includes('admin'));
-  const getWishlist = useWishlistStore((s) => s.getWishlist);
-  const wishlistIds = getWishlist(user);
-  const wishlistKey = wishlistIds.join(',');
+  const getWishlistItems = useWishlistStore((s) => s.getWishlistItems);
+  const toggleWishlist = useWishlistStore((s) => s.toggle);
+  const wishlistItems = getWishlistItems(user);
+  const wishlistKey = wishlistItems.map((i) => i.key).join(',');
+  const [catalogProducts, setCatalogProducts] = useState([]);
   const [editName, setEditName] = useState(userProfile?.name || user?.user_metadata?.name || '');
   const [editPhone, setEditPhone] = useState(userProfile?.phone || user?.user_metadata?.phone || '');
   const [savingProfile, setSavingProfile] = useState(false);
@@ -65,8 +67,8 @@ export default function Account() {
       setLoading(true);
       getMyOrders(user).then((d) => setOrders(Array.isArray(d?.orders) ? d.orders : [])).catch(() => setOrders([])).finally(() => setLoading(false));
     }
-    if (activeTab === 'wishlist' && wishlistIds.length > 0) {
-      getProducts({ limit: 50 }).then((d) => setWishlistProducts((d.products || []).filter((p) => wishlistIds.includes(p.id)))).catch(() => setWishlistProducts([]));
+    if (activeTab === 'wishlist' && wishlistItems.length > 0) {
+      getProducts({ limit: 50 }).then((d) => setCatalogProducts(d.products || [])).catch(() => setCatalogProducts([]));
     }
   }, [activeTab, wishlistKey, user]);
 
@@ -160,7 +162,7 @@ export default function Account() {
                 {[
                   { label: 'Total Orders', value: orderList.length, icon: 'shopping_bag' },
                   { label: 'Active Orders', value: orderList.filter((o) => !['delivered', 'cancelled'].includes(o?.status)).length, icon: 'local_shipping', accent: true },
-                  { label: 'Wishlist Items', value: wishlistIds.length, icon: 'favorite_border' },
+                  { label: 'Wishlist Items', value: wishlistItems.length, icon: 'favorite_border' },
                 ].map((s) => (
                   <div key={s.label} className={`border border-outline-variant/40 p-5 flex flex-col justify-between h-32 ${s.accent ? 'bg-surface-container-low border-secondary/40' : 'bg-white'}`}>
                     <span className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">{s.label}</span>
@@ -280,7 +282,7 @@ export default function Account() {
           {activeTab === 'wishlist' && (
             <div className="space-y-4">
               <h1 className="font-display text-2xl font-bold text-primary">Saved Wishlist</h1>
-              {wishlistIds.length === 0 ? (
+              {wishlistItems.length === 0 ? (
                 <div className="text-center py-16 bg-white border border-outline-variant/30 p-6">
                   <span className="material-symbols-outlined text-4xl text-outline-variant mb-2">favorite_border</span>
                   <p className="text-xs text-on-surface-variant mb-4">No saved items in your wishlist.</p>
@@ -288,15 +290,57 @@ export default function Account() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {wishlistProducts.map((p) => (
-                    <Link key={p.id} to={`/product/${p.id}`} className="p-3 bg-white border border-outline-variant/30 flex flex-col gap-2">
-                      <div className="aspect-[4/5] bg-surface-container overflow-hidden">
-                        <img src={p.images?.[0]} alt={p.name} className="w-full h-full object-contain drop-shadow-sm p-1" />
+                  {wishlistItems.map((item) => {
+                    const catalogProduct = catalogProducts.find((p) => p.id === item.productId || p.id === item.id);
+                    let matchedVariant = null;
+                    if (item.variantId && catalogProduct?.variants) {
+                      matchedVariant = catalogProduct.variants.find(
+                        (v) => v.id === item.variantId || v.name?.toLowerCase() === item.variantName?.toLowerCase() || v.name?.toLowerCase() === item.variantId?.toLowerCase()
+                      );
+                    }
+
+                    const displayImage = item.image || matchedVariant?.image || catalogProduct?.images?.[0] || catalogProduct?.image || 'https://placehold.co/400x500/f4f3f1/7e7576?text=MAXYWALK';
+                    const productName = item.name || catalogProduct?.name || item.productId || 'Footwear Item';
+                    const variantLabel = item.variantName || matchedVariant?.name || null;
+                    const price = item.price || catalogProduct?.price || 0;
+
+                    return (
+                      <div key={item.key} className="p-3 bg-white border border-outline-variant/30 flex flex-col gap-2 rounded-xl hover:border-secondary transition-all shadow-sm">
+                        <Link to={`/product/${item.productId}`} className="aspect-[4/5] bg-surface-container overflow-hidden block rounded-lg">
+                          <img
+                            src={displayImage}
+                            alt={productName}
+                            className="w-full h-full object-contain drop-shadow-sm p-1 transition-transform duration-300 hover:scale-105"
+                            onError={(e) => { e.target.src = 'https://placehold.co/400x500/f4f3f1/7e7576?text=MAXYWALK'; }}
+                          />
+                        </Link>
+                        <div className="flex flex-col flex-grow">
+                          <Link to={`/product/${item.productId}`} className="font-display text-xs sm:text-sm font-bold text-primary truncate hover:text-secondary block">
+                            {productName}
+                          </Link>
+                          {variantLabel && (
+                            <p className="text-[11px] text-on-surface-variant font-medium mt-0.5">
+                              {variantLabel}
+                            </p>
+                          )}
+                          <div className="flex items-center justify-between mt-auto pt-2 border-t border-outline-variant/20">
+                            <p className="text-xs font-bold text-secondary">{formatPrice(price)}</p>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                toggleWishlist(item.productId, item.variantId, {}, user);
+                                toast.success('Removed from wishlist');
+                              }}
+                              className="text-on-surface-variant/60 hover:text-error transition-colors p-1"
+                              title="Remove item"
+                            >
+                              <span className="material-symbols-outlined text-base">delete</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                      <p className="font-display text-xs font-bold text-primary truncate">{p.name}</p>
-                      <p className="text-xs font-bold text-secondary">{formatPrice(p.price)}</p>
-                    </Link>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

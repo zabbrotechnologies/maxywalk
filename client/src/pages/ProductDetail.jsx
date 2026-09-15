@@ -45,14 +45,57 @@ export default function ProductDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  const variants = product?.variants || DEFAULT_EXCLUSIVE_PRODUCT.variants;
+  const currentVariant = variants?.find((v) => v.name?.toLowerCase() === selectedColor?.toLowerCase() || v.id?.toLowerCase() === selectedColor?.toLowerCase()) || variants?.[0];
+  const currentVariantId = currentVariant?.id || (selectedColor ? selectedColor.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);
+  const currentVariantImage = currentVariant?.image || product?.images?.[activeImage] || product?.images?.[0];
+
+  const handleColorSelect = (color) => {
+    setSelectedColor(color);
+    const matchedIdx = product?.variants?.findIndex((v) => v.name?.toLowerCase() === color.toLowerCase() || v.id?.toLowerCase() === color.toLowerCase());
+    if (matchedIdx !== undefined && matchedIdx >= 0) {
+      setActiveImage(matchedIdx);
+    } else if (product?.images?.length > 0) {
+      const idx = product.colors?.findIndex((c) => c.toLowerCase() === color.toLowerCase());
+      if (idx !== undefined && idx >= 0 && idx < product.images.length) {
+        setActiveImage(idx);
+      }
+    }
+  };
+
   const handleAddToCart = () => {
     if (!product) return;
     const effectiveSize = selectedSize || (product.sizes?.length ? product.sizes[0] : 'Standard');
     const effectiveColor = selectedColor || (product.colors?.length ? product.colors[0] : 'Default');
     
-    addItem(product, effectiveSize, effectiveColor, qty, user);
+    const productWithVariantImage = {
+      ...product,
+      image: currentVariantImage
+    };
+
+    addItem(productWithVariantImage, effectiveSize, effectiveColor, qty, user);
     openCart();
     toast.success('Added to your shopping bag!', { duration: 2000 });
+  };
+
+  const handleToggleWishlist = () => {
+    const isAdded = toggle(
+      product.id,
+      currentVariantId,
+      {
+        variantName: selectedColor || currentVariant?.name || 'Default',
+        image: currentVariantImage,
+        price: product.price,
+        name: product.name,
+      },
+      user
+    );
+
+    if (isAdded) {
+      toast.success(`Saved ${product.name} (${selectedColor || 'Default'}) to wishlist!`);
+    } else {
+      toast.success(`Removed from wishlist.`);
+    }
   };
 
   const origPrice = product?.originalPrice || product?.original_price;
@@ -86,7 +129,8 @@ export default function ProductDetail() {
     );
   }
 
-  const images = product.images?.length > 0 ? product.images : ['https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK'];
+  const images = product.images?.length > 0 ? product.images : [currentVariantImage || 'https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK'];
+  const displayedImage = currentVariantImage || images[activeImage] || images[0];
 
   return (
     <div className="page-enter w-full overflow-hidden">
@@ -107,9 +151,9 @@ export default function ProductDetail() {
             {/* Main Image */}
             <div className="aspect-[4/5] bg-surface-container-lowest overflow-hidden relative border border-outline-variant/30">
               <img
-                src={images[activeImage]}
+                src={displayedImage}
                 alt={product.name}
-                className="w-full h-full object-contain drop-shadow-2xl transition-transform duration-500 hover:scale-105"
+                className="w-full h-full object-contain drop-shadow-2xl transition-all duration-500 hover:scale-105"
                 onError={(e) => { e.target.src = 'https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK'; }}
               />
               {product.badge && (
@@ -132,7 +176,7 @@ export default function ProductDetail() {
                     key={idx}
                     onClick={() => setActiveImage(idx)}
                     className={`w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 overflow-hidden border-2 transition-colors bg-white ${
-                      activeImage === idx ? 'border-secondary' : 'border-outline-variant/40 hover:border-outline'
+                      displayedImage === img ? 'border-secondary' : 'border-outline-variant/40 hover:border-outline'
                     }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-contain p-1 drop-shadow-sm" />
@@ -186,7 +230,7 @@ export default function ProductDetail() {
                   {product.colors.map((color) => (
                     <button
                       key={color}
-                      onClick={() => setSelectedColor(color)}
+                      onClick={() => handleColorSelect(color)}
                       className={`px-3 py-2 text-xs font-sans border transition-all ${
                         selectedColor === color
                           ? 'border-primary bg-primary text-white font-bold'
@@ -246,15 +290,15 @@ export default function ProductDetail() {
                   {product.stock === 0 ? 'Out of Stock' : 'Add to Bag'}
                 </button>
                 <button
-                  onClick={() => toggle(product.id, user)}
+                  onClick={handleToggleWishlist}
                   className={`w-12 h-12 border flex items-center justify-center transition-all bg-white ${
-                    isWishlisted(product.id, user) ? 'border-secondary bg-secondary/5' : 'border-outline-variant hover:border-secondary'
+                    isWishlisted(product.id, currentVariantId, user) ? 'border-secondary bg-secondary/5' : 'border-outline-variant hover:border-secondary'
                   }`}
                   aria-label="Wishlist"
                 >
                   <span
                     className="material-symbols-outlined"
-                    style={{ fontVariationSettings: isWishlisted(product.id, user) ? "'FILL' 1" : "'FILL' 0", color: isWishlisted(product.id, user) ? '#934b19' : '#1a1c1b' }}
+                    style={{ fontVariationSettings: isWishlisted(product.id, currentVariantId, user) ? "'FILL' 1" : "'FILL' 0", color: isWishlisted(product.id, currentVariantId, user) ? '#934b19' : '#1a1c1b' }}
                   >
                     favorite
                   </span>

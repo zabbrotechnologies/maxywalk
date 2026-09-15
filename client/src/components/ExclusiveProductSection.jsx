@@ -12,7 +12,7 @@ export default function ExclusiveProductSection() {
   const { addItem, openCart } = useCartStore();
   const { user } = useAuthStore();
   
-  const isWishlisted = useWishlistStore((s) => s.isWishlisted(product.id, user));
+  const checkWishlisted = useWishlistStore((s) => s.isWishlisted);
   const toggleWishlist = useWishlistStore((s) => s.toggle);
 
   useEffect(() => {
@@ -27,11 +27,14 @@ export default function ExclusiveProductSection() {
     : DEFAULT_EXCLUSIVE_PRODUCT.variants;
 
   const selectedVariant = variants[selectedIndex] || variants[0];
+  const selectedVariantId = selectedVariant?.id || (selectedVariant?.name ? selectedVariant.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);
+  const isWishlisted = checkWishlisted(product.id, selectedVariantId, user);
 
   const handleAddToCart = () => {
     const itemToAdd = {
       id: product.id,
-      name: `${product.name} (${selectedVariant.name})`,
+      variantId: selectedVariantId,
+      name: product.name,
       price: product.price,
       original_price: product.original_price,
       image: selectedVariant.image || product.images?.[0],
@@ -43,13 +46,24 @@ export default function ExclusiveProductSection() {
 
     addItem(itemToAdd, '8', selectedVariant.name, 1, user);
     openCart();
-    toast.success(`${product.name} added to your bag!`);
+    toast.success(`${product.name} (${selectedVariant.name}) added to your bag!`);
   };
 
   const handleSaveForLater = () => {
-    toggleWishlist(product.id, user);
-    if (!isWishlisted) {
-      toast.success('Saved to wishlist!');
+    const isAdded = toggleWishlist(
+      product.id,
+      selectedVariantId,
+      {
+        variantName: selectedVariant.name,
+        image: selectedVariant.image || product.images?.[0],
+        price: product.price,
+        name: product.name,
+      },
+      user
+    );
+
+    if (isAdded) {
+      toast.success(`Saved ${product.name} (${selectedVariant.name}) to wishlist!`);
     } else {
       toast.success('Removed from wishlist.');
     }
