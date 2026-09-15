@@ -65,19 +65,16 @@ const useWishlistStore = create(
         if (variantId) {
           const targetKey = makeWishlistKey(productId, variantId);
           return list.some((item) => {
-            if (typeof item === 'string') {
-              return item === targetKey || item === productId;
-            }
-            return (item.key === targetKey) || (item.productId === productId && item.variantId === variantId);
+            const norm = normalizeWishlistItem(item);
+            if (!norm) return false;
+            return norm.key === targetKey || (norm.productId === productId && norm.variantId === variantId);
           });
         }
 
         // If no variantId specified, check if product ID matches any item
         return list.some((item) => {
-          if (typeof item === 'string') {
-            return item === productId || item.startsWith(`${productId}::`);
-          }
-          return (item.productId === productId || item.id === productId);
+          const norm = normalizeWishlistItem(item);
+          return norm && (norm.productId === productId || norm.id === productId);
         });
       },
 

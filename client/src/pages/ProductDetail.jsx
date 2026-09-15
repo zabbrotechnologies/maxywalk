@@ -21,6 +21,7 @@ export default function ProductDetail() {
 
   const { addItem, openCart } = useCartStore();
   const { user } = useAuthStore();
+  const userWishlists = useWishlistStore((s) => s.userWishlists);
   const toggleWishlist = useWishlistStore((s) => s.toggle);
   const isWishlisted = useWishlistStore((s) => s.isWishlisted);
 
@@ -89,7 +90,9 @@ export default function ProductDetail() {
   const currentVariantId = currentVariant?.id || (selectedColor ? selectedColor.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);
   const currentVariantImage = currentVariant?.image || product.images?.[activeImage] || product.images?.[0] || product.image || null;
 
-  const images = product.images?.length > 0 ? product.images : [currentVariantImage || product.image || 'https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK'];
+  const images = (product.images && product.images.length > 0)
+    ? product.images
+    : (variants.length > 0 ? variants.map((v) => v.image) : [currentVariantImage || product.image || 'https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK']);
   const displayedImage = currentVariantImage || images[activeImage] || images[0];
 
   const origPrice = product.originalPrice || product.original_price;
@@ -101,7 +104,7 @@ export default function ProductDetail() {
     setSelectedColor(color);
     if (variants.length > 0) {
       const matchedIdx = variants.findIndex((v) => v.name?.toLowerCase() === color.toLowerCase() || v.id?.toLowerCase() === color.toLowerCase());
-      if (matchedIdx >= 0 && product.images?.length > matchedIdx) {
+      if (matchedIdx >= 0) {
         setActiveImage(matchedIdx);
       }
     } else if (product.images?.length > 0 && product.colors?.length > 0) {
@@ -109,6 +112,18 @@ export default function ProductDetail() {
       if (idx >= 0 && idx < product.images.length) {
         setActiveImage(idx);
       }
+    }
+  };
+
+  const handleThumbnailClick = (idx, img) => {
+    setActiveImage(idx);
+    if (variants.length > 0) {
+      const matchedVariant = variants.find((v) => v.image === img) || variants[idx];
+      if (matchedVariant?.name) {
+        setSelectedColor(matchedVariant.name);
+      }
+    } else if (product.colors?.length > idx) {
+      setSelectedColor(product.colors[idx]);
     }
   };
 
@@ -190,9 +205,9 @@ export default function ProductDetail() {
                 {images.map((img, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setActiveImage(idx)}
+                    onClick={() => handleThumbnailClick(idx, img)}
                     className={`w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 overflow-hidden border-2 transition-colors bg-white ${
-                      displayedImage === img ? 'border-secondary' : 'border-outline-variant/40 hover:border-outline'
+                      (displayedImage === img || activeImage === idx) ? 'border-secondary' : 'border-outline-variant/40 hover:border-outline'
                     }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-contain p-1 drop-shadow-sm" />
