@@ -174,11 +174,28 @@ export const getProduct = async (id) => {
   return data;
 };
 
+const ALLOWED_PRODUCT_KEYS = [
+  'id', 'name', 'description', 'category', 'price', 'original_price',
+  'sizes', 'colors', 'images', 'stock', 'featured', 'material',
+  'badge', 'rating', 'review_count', 'created_at'
+];
+
+function sanitizeProductData(data) {
+  const clean = {};
+  for (const key of ALLOWED_PRODUCT_KEYS) {
+    if (data[key] !== undefined && data[key] !== null) {
+      clean[key] = data[key];
+    }
+  }
+  return clean;
+}
+
 export const createProduct = async (data) => {
   clearApiCache();
+  const cleanData = sanitizeProductData(data);
   const newProduct = {
-    id: `custom-${Date.now()}`,
-    ...data,
+    id: cleanData.id || `custom-${Date.now()}`,
+    ...cleanData,
     created_at: new Date().toISOString()
   };
   
@@ -187,17 +204,40 @@ export const createProduct = async (data) => {
     console.error('Supabase createProduct error:', error);
     throw error;
   }
-  return insertedData;
+  return { ...data, ...insertedData };
 };
 
 export const updateProduct = async (id, data) => {
   clearApiCache();
-  const { data: updatedData, error } = await supabase.from('products').update(data).eq('id', id).select().single();
+  const cleanData = sanitizeProductData(data);
+  
+  const { data: updatedData, error } = await supabase
+    .from('products')
+    .update(cleanData)
+    .eq('id', id)
+    .select();
+
   if (error) {
     console.error(`Supabase updateProduct ${id} error:`, error);
     throw error;
   }
-  return updatedData;
+
+  if (!updatedData || updatedData.length === 0) {
+    const upsertPayload = { id, ...cleanData };
+    const { data: upsertedData, error: upsertErr } = await supabase
+      .from('products')
+      .upsert([upsertPayload])
+      .select()
+      .single();
+      
+    if (upsertErr) {
+      console.error(`Supabase updateProduct (upsert) ${id} error:`, upsertErr);
+      throw upsertErr;
+    }
+    return { ...data, ...upsertedData };
+  }
+
+  return { ...data, ...updatedData[0] };
 };
 
 export const deleteProduct = async (id) => {

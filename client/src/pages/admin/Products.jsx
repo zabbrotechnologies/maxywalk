@@ -187,7 +187,7 @@ export default function AdminProducts() {
       setModalOpen(false);
     } catch (err) {
       console.error('Save product error:', err);
-      toast.error('Failed to save product. Please try again.');
+      toast.error(err?.message || 'Failed to save product. Please try again.');
     } finally {
       setSaving(false);
     }
