@@ -151,31 +151,47 @@ export default function ExclusiveProductSection() {
 
               {/* Open Orange Orbit SVG Frame & Connector Lines (Layer 2) */}
               <svg className="absolute inset-0 w-full h-full pointer-events-none z-[2]" viewBox="0 0 500 500">
-                {/* Left Arc Segment (Open top & bottom gaps) */}
+                <defs>
+                  {/* Left Arc Gradient for soft fading tips */}
+                  <linearGradient id="leftArcFade" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#D35B22" stopOpacity="0" />
+                    <stop offset="20%" stopColor="#D35B22" stopOpacity="0.8" />
+                    <stop offset="80%" stopColor="#D35B22" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#D35B22" stopOpacity="0" />
+                  </linearGradient>
+
+                  {/* Right Arc Gradient for soft fading tips */}
+                  <linearGradient id="rightArcFade" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#D35B22" stopOpacity="0" />
+                    <stop offset="20%" stopColor="#D35B22" stopOpacity="0.8" />
+                    <stop offset="80%" stopColor="#D35B22" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#D35B22" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+
+                {/* Left Arc Segment (Soft fading top & bottom ends) */}
                 <path
                   d="M 132.42 82.08 A 205 205 0 0 0 132.42 417.92"
                   fill="none"
-                  stroke="#D35B22"
-                  strokeWidth="1.5"
+                  stroke="url(#leftArcFade)"
+                  strokeWidth="1.8"
                   strokeLinecap="round"
-                  opacity="0.65"
                 />
 
-                {/* Right Arc Segment (Open top & bottom gaps) */}
+                {/* Right Arc Segment (Soft fading top & bottom ends) */}
                 <path
                   d="M 367.58 82.08 A 205 205 0 0 1 367.58 417.92"
                   fill="none"
-                  stroke="#D35B22"
-                  strokeWidth="1.5"
+                  stroke="url(#rightArcFade)"
+                  strokeWidth="1.8"
                   strokeLinecap="round"
-                  opacity="0.65"
                 />
 
                 {/* Connector Lines from Callouts to Orbit Dots */}
-                <line x1="10" y1="132.42" x2="82.08" y2="132.42" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
-                <line x1="10" y1="367.58" x2="82.08" y2="367.58" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
-                <line x1="490" y1="132.42" x2="417.92" y2="132.42" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
-                <line x1="490" y1="367.58" x2="417.92" y2="367.58" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
+                <line x1="25" y1="132.42" x2="82.08" y2="132.42" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
+                <line x1="25" y1="367.58" x2="82.08" y2="367.58" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
+                <line x1="475" y1="132.42" x2="417.92" y2="132.42" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
+                <line x1="475" y1="367.58" x2="417.92" y2="367.58" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
 
                 {/* 4 Orange Connection Dots directly on the Orbit Arcs */}
                 <circle cx="82.08" cy="132.42" r="6" fill="#D35B22" stroke="#FFFFFF" strokeWidth="2" />
@@ -186,59 +202,51 @@ export default function ExclusiveProductSection() {
 
               {/* 4 Connected Feature Callouts (Desktop / Large Screen - Layer 20) */}
               {/* 1. Top Left: Premium Leather */}
-              <div className="hidden xl:flex absolute top-[26.5%] left-[-95px] -translate-y-1/2 z-20 items-center gap-2.5 max-w-[170px] text-left pointer-events-auto">
-                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="hidden xl:flex absolute top-[26.5%] left-[-80px] -translate-y-1/2 z-20 flex-col items-center text-center max-w-[130px] pointer-events-auto">
+                <div className="w-9 h-9 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1.5 flex-shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                   </svg>
                 </div>
-                <div>
-                  <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">Premium Leather</h4>
-                  <p className="font-sans text-[10px] text-[#78716C] leading-snug">Luxury that lasts</p>
-                </div>
+                <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">Premium Leather</h4>
+                <p className="font-sans text-[10px] text-[#78716C] leading-snug mt-0.5">Luxury that lasts</p>
               </div>
 
               {/* 2. Top Right: Lightweight Design */}
-              <div className="hidden xl:flex absolute top-[26.5%] right-[-95px] -translate-y-1/2 z-20 items-center gap-2.5 max-w-[170px] text-right flex-row-reverse pointer-events-auto">
-                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="hidden xl:flex absolute top-[26.5%] right-[-80px] -translate-y-1/2 z-20 flex-col items-center text-center max-w-[130px] pointer-events-auto">
+                <div className="w-9 h-9 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1.5 flex-shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/>
                     <line x1="16" y1="8" x2="2" y2="22"/>
                     <line x1="17.5" y1="15" x2="9" y2="15"/>
                   </svg>
                 </div>
-                <div>
-                  <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">Lightweight Design</h4>
-                  <p className="font-sans text-[10px] text-[#78716C] leading-snug">Airy feel without limits</p>
-                </div>
+                <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">Lightweight Design</h4>
+                <p className="font-sans text-[10px] text-[#78716C] leading-snug mt-0.5">Airy feel without limits</p>
               </div>
 
               {/* 3. Bottom Left: All-Day Comfort */}
-              <div className="hidden xl:flex absolute top-[73.5%] left-[-95px] -translate-y-1/2 z-20 items-center gap-2.5 max-w-[170px] text-left pointer-events-auto">
-                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="hidden xl:flex absolute top-[73.5%] left-[-80px] -translate-y-1/2 z-20 flex-col items-center text-center max-w-[130px] pointer-events-auto">
+                <div className="w-9 h-9 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1.5 flex-shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polygon points="12 2 2 7 12 12 22 7 12 2"/>
                     <polyline points="2 17 12 22 22 17"/>
                     <polyline points="2 12 12 17 22 12"/>
                   </svg>
                 </div>
-                <div>
-                  <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">All-Day Comfort</h4>
-                  <p className="font-sans text-[10px] text-[#78716C] leading-snug">Built for every journey</p>
-                </div>
+                <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">All-Day Comfort</h4>
+                <p className="font-sans text-[10px] text-[#78716C] leading-snug mt-0.5">Built for every journey</p>
               </div>
 
               {/* 4. Bottom Right: Durable Outsole */}
-              <div className="hidden xl:flex absolute top-[73.5%] right-[-95px] -translate-y-1/2 z-20 items-center gap-2.5 max-w-[170px] text-right flex-row-reverse pointer-events-auto">
-                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
+              <div className="hidden xl:flex absolute top-[73.5%] right-[-80px] -translate-y-1/2 z-20 flex-col items-center text-center max-w-[130px] pointer-events-auto">
+                <div className="w-9 h-9 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1.5 flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                   </svg>
                 </div>
-                <div>
-                  <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">Durable Outsole</h4>
-                  <p className="font-sans text-[10px] text-[#78716C] leading-snug">Made for everyday terrain</p>
-                </div>
+                <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">Durable Outsole</h4>
+                <p className="font-sans text-[10px] text-[#78716C] leading-snug mt-0.5">Made for everyday terrain</p>
               </div>
 
               {/* FLOATING PRODUCT IMAGE SLIDER (Layer 10 - Sits above circle, below callouts) */}
