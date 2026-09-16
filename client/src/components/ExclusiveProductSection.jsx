@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import useCartStore from '../store/cartStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
 import useAuthStore from '../store/authStore.js';
@@ -15,6 +15,11 @@ export default function ExclusiveProductSection() {
   const checkWishlisted = useWishlistStore((s) => s.isWishlisted);
   const toggleWishlist = useWishlistStore((s) => s.toggle);
 
+  // Touch & Mouse Drag Swipe State for Product Image Slider
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  const isDragging = useRef(false);
+
   useEffect(() => {
     // Fetch live product data from database/catalog
     getProduct('urbanedge-pro').then((data) => {
@@ -29,6 +34,50 @@ export default function ExclusiveProductSection() {
   const selectedVariant = variants[selectedIndex] || variants[0];
   const selectedVariantId = selectedVariant?.id || (selectedVariant?.name ? selectedVariant.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);
   const isWishlisted = checkWishlisted(product.id, selectedVariantId, user);
+
+  // Touch swipe handlers
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    const distance = touchStartX.current - touchEndX.current;
+    if (Math.abs(distance) > 30) {
+      if (distance > 0) {
+        setSelectedIndex((prev) => (prev + 1) % variants.length);
+      } else {
+        setSelectedIndex((prev) => (prev - 1 + variants.length) % variants.length);
+      }
+    }
+    touchStartX.current = 0;
+    touchEndX.current = 0;
+  };
+
+  // Mouse drag handlers
+  const handleMouseDown = (e) => {
+    isDragging.current = true;
+    touchStartX.current = e.clientX;
+    touchEndX.current = e.clientX;
+  };
+
+  const handleMouseUp = (e) => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    const distance = touchStartX.current - e.clientX;
+    if (Math.abs(distance) > 30) {
+      if (distance > 0) {
+        setSelectedIndex((prev) => (prev + 1) % variants.length);
+      } else {
+        setSelectedIndex((prev) => (prev - 1 + variants.length) % variants.length);
+      }
+    }
+  };
 
   const handleAddToCart = () => {
     const itemToAdd = {
@@ -187,22 +236,22 @@ export default function ExclusiveProductSection() {
                   strokeLinecap="round"
                 />
 
-                {/* Connector Lines from Callouts to Orbit Dots */}
-                <line x1="25" y1="132.42" x2="82.08" y2="132.42" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
-                <line x1="25" y1="367.58" x2="82.08" y2="367.58" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
-                <line x1="475" y1="132.42" x2="417.92" y2="132.42" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
-                <line x1="475" y1="367.58" x2="417.92" y2="367.58" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
+                {/* Connector Lines from Callouts directly to Orbit Dots (No Gap) */}
+                <line x1="50" y1="132.42" x2="82.08" y2="132.42" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
+                <line x1="50" y1="367.58" x2="82.08" y2="367.58" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
+                <line x1="450" y1="132.42" x2="417.92" y2="132.42" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
+                <line x1="450" y1="367.58" x2="417.92" y2="367.58" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
 
-                {/* 4 Orange Connection Dots directly on the Orbit Arcs */}
-                <circle cx="82.08" cy="132.42" r="6" fill="#D35B22" stroke="#FFFFFF" strokeWidth="2" />
-                <circle cx="82.08" cy="367.58" r="6" fill="#D35B22" stroke="#FFFFFF" strokeWidth="2" />
-                <circle cx="417.92" cy="132.42" r="6" fill="#D35B22" stroke="#FFFFFF" strokeWidth="2" />
-                <circle cx="417.92" cy="367.58" r="6" fill="#D35B22" stroke="#FFFFFF" strokeWidth="2" />
+                {/* 4 Reduced Size Orange Connection Dots directly on the Orbit Arcs */}
+                <circle cx="82.08" cy="132.42" r="4" fill="#D35B22" stroke="#FFFFFF" strokeWidth="1.5" />
+                <circle cx="82.08" cy="367.58" r="4" fill="#D35B22" stroke="#FFFFFF" strokeWidth="1.5" />
+                <circle cx="417.92" cy="132.42" r="4" fill="#D35B22" stroke="#FFFFFF" strokeWidth="1.5" />
+                <circle cx="417.92" cy="367.58" r="4" fill="#D35B22" stroke="#FFFFFF" strokeWidth="1.5" />
               </svg>
 
-              {/* 4 Connected Feature Callouts (Desktop / Large Screen - Layer 20) */}
+              {/* 4 Connected Unique Feature Callouts (Desktop / Large Screen - Layer 20) */}
               {/* 1. Top Left: Premium Leather */}
-              <div className="hidden xl:flex absolute top-[26.5%] left-[-80px] -translate-y-1/2 z-20 flex-col items-center text-center max-w-[130px] pointer-events-auto">
+              <div className="hidden xl:flex absolute top-[26.5%] left-[-50px] -translate-y-1/2 z-20 flex-col items-center text-center max-w-[130px] pointer-events-auto">
                 <div className="w-9 h-9 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1.5 flex-shrink-0">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
@@ -213,7 +262,7 @@ export default function ExclusiveProductSection() {
               </div>
 
               {/* 2. Top Right: Lightweight Design */}
-              <div className="hidden xl:flex absolute top-[26.5%] right-[-80px] -translate-y-1/2 z-20 flex-col items-center text-center max-w-[130px] pointer-events-auto">
+              <div className="hidden xl:flex absolute top-[26.5%] right-[-50px] -translate-y-1/2 z-20 flex-col items-center text-center max-w-[130px] pointer-events-auto">
                 <div className="w-9 h-9 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1.5 flex-shrink-0">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/>
@@ -225,21 +274,19 @@ export default function ExclusiveProductSection() {
                 <p className="font-sans text-[10px] text-[#78716C] leading-snug mt-0.5">Airy feel without limits</p>
               </div>
 
-              {/* 3. Bottom Left: All-Day Comfort */}
-              <div className="hidden xl:flex absolute top-[73.5%] left-[-80px] -translate-y-1/2 z-20 flex-col items-center text-center max-w-[130px] pointer-events-auto">
+              {/* 3. Bottom Left: All-Day Comfort (Soft Cushion / Cloud Icon - Unique!) */}
+              <div className="hidden xl:flex absolute top-[73.5%] left-[-50px] -translate-y-1/2 z-20 flex-col items-center text-center max-w-[130px] pointer-events-auto">
                 <div className="w-9 h-9 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1.5 flex-shrink-0">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                    <polyline points="2 17 12 22 22 17"/>
-                    <polyline points="2 12 12 17 22 12"/>
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
                   </svg>
                 </div>
                 <h4 className="font-display text-xs font-bold text-[#171412] leading-tight">All-Day Comfort</h4>
                 <p className="font-sans text-[10px] text-[#78716C] leading-snug mt-0.5">Built for every journey</p>
               </div>
 
-              {/* 4. Bottom Right: Durable Outsole */}
-              <div className="hidden xl:flex absolute top-[73.5%] right-[-80px] -translate-y-1/2 z-20 flex-col items-center text-center max-w-[130px] pointer-events-auto">
+              {/* 4. Bottom Right: Durable Outsole (Shield Icon) */}
+              <div className="hidden xl:flex absolute top-[73.5%] right-[-50px] -translate-y-1/2 z-20 flex-col items-center text-center max-w-[130px] pointer-events-auto">
                 <div className="w-9 h-9 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1.5 flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -249,8 +296,16 @@ export default function ExclusiveProductSection() {
                 <p className="font-sans text-[10px] text-[#78716C] leading-snug mt-0.5">Made for everyday terrain</p>
               </div>
 
-              {/* FLOATING PRODUCT IMAGE SLIDER (Layer 10 - Sits above circle, below callouts) */}
-              <div className="relative z-10 w-[80%] h-[80%] flex items-center justify-center overflow-hidden animate-float">
+              {/* SWIPEABLE & DRAGGABLE PRODUCT IMAGE SLIDER (Layer 10) */}
+              <div
+                className="relative z-10 w-[80%] h-[80%] flex items-center justify-center overflow-hidden animate-float cursor-grab active:cursor-grabbing select-none touch-pan-y"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              >
                 <div
                   className="w-full h-full flex transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
                   style={{ transform: `translateX(-${selectedIndex * 100}%)` }}
@@ -349,7 +404,7 @@ export default function ExclusiveProductSection() {
           {[
             { title: 'Premium Leather', desc: 'Luxury that lasts', icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5' },
             { title: 'Lightweight Design', desc: 'Airy feel without limits', icon: 'M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' },
-            { title: 'All-Day Comfort', desc: 'Built for every journey', icon: 'M12 2L2 7l10 5 10-5-10-5z' },
+            { title: 'All-Day Comfort', desc: 'Built for every journey', icon: 'M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z' },
             { title: 'Durable Outsole', desc: 'Made for everyday terrain', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
           ].map((item) => (
             <div key={item.title} className="flex items-center gap-2.5 p-2">
