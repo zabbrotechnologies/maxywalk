@@ -105,6 +105,22 @@ export const DEFAULT_EXCLUSIVE_PRODUCT = {
   ]
 };
 
+const ALLOWED_PRODUCT_KEYS = [
+  'id', 'name', 'description', 'category', 'price', 'original_price',
+  'sizes', 'colors', 'images', 'stock', 'featured', 'material',
+  'badge', 'rating', 'review_count', 'created_at'
+];
+
+function sanitizeProductData(data) {
+  const clean = {};
+  for (const key of ALLOWED_PRODUCT_KEYS) {
+    if (data[key] !== undefined) {
+      clean[key] = data[key];
+    }
+  }
+  return clean;
+}
+
 export const getProducts = async (params = {}) => {
   const cacheKey = `products_${JSON.stringify(params)}`;
   const cached = getCached(cacheKey);
@@ -138,6 +154,14 @@ export const getProducts = async (params = {}) => {
     }
   }
 
+  // Ensure urbanedge-pro has is_exclusive flags set in memory
+  list = list.map((p) => {
+    if (p.id === 'urbanedge-pro') {
+      return { ...DEFAULT_EXCLUSIVE_PRODUCT, ...p, is_exclusive: true, isExclusive: true };
+    }
+    return p;
+  });
+
   if (params.exclusive === true || params.exclusive === 'true') {
     list = list.filter((p) => p.is_exclusive || p.isExclusive || p.id === 'urbanedge-pro');
   }
@@ -156,7 +180,7 @@ export const getProducts = async (params = {}) => {
 export const getProduct = async (id) => {
   if (id === 'urbanedge-pro') {
     const { data } = await supabase.from('products').select('*').eq('id', id).maybeSingle();
-    if (data) return { ...DEFAULT_EXCLUSIVE_PRODUCT, ...data };
+    if (data) return { ...DEFAULT_EXCLUSIVE_PRODUCT, ...data, is_exclusive: true, isExclusive: true };
     return DEFAULT_EXCLUSIVE_PRODUCT;
   }
 
@@ -176,9 +200,10 @@ export const getProduct = async (id) => {
 
 export const createProduct = async (data) => {
   clearApiCache();
+  const cleanData = sanitizeProductData(data);
   const newProduct = {
-    id: `custom-${Date.now()}`,
-    ...data,
+    id: cleanData.id || `custom-${Date.now()}`,
+    ...cleanData,
     created_at: new Date().toISOString()
   };
   
@@ -192,12 +217,36 @@ export const createProduct = async (data) => {
 
 export const updateProduct = async (id, data) => {
   clearApiCache();
-  const { data: updatedData, error } = await supabase.from('products').update(data).eq('id', id).select().single();
+  const cleanData = sanitizeProductData(data);
+  
+  const { data: updatedData, error } = await supabase
+    .from('products')
+    .update(cleanData)
+    .eq('id', id)
+    .select();
+
   if (error) {
     console.error(`Supabase updateProduct ${id} error:`, error);
     throw error;
   }
-  return updatedData;
+
+  // If update returned 0 rows (e.g. for 'urbanedge-pro' or local template product not yet in DB)
+  if (!updatedData || updatedData.length === 0) {
+    const upsertPayload = { id, ...cleanData };
+    const { data: upsertedData, error: upsertErr } = await supabase
+      .from('products')
+      .upsert([upsertPayload])
+      .select()
+      .single();
+      
+    if (upsertErr) {
+      console.error(`Supabase updateProduct (upsert) ${id} error:`, upsertErr);
+      throw upsertErr;
+    }
+    return upsertedData;
+  }
+
+  return updatedData[0];
 };
 
 export const deleteProduct = async (id) => {
