@@ -149,18 +149,44 @@ export default function ExclusiveProductSection() {
               {/* Soft Product Shadow (Layer 1) */}
               <div className="absolute bottom-[18%] left-1/2 -translate-x-1/2 w-[75%] h-[40px] bg-black/15 rounded-full blur-xl pointer-events-none z-[1]" />
 
-              {/* Orange Circular Showcase Frame (Layer 2) */}
-              <div className="absolute inset-[6%] sm:inset-[8%] rounded-full border border-[#D35B22]/50 shadow-[0_0_25px_rgba(211,91,34,0.12)] pointer-events-none z-[2]" />
+              {/* Open Orange Orbit SVG Frame & Connector Lines (Layer 2) */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none z-[2]" viewBox="0 0 500 500">
+                {/* Left Arc Segment (Open top & bottom gaps) */}
+                <path
+                  d="M 132.42 82.08 A 205 205 0 0 0 132.42 417.92"
+                  fill="none"
+                  stroke="#D35B22"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  opacity="0.65"
+                />
 
-              {/* 4 Small Orange Circle Node Dots on the Circle Perimeter (Layer 2) */}
-              <div className="absolute top-[21%] left-[14%] z-[2] -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md pointer-events-none" />
-              <div className="absolute top-[21%] right-[14%] z-[2] translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md pointer-events-none" />
-              <div className="absolute bottom-[23%] left-[14%] z-[2] -translate-x-1/2 translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md pointer-events-none" />
-              <div className="absolute bottom-[23%] right-[14%] z-[2] translate-x-1/2 translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#D35B22] border-2 border-white shadow-md pointer-events-none" />
+                {/* Right Arc Segment (Open top & bottom gaps) */}
+                <path
+                  d="M 367.58 82.08 A 205 205 0 0 1 367.58 417.92"
+                  fill="none"
+                  stroke="#D35B22"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  opacity="0.65"
+                />
+
+                {/* Connector Lines from Callouts to Orbit Dots */}
+                <line x1="10" y1="132.42" x2="82.08" y2="132.42" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
+                <line x1="10" y1="367.58" x2="82.08" y2="367.58" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
+                <line x1="490" y1="132.42" x2="417.92" y2="132.42" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
+                <line x1="490" y1="367.58" x2="417.92" y2="367.58" stroke="#D35B22" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" />
+
+                {/* 4 Orange Connection Dots directly on the Orbit Arcs */}
+                <circle cx="82.08" cy="132.42" r="6" fill="#D35B22" stroke="#FFFFFF" strokeWidth="2" />
+                <circle cx="82.08" cy="367.58" r="6" fill="#D35B22" stroke="#FFFFFF" strokeWidth="2" />
+                <circle cx="417.92" cy="132.42" r="6" fill="#D35B22" stroke="#FFFFFF" strokeWidth="2" />
+                <circle cx="417.92" cy="367.58" r="6" fill="#D35B22" stroke="#FFFFFF" strokeWidth="2" />
+              </svg>
 
               {/* 4 Connected Feature Callouts (Desktop / Large Screen - Layer 20) */}
               {/* 1. Top Left: Premium Leather */}
-              <div className="hidden xl:flex absolute top-[12%] left-[-35px] z-20 items-start gap-2.5 max-w-[160px] text-left pointer-events-auto">
+              <div className="hidden xl:flex absolute top-[26.5%] left-[-95px] -translate-y-1/2 z-20 items-center gap-2.5 max-w-[170px] text-left pointer-events-auto">
                 <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
@@ -173,7 +199,7 @@ export default function ExclusiveProductSection() {
               </div>
 
               {/* 2. Top Right: Lightweight Design */}
-              <div className="hidden xl:flex absolute top-[12%] right-[-35px] z-20 items-start gap-2.5 max-w-[160px] text-right flex-row-reverse pointer-events-auto">
+              <div className="hidden xl:flex absolute top-[26.5%] right-[-95px] -translate-y-1/2 z-20 items-center gap-2.5 max-w-[170px] text-right flex-row-reverse pointer-events-auto">
                 <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/>
@@ -188,7 +214,7 @@ export default function ExclusiveProductSection() {
               </div>
 
               {/* 3. Bottom Left: All-Day Comfort */}
-              <div className="hidden xl:flex absolute bottom-[14%] left-[-35px] z-20 items-start gap-2.5 max-w-[160px] text-left pointer-events-auto">
+              <div className="hidden xl:flex absolute top-[73.5%] left-[-95px] -translate-y-1/2 z-20 items-center gap-2.5 max-w-[170px] text-left pointer-events-auto">
                 <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polygon points="12 2 2 7 12 12 22 7 12 2"/>
@@ -203,7 +229,7 @@ export default function ExclusiveProductSection() {
               </div>
 
               {/* 4. Bottom Right: Durable Outsole */}
-              <div className="hidden xl:flex absolute bottom-[14%] right-[-35px] z-20 items-start gap-2.5 max-w-[160px] text-right flex-row-reverse pointer-events-auto">
+              <div className="hidden xl:flex absolute top-[73.5%] right-[-95px] -translate-y-1/2 z-20 items-center gap-2.5 max-w-[170px] text-right flex-row-reverse pointer-events-auto">
                 <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
