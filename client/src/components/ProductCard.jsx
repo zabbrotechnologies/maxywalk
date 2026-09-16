@@ -1,22 +1,74 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import useCartStore from '../store/cartStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
 import { formatPrice } from '../lib/utils.js';
 import toast from 'react-hot-toast';
-
 import useAuthStore from '../store/authStore.js';
 
 export default function ProductCard({ product }) {
-  const [hovered, setHovered] = useState(false);
+  const [currentImgIndex, setCurrentImgIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const containerRef = useRef(null);
+
   const { addItem, openCart } = useCartStore();
   const { user } = useAuthStore();
   const toggle = useWishlistStore((s) => s.toggle);
   const isWishlisted = useWishlistStore((s) => s.isWishlisted);
 
   const wishlisted = isWishlisted(product.id, user);
-  const hasSecondImage = product.images?.length > 1;
   const defaultSize = product.sizes?.[0] || 'Standard';
+
+  const validImages = useMemo(() => {
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      const filtered = product.images.filter((img) => img && typeof img === 'string' && img.trim() !== '');
+      return filtered.length > 0 ? filtered : ['https://placehold.co/400x500/f4f3f1/7e7576?text=MAXYWALK'];
+    }
+    return ['https://placehold.co/400x500/f4f3f1/7e7576?text=MAXYWALK'];
+  }, [product.images]);
+
+  const totalImages = validImages.length;
+  const isMultiImage = totalImages >= 2;
+
+  // Viewport IntersectionObserver to pause off-screen cards
+  useEffect(() => {
+    if (!containerRef.current || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Preload images for smooth transition
+  useEffect(() => {
+    if (isMultiImage) {
+      validImages.forEach((src) => {
+        const img = new Image();
+        img.src = src;
+      });
+    }
+  }, [isMultiImage, validImages]);
+
+  // Automatic slideshow interval (2.8s) when visible, multi-image, and not hovered
+  useEffect(() => {
+    if (!isMultiImage || !isVisible || isHovered) return;
+
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (mediaQuery.matches) return;
+    }
+
+    const timer = setInterval(() => {
+      setCurrentImgIndex((prev) => (prev + 1) % totalImages);
+    }, 2800);
+
+    return () => clearInterval(timer);
+  }, [isMultiImage, isVisible, isHovered, totalImages]);
 
   const handleQuickAdd = (e) => {
     e.preventDefault();
@@ -41,43 +93,40 @@ export default function ProductCard({ product }) {
   };
 
   return (
-    <div className="product-card group flex flex-col w-full bg-white border border-outline-variant/40 hover:border-secondary transition-all duration-300 p-3 sm:p-4 rounded-2xl shadow-lux hover:shadow-lux-md">
+    <div
+      ref={containerRef}
+      className="product-card group flex flex-col w-full bg-white border border-outline-variant/40 hover:border-secondary transition-all duration-300 p-3 sm:p-4 rounded-2xl shadow-lux hover:shadow-lux-md"
+    >
       {/* Image Container */}
       <Link
         to={`/product/${product.id}`}
-        className="relative w-full aspect-[4/5] overflow-hidden mb-3 block rounded-xl flex items-center justify-center p-4"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        className="relative w-full aspect-[4/5] overflow-hidden mb-3 block rounded-xl p-4 bg-surface-container/30"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Primary Image */}
-        <img
-          src={product.images?.[0] || 'https://placehold.co/400x500/f4f3f1/7e7576?text=MAXYWALK'}
-          alt={product.name}
-          loading="lazy"
-          decoding="async"
-          className={`img-primary absolute w-full h-full object-contain drop-shadow-md transition-all duration-500 ${
-            hovered && hasSecondImage ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
-          }`}
-          onError={(e) => { e.target.src = 'https://placehold.co/400x500/f4f3f1/7e7576?text=MAXYWALK'; }}
-        />
-
-        {/* Secondary Image */}
-        {hasSecondImage && (
-          <img
-            src={product.images[1]}
-            alt={`${product.name} alternate view`}
-            loading="lazy"
-            decoding="async"
-            className={`img-secondary absolute w-full h-full object-contain drop-shadow-md transition-all duration-500 ${
-              hovered ? 'opacity-100' : 'opacity-0'
-            }`}
-            onError={(e) => { e.target.src = 'https://placehold.co/400x500/f4f3f1/7e7576?text=MAXYWALK'; }}
-          />
-        )}
+        {/* Stacked Images for Smooth Crossfade */}
+        {validImages.map((imgSrc, idx) => {
+          const isActive = idx === (currentImgIndex % totalImages);
+          return (
+            <img
+              key={`${imgSrc}-${idx}`}
+              src={imgSrc}
+              alt={`${product.name} view ${idx + 1}`}
+              loading={idx === 0 ? 'eager' : 'lazy'}
+              decoding="async"
+              className={`absolute inset-0 w-full h-full object-contain p-4 drop-shadow-md transition-opacity duration-500 ease-in-out ${
+                isActive ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none z-0'
+              }`}
+              onError={(e) => {
+                e.target.src = 'https://placehold.co/400x500/f4f3f1/7e7576?text=MAXYWALK';
+              }}
+            />
+          );
+        })}
 
         {/* Badge */}
         {product.badge && (
-          <div className="absolute top-2 left-2 bg-primary text-white px-2 py-0.5 font-sans text-[9px] uppercase tracking-wider z-10 font-semibold">
+          <div className="absolute top-2 left-2 bg-primary text-white px-2 py-0.5 font-sans text-[9px] uppercase tracking-wider z-20 font-semibold rounded-sm">
             {product.badge}
           </div>
         )}
@@ -85,7 +134,7 @@ export default function ProductCard({ product }) {
         {/* Wishlist Button */}
         <button
           onClick={handleWishlist}
-          className="absolute top-2 right-2 z-10 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white shadow-sm transition-colors"
+          className="absolute top-2 right-2 z-20 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white shadow-sm transition-colors"
           aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
         >
           <span
