@@ -59,9 +59,9 @@ export default function Navbar() {
 
   const navLinks = [
     { to: '/', label: 'Home' },
-    { to: '/shop', label: 'Shoes' },
     { to: '/shop', label: 'Shop All' },
     { to: '/shop?category=slippers', label: 'Slippers' },
+    { to: '/shop?category=shoes', label: 'Shoes' },
     { to: '/shop?category=sandals', label: 'Sandals' },
     { to: '/shop?category=belts', label: 'Belts' },
     { to: '/shop?category=wallets', label: 'Wallets' },

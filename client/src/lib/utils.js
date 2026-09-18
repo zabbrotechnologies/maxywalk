@@ -86,6 +86,7 @@ export const INDIAN_STATES = [
 export const CATEGORIES = [
   { value: 'all', label: 'All Products' },
   { value: 'slippers', label: 'Slippers & Mules' },
+  { value: 'shoes', label: 'Shoes' },
   { value: 'sandals', label: 'Sandals' },
   { value: 'belts', label: 'Belts' },
   { value: 'wallets', label: 'Wallets' },
