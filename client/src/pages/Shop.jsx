@@ -13,103 +13,18 @@ const SORT_OPTIONS = [
 
 const MATERIALS = ['Genuine Leather', 'Full-Grain Leather', 'Vegetable-Tanned', 'Genuine Cowhide'];
 
-export default function Shop() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-
-  // Filter state
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
-  const [selectedSizes, setSelectedSizes] = useState([]);
-  const [selectedMaterials, setSelectedMaterials] = useState([]);
-  const [priceRange, setPriceRange] = useState([0, 5000]);
-  const [sort, setSort] = useState('featured');
-  const searchQuery = searchParams.get('search') || '';
-
-  useEffect(() => {
-    document.title = 'Shop All Leather Footwear & Goods | MAXYWALK';
-  }, []);
-
-  // Fetch products
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = { sort };
-      if (selectedCategory !== 'all') params.category = selectedCategory;
-      const data = await getProducts(params);
-      let filtered = data.products || [];
-
-      // Client-side filters
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        filtered = filtered.filter((p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.description?.toLowerCase().includes(q) ||
-          p.category?.toLowerCase().includes(q)
-        );
-      }
-      if (selectedSizes.length > 0) {
-        filtered = filtered.filter((p) =>
-          p.sizes?.some((s) => selectedSizes.includes(s))
-        );
-      }
-      if (selectedMaterials.length > 0) {
-        filtered = filtered.filter((p) =>
-          selectedMaterials.includes(p.material)
-        );
-      }
-      filtered = filtered.filter(
-        (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
-      );
-
-      setProducts(filtered);
-      setTotal(filtered.length);
-    } catch (err) {
-      console.error(err);
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedCategory, selectedSizes, selectedMaterials, priceRange, sort, searchQuery]);
-
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
-
-  useEffect(() => {
-    const cat = searchParams.get('category');
-    if (cat) setSelectedCategory(cat);
-  }, [searchParams]);
-
-  const toggleSize = (size) =>
-    setSelectedSizes((prev) =>
-      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
-    );
-
-  const toggleMaterial = (mat) =>
-    setSelectedMaterials((prev) =>
-      prev.includes(mat) ? prev.filter((m) => m !== mat) : [...prev, mat]
-    );
-
-  const clearAll = () => {
-    setSelectedCategory('all');
-    setSelectedSizes([]);
-    setSelectedMaterials([]);
-    setPriceRange([0, 5000]);
-    setSort('featured');
-    setSearchParams({});
-  };
-
-  const activeFilters = [
-    selectedCategory !== 'all' && { label: CATEGORIES.find((c) => c.value === selectedCategory)?.label, onRemove: () => setSelectedCategory('all') },
-    ...selectedSizes.map((s) => ({ label: `Size ${s}`, onRemove: () => toggleSize(s) })),
-    ...selectedMaterials.map((m) => ({ label: m, onRemove: () => toggleMaterial(m) })),
-    searchQuery && { label: `"${searchQuery}"`, onRemove: () => setSearchParams({}) },
-  ].filter(Boolean);
-
-  const Sidebar = () => (
+function Sidebar({
+  selectedCategory,
+  setSelectedCategory,
+  setSearchParams,
+  selectedSizes,
+  toggleSize,
+  priceRange,
+  setPriceRange,
+  selectedMaterials,
+  toggleMaterial,
+}) {
+  return (
     <div className="space-y-6">
       {/* Category */}
       <div className="border-b border-outline-variant/30 pb-5">
@@ -205,6 +120,123 @@ export default function Shop() {
       </div>
     </div>
   );
+}
+
+export default function Shop() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Filter state
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [selectedSizes, setSelectedSizes] = useState([]);
+  const [selectedMaterials, setSelectedMaterials] = useState([]);
+  const [priceRange, setPriceRange] = useState([0, 5000]);
+  const [sort, setSort] = useState('featured');
+  const searchQuery = searchParams.get('search') || '';
+
+  useEffect(() => {
+    document.title = 'Shop All Leather Footwear & Goods | MAXYWALK';
+  }, []);
+
+  // Fetch products
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = { sort };
+      if (selectedCategory !== 'all') params.category = selectedCategory;
+      const data = await getProducts(params);
+      let filtered = data.products || [];
+
+      // Client-side filters
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter((p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.description?.toLowerCase().includes(q) ||
+          p.category?.toLowerCase().includes(q)
+        );
+      }
+      if (selectedSizes.length > 0) {
+        filtered = filtered.filter((p) =>
+          p.sizes?.some((s) => selectedSizes.includes(s))
+        );
+      }
+      if (selectedMaterials.length > 0) {
+        filtered = filtered.filter((p) =>
+          selectedMaterials.includes(p.material)
+        );
+      }
+      filtered = filtered.filter(
+        (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
+      );
+
+      setProducts(filtered);
+      setTotal(filtered.length);
+    } catch (err) {
+      console.error(err);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedCategory, selectedSizes, selectedMaterials, priceRange, sort, searchQuery]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    setSelectedCategory(cat || 'all');
+  }, [searchParams]);
+
+  const toggleSize = (size) =>
+    setSelectedSizes((prev) =>
+      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+    );
+
+  const toggleMaterial = (mat) =>
+    setSelectedMaterials((prev) =>
+      prev.includes(mat) ? prev.filter((m) => m !== mat) : [...prev, mat]
+    );
+
+  const clearAll = () => {
+    setSelectedCategory('all');
+    setSelectedSizes([]);
+    setSelectedMaterials([]);
+    setPriceRange([0, 5000]);
+    setSort('featured');
+    setSearchParams({});
+  };
+
+  const activeFilters = [
+    selectedCategory !== 'all' && {
+      label: CATEGORIES.find((c) => c.value === selectedCategory)?.label || selectedCategory,
+      onRemove: () => {
+        setSelectedCategory('all');
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete('category');
+        setSearchParams(nextParams);
+      },
+    },
+    ...selectedSizes.map((s) => ({ label: `Size ${s}`, onRemove: () => toggleSize(s) })),
+    ...selectedMaterials.map((m) => ({ label: m, onRemove: () => toggleMaterial(m) })),
+    searchQuery && { label: `"${searchQuery}"`, onRemove: () => setSearchParams({}) },
+  ].filter(Boolean);
+
+  const sidebarProps = {
+    selectedCategory,
+    setSelectedCategory,
+    setSearchParams,
+    selectedSizes,
+    toggleSize,
+    priceRange,
+    setPriceRange,
+    selectedMaterials,
+    toggleMaterial,
+  };
 
   return (
     <div className="page-enter min-h-screen w-full overflow-hidden">
@@ -276,7 +308,7 @@ export default function Shop() {
           {/* Desktop Sidebar */}
           <aside className="hidden md:block w-56 flex-shrink-0">
             <div className="sticky top-24 bg-white p-5 border border-outline-variant/30">
-              <Sidebar />
+              <Sidebar {...sidebarProps} />
             </div>
           </aside>
 
@@ -322,7 +354,7 @@ export default function Shop() {
               </div>
 
               <div className="flex-1">
-                <Sidebar />
+                <Sidebar {...sidebarProps} />
               </div>
 
               <div className="pt-4 mt-4 border-t border-outline-variant/30 flex gap-2">

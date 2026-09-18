@@ -66,6 +66,37 @@ export const getStepIndex = (status) => {
 };
 
 /**
+ * Calculate expected delivery date (7 days from order creation)
+ */
+export const getExpectedDeliveryDate = (dateStr) => {
+  if (!dateStr) return 'Pending';
+  try {
+    const raw = dateStr?.toDate ? dateStr.toDate() : dateStr;
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return 'Pending';
+    // Add 7 days
+    d.setDate(d.getDate() + 7);
+    return d.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+  } catch {
+    return 'Pending';
+  }
+};
+
+/**
+ * Calculate size-based price surcharge
+ * Base price for sizes 6-10. +150 per size above 10.
+ */
+export const calculateSizePrice = (basePrice, size) => {
+  const sizeNum = parseInt(size, 10);
+  if (isNaN(sizeNum) || sizeNum <= 10) return Number(basePrice);
+  return Number(basePrice) + (sizeNum - 10) * 150;
+};
+
+/**
  * Indian states list
  */
 export const INDIAN_STATES = [
@@ -94,4 +125,4 @@ export const CATEGORIES = [
 /**
  * Shoe sizes (Indian)
  */
-export const SHOE_SIZES = ['6', '7', '8', '9', '10', '11', '12'];
+export const SHOE_SIZES = ['6', '7', '8', '9', '10', '11', '12', '13'];

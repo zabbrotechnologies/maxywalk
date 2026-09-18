@@ -106,6 +106,7 @@ function CheckoutLayout({ children }) {
 
 import useCartStore from './store/cartStore.js';
 import useWishlistStore from './store/wishlistStore.js';
+import { clearApiCache } from './lib/api.js';
 
 export default function App() {
   const { init, user } = useAuthStore();
@@ -115,6 +116,9 @@ export default function App() {
     const unsubscribe = init();
 
     const handleStorageChange = (e) => {
+      if (e.key === 'maxywalk-cache-sync') {
+        clearApiCache();
+      }
       if (['maxywalk-user-carts', 'maxywalk-user-wishlists', 'maxywalk-my-orders', 'maxywalk-auth'].includes(e.key)) {
         const currentUser = useAuthStore.getState().user;
         useCartStore.getState().setActiveUser(currentUser);

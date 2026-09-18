@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getProduct, getProducts } from '../lib/api.js';
+import { getProduct, getProducts, DEFAULT_EXCLUSIVE_PRODUCT } from '../lib/api.js';
 import useCartStore from '../store/cartStore.js';
 import useAuthStore from '../store/authStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
 import ProductCard from '../components/ProductCard.jsx';
-import { formatPrice } from '../lib/utils.js';
+import { formatPrice, calculateSizePrice } from '../lib/utils.js';
 import toast from 'react-hot-toast';
 
 export default function ProductDetail() {
@@ -21,11 +21,12 @@ export default function ProductDetail() {
 
   const { addItem, openCart } = useCartStore();
   const { user } = useAuthStore();
-  const toggle = useWishlistStore((s) => s.toggle);
+  const userWishlists = useWishlistStore((s) => s.userWishlists);
+  const toggleWishlist = useWishlistStore((s) => s.toggle);
   const isWishlisted = useWishlistStore((s) => s.isWishlisted);
-  const uid = user?.uid || 'guest';
 
   useEffect(() => {
+    if (!id) return;
     setLoading(true);
     setActiveImage(0);
     setSelectedSize('');
@@ -35,30 +36,25 @@ export default function ProductDetail() {
     getProduct(id)
       .then((data) => {
         setProduct(data);
-        setSelectedColor(data.colors?.[0] || '');
-        if (data.sizes?.length > 0) setSelectedSize(data.sizes[0]);
-        document.title = `${data.name} | MAXYWALK`;
-        return getProducts({ category: data.category, limit: 4 });
+        if (data) {
+          setSelectedColor(data.colors?.[0] || '');
+          if (data.sizes?.length > 0) setSelectedSize(data.sizes[0]);
+          document.title = `${data.name || 'Product'} | MAXYWALK`;
+          return getProducts({ category: data.category, limit: 4 });
+        }
+        return { products: [] };
       })
-      .then((d) => setRelated((d.products || []).filter((p) => p.id !== id).slice(0, 4)))
-      .catch(console.error)
+      .then((d) => {
+        if (d?.products) {
+          setRelated(d.products.filter((p) => p.id !== id).slice(0, 4));
+        }
+      })
+      .catch((err) => {
+        console.error('Error loading product details:', err);
+        setProduct(null);
+      })
       .finally(() => setLoading(false));
   }, [id]);
-
-  const handleAddToCart = () => {
-    if (!product) return;
-    const effectiveSize = selectedSize || (product.sizes?.length ? product.sizes[0] : 'Standard');
-    const effectiveColor = selectedColor || (product.colors?.length ? product.colors[0] : 'Default');
-    
-    addItem(product, effectiveSize, effectiveColor, qty, user);
-    openCart();
-    toast.success('Added to your shopping bag!', { duration: 2000 });
-  };
-
-  const origPrice = product?.originalPrice || product?.original_price;
-  const discount = origPrice
-    ? Math.round(((origPrice - product.price) / origPrice) * 100)
-    : 0;
 
   if (loading) {
     return (
@@ -86,7 +82,86 @@ export default function ProductDetail() {
     );
   }
 
-  const images = product.images?.length > 0 ? product.images : ['https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK'];
+  // Safely compute variant and price properties NOW that product is guaranteed to exist
+  const variants = product.variants || (product.id === 'urbanedge-pro' ? DEFAULT_EXCLUSIVE_PRODUCT.variants : []);
+  const currentVariant = variants.length > 0
+    ? (variants.find((v) => v.name?.toLowerCase() === selectedColor?.toLowerCase() || v.id?.toLowerCase() === selectedColor?.toLowerCase()) || variants[0])
+    : null;
+  const currentVariantId = currentVariant?.id || (selectedColor ? selectedColor.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);
+  const currentVariantImage = currentVariant?.image || product.images?.[activeImage] || product.images?.[0] || product.image || null;
+
+  const images = (product.images && product.images.length > 0)
+    ? product.images
+    : (variants.length > 0 ? variants.map((v) => v.image) : [currentVariantImage || product.image || 'https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK']);
+  const displayedImage = currentVariantImage || images[activeImage] || images[0];
+
+  const origPrice = product.originalPrice || product.original_price;
+  const discount = (origPrice && origPrice > product.price)
+    ? Math.round(((origPrice - product.price) / origPrice) * 100)
+    : 0;
+
+  const handleColorSelect = (color) => {
+    setSelectedColor(color);
+    if (variants.length > 0) {
+      const matchedIdx = variants.findIndex((v) => v.name?.toLowerCase() === color.toLowerCase() || v.id?.toLowerCase() === color.toLowerCase());
+      if (matchedIdx >= 0) {
+        setActiveImage(matchedIdx);
+      }
+    } else if (product.images?.length > 0 && product.colors?.length > 0) {
+      const idx = product.colors.findIndex((c) => c.toLowerCase() === color.toLowerCase());
+      if (idx >= 0 && idx < product.images.length) {
+        setActiveImage(idx);
+      }
+    }
+  };
+
+  const handleThumbnailClick = (idx, img) => {
+    setActiveImage(idx);
+    if (variants.length > 0) {
+      const matchedVariant = variants.find((v) => v.image === img) || variants[idx];
+      if (matchedVariant?.name) {
+        setSelectedColor(matchedVariant.name);
+      }
+    } else if (product.colors?.length > idx) {
+      setSelectedColor(product.colors[idx]);
+    }
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    const effectiveSize = selectedSize || (product.sizes?.length ? product.sizes[0] : 'Standard');
+    const effectiveColor = selectedColor || (product.colors?.length ? product.colors[0] : 'Default');
+    
+    const productWithVariantImage = {
+      ...product,
+      image: currentVariantImage || product.images?.[0] || product.image || ''
+    };
+
+    addItem(productWithVariantImage, effectiveSize, effectiveColor, qty, user);
+    openCart();
+    toast.success('Added to your shopping bag!', { duration: 2000 });
+  };
+
+  const handleToggleWishlist = () => {
+    if (!product) return;
+    const isAdded = toggleWishlist(
+      product.id,
+      currentVariantId,
+      {
+        variantName: selectedColor || currentVariant?.name || 'Default',
+        image: currentVariantImage || product.images?.[0] || product.image || '',
+        price: product.price,
+        name: product.name,
+      },
+      user
+    );
+
+    if (isAdded) {
+      toast.success(`Saved ${product.name} (${selectedColor || 'Default'}) to wishlist!`);
+    } else {
+      toast.success(`Removed from wishlist.`);
+    }
+  };
 
   return (
     <div className="page-enter w-full overflow-hidden">
@@ -107,9 +182,9 @@ export default function ProductDetail() {
             {/* Main Image */}
             <div className="aspect-[4/5] bg-surface-container-lowest overflow-hidden relative border border-outline-variant/30">
               <img
-                src={images[activeImage]}
+                src={displayedImage}
                 alt={product.name}
-                className="w-full h-full object-contain drop-shadow-2xl transition-transform duration-500 hover:scale-105"
+                className="w-full h-full object-contain drop-shadow-2xl transition-all duration-500 hover:scale-105"
                 onError={(e) => { e.target.src = 'https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK'; }}
               />
               {product.badge && (
@@ -130,9 +205,9 @@ export default function ProductDetail() {
                 {images.map((img, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setActiveImage(idx)}
+                    onClick={() => handleThumbnailClick(idx, img)}
                     className={`w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 overflow-hidden border-2 transition-colors bg-white ${
-                      activeImage === idx ? 'border-secondary' : 'border-outline-variant/40 hover:border-outline'
+                      (displayedImage === img || activeImage === idx) ? 'border-secondary' : 'border-outline-variant/40 hover:border-outline'
                     }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-contain p-1 drop-shadow-sm" />
@@ -160,18 +235,18 @@ export default function ProductDetail() {
                       <span key={s} className="material-symbols-outlined text-sm" style={{ fontVariationSettings: s <= Math.round(product.rating) ? "'FILL' 1" : "'FILL' 0" }}>star</span>
                     ))}
                   </div>
-                  <span className="text-xs text-on-surface-variant font-medium">{product.rating} ({product.reviewCount || 0} reviews)</span>
+                  <span className="text-xs text-on-surface-variant font-medium">{product.rating} ({product.reviewCount || product.review_count || 0} reviews)</span>
                 </div>
               )}
             </div>
 
             {/* Price */}
             <div className="flex items-baseline gap-3 p-3 bg-surface-container-low border border-outline-variant/30">
-              <span className="font-display text-2xl sm:text-3xl text-primary font-bold">{formatPrice(product.price)}</span>
-              {product.originalPrice && (
+              <span className="font-display text-2xl sm:text-3xl text-primary font-bold">{formatPrice(calculateSizePrice(product.price, selectedSize))}</span>
+              {origPrice && origPrice > product.price && (
                 <>
-                  <span className="text-base text-on-surface-variant line-through">{formatPrice(product.originalPrice)}</span>
-                  <span className="text-xs bg-secondary text-white px-2 py-0.5 font-bold uppercase tracking-wider">Save {formatPrice(product.originalPrice - product.price)}</span>
+                  <span className="text-base text-on-surface-variant line-through">{formatPrice(calculateSizePrice(origPrice, selectedSize))}</span>
+                  <span className="text-xs bg-secondary text-white px-2 py-0.5 font-bold uppercase tracking-wider">Save {formatPrice(calculateSizePrice(origPrice, selectedSize) - calculateSizePrice(product.price, selectedSize))}</span>
                 </>
               )}
             </div>
@@ -186,7 +261,7 @@ export default function ProductDetail() {
                   {product.colors.map((color) => (
                     <button
                       key={color}
-                      onClick={() => setSelectedColor(color)}
+                      onClick={() => handleColorSelect(color)}
                       className={`px-3 py-2 text-xs font-sans border transition-all ${
                         selectedColor === color
                           ? 'border-primary bg-primary text-white font-bold'
@@ -240,21 +315,20 @@ export default function ProductDetail() {
                 <button
                   onClick={handleAddToCart}
                   className="btn-primary flex-1 h-12 text-xs uppercase tracking-widest gap-2 justify-center font-bold"
-                  disabled={product.stock === 0}
                 >
                   <span className="material-symbols-outlined text-base">shopping_bag</span>
-                  {product.stock === 0 ? 'Out of Stock' : 'Add to Bag'}
+                  Add to Bag
                 </button>
                 <button
-                  onClick={() => toggle(product.id, user)}
+                  onClick={handleToggleWishlist}
                   className={`w-12 h-12 border flex items-center justify-center transition-all bg-white ${
-                    isWishlisted(product.id, user) ? 'border-secondary bg-secondary/5' : 'border-outline-variant hover:border-secondary'
+                    isWishlisted(product.id, currentVariantId, user) ? 'border-secondary bg-secondary/5' : 'border-outline-variant hover:border-secondary'
                   }`}
                   aria-label="Wishlist"
                 >
                   <span
                     className="material-symbols-outlined"
-                    style={{ fontVariationSettings: isWishlisted(product.id, user) ? "'FILL' 1" : "'FILL' 0", color: isWishlisted(product.id, user) ? '#934b19' : '#1a1c1b' }}
+                    style={{ fontVariationSettings: isWishlisted(product.id, currentVariantId, user) ? "'FILL' 1" : "'FILL' 0", color: isWishlisted(product.id, currentVariantId, user) ? '#934b19' : '#1a1c1b' }}
                   >
                     favorite
                   </span>
