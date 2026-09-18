@@ -58,11 +58,8 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { to: '/shop', label: 'Shop All' },
-    { to: '/shop?category=slippers', label: 'Slippers' },
-    { to: '/shop?category=sandals', label: 'Sandals' },
-    { to: '/shop?category=belts', label: 'Belts' },
-    { to: '/shop?category=wallets', label: 'Wallets' },
+    { to: '/', label: 'Home' },
+    { to: '/shop', label: 'Shoes' },
   ];
 
   const isActive = (to) => location.pathname + location.search === to;

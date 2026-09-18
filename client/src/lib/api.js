@@ -253,6 +253,9 @@ export const deleteProduct = async (id) => {
 export const placeOrder = async (data) => {
   clearApiCache();
   const orderId = `MW-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
+  const expectedDeliveryDate = new Date();
+  expectedDeliveryDate.setDate(expectedDeliveryDate.getDate() + 7);
+
   const newOrder = {
     id: `order-${Date.now()}`,
     order_id: orderId,
@@ -262,6 +265,7 @@ export const placeOrder = async (data) => {
     shipping_address: data.shippingAddress || {},
     payment_method: data.paymentMethod || 'cod',
     status: 'pending',
+    expected_delivery_date: expectedDeliveryDate.toISOString(),
     created_at: new Date().toISOString()
   };
 
