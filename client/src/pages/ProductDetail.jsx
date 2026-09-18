@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getProduct, getProducts, DEFAULT_EXCLUSIVE_PRODUCT } from '../lib/api.js';
 import useCartStore from '../store/cartStore.js';
 import useAuthStore from '../store/authStore.js';
@@ -18,6 +18,7 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [activeTab, setActiveTab] = useState('description');
+  const navigate = useNavigate();
 
   const { addItem, openCart } = useCartStore();
   const { user } = useAuthStore();
@@ -134,6 +135,11 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     if (!product) return;
+    if (!user) {
+      toast.error('Please login to add to bag.');
+      navigate('/login');
+      return;
+    }
     const effectiveSize = selectedSize || (product.sizes?.length ? product.sizes[0] : 'Standard');
     const effectiveColor = selectedColor || (product.colors?.length ? product.colors[0] : 'Default');
     

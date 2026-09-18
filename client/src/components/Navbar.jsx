@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useCartStore from '../store/cartStore.js';
 import useAuthStore from '../store/authStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
+import toast from 'react-hot-toast';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -20,6 +21,15 @@ export default function Navbar() {
   const wishlistItems = getWishlist(user);
 
   const itemCount = items.reduce((s, i) => s + (i.qty || 1), 0);
+
+  const handleCartClick = () => {
+    if (!user) {
+      toast.error('Please login to view your bag.');
+      navigate('/login');
+      return;
+    }
+    openCart();
+  };
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -242,7 +252,7 @@ export default function Navbar() {
 
               {/* Shopping Cart Button with Badge */}
               <button
-                onClick={openCart}
+                onClick={handleCartClick}
                 className="w-10 h-10 flex items-center justify-center relative text-primary hover:text-secondary transition-colors"
                 aria-label="Open cart"
                 id="nav-cart-btn"

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useCartStore from '../store/cartStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
 import { formatPrice } from '../lib/utils.js';
@@ -11,6 +11,7 @@ export default function ProductCard({ product }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const containerRef = useRef(null);
+  const navigate = useNavigate();
 
   const { addItem, openCart } = useCartStore();
   const { user } = useAuthStore();
@@ -73,6 +74,11 @@ export default function ProductCard({ product }) {
   const handleQuickAdd = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!user) {
+      toast.error('Please login to add to bag.');
+      navigate('/login');
+      return;
+    }
     addItem(product, defaultSize, product.colors?.[0] || '', 1, user);
     openCart();
     toast.success(`${product.name} added to bag!`, {

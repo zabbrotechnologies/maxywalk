@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useCartStore from '../store/cartStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
 import useAuthStore from '../store/authStore.js';
@@ -6,6 +7,7 @@ import { getProduct, DEFAULT_EXCLUSIVE_PRODUCT } from '../lib/api.js';
 import toast from 'react-hot-toast';
 
 export default function ExclusiveProductSection() {
+  const navigate = useNavigate();
   const [product, setProduct] = useState(DEFAULT_EXCLUSIVE_PRODUCT);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -80,6 +82,11 @@ export default function ExclusiveProductSection() {
   };
 
   const handleAddToCart = () => {
+    if (!user) {
+      toast.error('Please login to add to bag.');
+      navigate('/login');
+      return;
+    }
     const itemToAdd = {
       id: product.id,
       variantId: selectedVariantId,
