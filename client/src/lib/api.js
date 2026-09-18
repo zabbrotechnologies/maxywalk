@@ -256,16 +256,20 @@ export const placeOrder = async (data) => {
   const expectedDeliveryDate = new Date();
   expectedDeliveryDate.setDate(expectedDeliveryDate.getDate() + 7);
 
+  const shipping_address = {
+    ...(data.shippingAddress || {}),
+    expected_delivery_date: expectedDeliveryDate.toISOString()
+  };
+
   const newOrder = {
     id: `order-${Date.now()}`,
     order_id: orderId,
     user_email: data.shippingAddress?.email?.toLowerCase().trim() || 'guest',
     items: data.items || [],
     total: data.total || 0,
-    shipping_address: data.shippingAddress || {},
+    shipping_address: shipping_address,
     payment_method: data.paymentMethod || 'cod',
     status: 'pending',
-    expected_delivery_date: expectedDeliveryDate.toISOString(),
     created_at: new Date().toISOString()
   };
 

@@ -151,10 +151,10 @@ export default function Account() {
           </span>
         </div>
 
-        {order.expected_delivery_date && (
+        {order.shipping_address?.expected_delivery_date && (
             <div className="pt-2 text-center pb-2">
               <span className="text-[10px] uppercase tracking-widest text-[#78716C] font-bold block">Expected Delivery</span>
-              <span className="font-bold text-sm text-[#171412]">{formatDate(order.expected_delivery_date)}</span>
+              <span className="font-bold text-sm text-[#171412]">{formatDate(order.shipping_address.expected_delivery_date)}</span>
             </div>
         )}
         <div className="relative pt-2 pb-2">
