@@ -388,7 +388,14 @@ export default function ExclusiveProductSection() {
               <span>{isWishlisted ? 'Saved in Wishlist' : 'Save for Later'}</span>
             </button>
 
-
+            {/* Limited Stock Label */}
+            <div className="flex items-center justify-center lg:justify-start gap-2.5 mt-5 pt-5 border-t border-[#E8E2D8] w-full sm:w-auto">
+              <span className="w-8 h-px bg-[#D5CFC7]" />
+              <span className="font-sans text-[10px] uppercase tracking-[0.22em] text-[#934B19] font-bold">
+                LIMITED STOCK ({product.stock ?? 8} LEFT)
+              </span>
+              <span className="w-8 h-px bg-[#D5CFC7]" />
+            </div>
           </div>
         </div>
 

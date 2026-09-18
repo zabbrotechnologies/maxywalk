@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { getUserAccountKey } from './wishlistStore.js';
-import { calculateSizePrice } from '../lib/utils.js';
 
 const useCartStore = create(
   persist(
@@ -79,7 +78,7 @@ const useCartStore = create(
               cartKey,
               id: product.id,
               name: product.name,
-              price: calculateSizePrice(Number(product.price) || 0, size),
+              price: Number(product.price) || 0,
               image: product.image || product.images?.[0] || '',
               selectedSize: size,
               selectedColor: color,

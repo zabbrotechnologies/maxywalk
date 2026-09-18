@@ -3,7 +3,7 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
 import { getMyOrders, updateUserProfile, getUserProfile, getProducts } from '../lib/api.js';
-import { formatPrice, formatDate, getStatusColor, ORDER_STEPS, getStepIndex, getExpectedDeliveryDate } from '../lib/utils.js';
+import { formatPrice, formatDate, getStatusColor, ORDER_STEPS, getStepIndex } from '../lib/utils.js';
 import toast from 'react-hot-toast';
 
 const NAV_ITEMS = [
@@ -189,11 +189,6 @@ export default function Account() {
             })}
           </div>
         </div>
-
-        <div className="mt-3 pt-3 border-t border-[#E8E2D8] flex justify-between items-center">
-          <span className="text-[10px] uppercase tracking-widest text-[#78716C] font-bold">Expected Delivery</span>
-          <span className="text-xs font-bold text-[#171412]">{getExpectedDeliveryDate(order.created_at || order.createdAt)}</span>
-        </div>
       </div>
     );
   }
@@ -305,11 +300,6 @@ export default function Account() {
                         );
                       })}
                     </div>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-outline-variant/20 flex justify-between items-center">
-                    <span className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Expected Delivery</span>
-                    <span className="text-xs font-bold text-primary">{getExpectedDeliveryDate(activeOrder.created_at || activeOrder.createdAt)}</span>
                   </div>
                 </div>
               )}

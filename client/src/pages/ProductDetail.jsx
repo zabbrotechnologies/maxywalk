@@ -5,7 +5,7 @@ import useCartStore from '../store/cartStore.js';
 import useAuthStore from '../store/authStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
 import ProductCard from '../components/ProductCard.jsx';
-import { formatPrice, calculateSizePrice } from '../lib/utils.js';
+import { formatPrice } from '../lib/utils.js';
 import toast from 'react-hot-toast';
 
 export default function ProductDetail() {
@@ -242,11 +242,11 @@ export default function ProductDetail() {
 
             {/* Price */}
             <div className="flex items-baseline gap-3 p-3 bg-surface-container-low border border-outline-variant/30">
-              <span className="font-display text-2xl sm:text-3xl text-primary font-bold">{formatPrice(calculateSizePrice(product.price, selectedSize))}</span>
+              <span className="font-display text-2xl sm:text-3xl text-primary font-bold">{formatPrice(product.price)}</span>
               {origPrice && origPrice > product.price && (
                 <>
-                  <span className="text-base text-on-surface-variant line-through">{formatPrice(calculateSizePrice(origPrice, selectedSize))}</span>
-                  <span className="text-xs bg-secondary text-white px-2 py-0.5 font-bold uppercase tracking-wider">Save {formatPrice(calculateSizePrice(origPrice, selectedSize) - calculateSizePrice(product.price, selectedSize))}</span>
+                  <span className="text-base text-on-surface-variant line-through">{formatPrice(origPrice)}</span>
+                  <span className="text-xs bg-secondary text-white px-2 py-0.5 font-bold uppercase tracking-wider">Save {formatPrice(origPrice - product.price)}</span>
                 </>
               )}
             </div>
@@ -315,9 +315,10 @@ export default function ProductDetail() {
                 <button
                   onClick={handleAddToCart}
                   className="btn-primary flex-1 h-12 text-xs uppercase tracking-widest gap-2 justify-center font-bold"
+                  disabled={product.stock === 0}
                 >
                   <span className="material-symbols-outlined text-base">shopping_bag</span>
-                  Add to Bag
+                  {product.stock === 0 ? 'Out of Stock' : 'Add to Bag'}
                 </button>
                 <button
                   onClick={handleToggleWishlist}
