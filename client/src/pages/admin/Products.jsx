@@ -270,9 +270,6 @@ export default function AdminProducts() {
                     <span className="font-medium text-primary text-sm">{formatPrice(p.price)}</span>
                     {(p.original_price || p.originalPrice) && <span className="text-xs text-on-surface-variant line-through ml-2">{formatPrice(p.original_price || p.originalPrice)}</span>}
                   </div>
-                  <span className={`text-xs px-2 py-0.5 ${p.stock > 0 ? 'text-green-700 bg-green-50' : 'text-error bg-error-container'}`}>
-                    {p.stock > 0 ? `Stock: ${p.stock}` : 'Out of Stock'}
-                  </span>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => openEdit(p)} className="flex-1 flex items-center justify-center gap-1.5 border border-outline-variant py-2 text-xs font-sans uppercase tracking-wider hover:border-primary transition-colors">
@@ -325,7 +322,7 @@ export default function AdminProducts() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 {/* Price */}
                 <div>
                   <label className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">Price (₹) *</label>
@@ -335,11 +332,6 @@ export default function AdminProducts() {
                 <div>
                   <label className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">Original (₹)</label>
                   <input type="number" value={form.originalPrice} onChange={(e) => setForm({ ...form, originalPrice: e.target.value })} min="0" step="1" className="w-full border border-outline-variant px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                {/* Stock */}
-                <div>
-                  <label className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">Stock</label>
-                  <input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} min="0" className="w-full border border-outline-variant px-3 py-2 text-sm focus:outline-none focus:border-primary" />
                 </div>
               </div>
 
