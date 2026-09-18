@@ -85,22 +85,22 @@ export const DEFAULT_EXCLUSIVE_PRODUCT = {
   sizes: ['6', '7', '8', '9', '10', '11'],
   colors: [
     'Black',
-    'Maroon',
+    'Burganty',
     'Sandal / Wood',
     'Light Blue',
     'Grey',
     'Olive Green',
-    'Rose',
+    'Red',
     'Light Pink'
   ],
   variants: [
     { id: 'black', name: 'Black', image: '/products/exclusive/black.png', colorHex: '#1F1E1D' },
-    { id: 'maroon', name: 'Maroon', image: '/products/exclusive/maroon.png', colorHex: '#5A2328' },
+    { id: 'maroon', name: 'Burganty', image: '/products/exclusive/maroon.png', colorHex: '#5A2328' },
     { id: 'sandal-wood', name: 'Sandal / Wood', image: '/products/exclusive/sandal_wood.png', colorHex: '#C28B53' },
     { id: 'lightblue', name: 'Light Blue', image: '/products/exclusive/lightblue.png', colorHex: '#88A0B5' },
     { id: 'grey', name: 'Grey', image: '/products/exclusive/gray.png', colorHex: '#6E6C6B' },
     { id: 'olivegreen', name: 'Olive Green', image: '/products/exclusive/olivegreen.png', colorHex: '#535D4A' },
-    { id: 'rose', name: 'Rose', image: '/products/exclusive/rose.png', colorHex: '#B85B64' },
+    { id: 'rose', name: 'Red', image: '/products/exclusive/rose.png', colorHex: '#B85B64' },
     { id: 'lightpink', name: 'Light Pink', image: '/products/exclusive/lightpink.png', colorHex: '#D6A29C' }
   ]
 };
