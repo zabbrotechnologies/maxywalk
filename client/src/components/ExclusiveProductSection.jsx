@@ -155,52 +155,81 @@ export default function ExclusiveProductSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 items-center mb-16 lg:mb-20">
           
           {/* LEFT COLUMN: Color Selector */}
-          <div className="lg:col-span-3 flex lg:flex-col flex-row flex-nowrap overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 gap-2.5 sm:gap-3 order-2 lg:order-1 scrollbar-none z-20">
-            <div className="w-full hidden lg:block mb-1">
+          <div className="lg:col-span-3 order-2 lg:order-1 z-20">
+            <div className="w-full mb-1 sm:mb-2">
               <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-[#78716C] font-bold">
                 AVAILABLE FINISHES ({variants.length})
               </span>
             </div>
 
-            {variants.map((v, idx) => {
-              const isSelected = selectedIndex === idx;
-              return (
-                <button
-                  key={v.id || v.name}
-                  onClick={() => setSelectedIndex(idx)}
-                  className={`relative flex items-center gap-3 p-2 sm:p-2.5 rounded-2xl transition-all duration-300 text-left group flex-shrink-0 min-w-[150px] lg:min-w-0 lg:w-full cursor-pointer bg-white border ${
-                    isSelected
-                      ? 'border-[#D35B22] shadow-[0_4px_20px_rgba(211,91,34,0.18)] scale-[1.03]'
-                      : 'border-[#E8E2D8] hover:border-[#D35B22]/50 hover:shadow-sm opacity-85 hover:opacity-100'
-                  }`}
-                >
-                  {/* Thumbnail Container */}
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-[#FAF7F2] p-1 flex-shrink-0 flex items-center justify-center border border-[#E8E2D8]/60">
-                    <img
-                      src={v.image}
-                      alt={v.name}
-                      className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
-                      loading="lazy"
-                    />
-                  </div>
+            <div className="flex lg:flex-col flex-row flex-nowrap overflow-x-auto lg:overflow-visible py-3 lg:py-1 px-1 lg:px-0 gap-2.5 sm:gap-3 scrollbar-none">
+              {variants.map((v, idx) => {
+                const isSelected = selectedIndex === idx;
+                return (
+                  <button
+                    key={v.id || v.name}
+                    onClick={() => setSelectedIndex(idx)}
+                    className={`relative flex items-center gap-3 p-2 sm:p-2.5 rounded-2xl transition-all duration-300 text-left group flex-shrink-0 min-w-[150px] lg:min-w-0 lg:w-full cursor-pointer bg-white border ${
+                      isSelected
+                        ? 'border-[#D35B22] shadow-[0_4px_20px_rgba(211,91,34,0.18)] scale-[1.03]'
+                        : 'border-[#E8E2D8] hover:border-[#D35B22]/50 hover:shadow-sm opacity-85 hover:opacity-100'
+                    }`}
+                  >
+                    {/* Thumbnail Container */}
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-[#FAF7F2] p-1 flex-shrink-0 flex items-center justify-center border border-[#E8E2D8]/60">
+                      <img
+                        src={v.image}
+                        alt={v.name}
+                        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
+                        loading="lazy"
+                      />
+                    </div>
 
-                  {/* Label */}
-                  <div className="min-w-0 pr-1">
-                    <p className={`font-sans text-xs font-bold leading-tight truncate ${isSelected ? 'text-[#D35B22]' : 'text-[#171412]'}`}>
-                      {v.name}
-                    </p>
-                    <span className="text-[10px] text-[#78716C] font-medium block mt-0.5">Handcrafted</span>
-                  </div>
-                </button>
-              );
-            })}
+                    {/* Label */}
+                    <div className="min-w-0 pr-1">
+                      <p className={`font-sans text-xs font-bold leading-tight truncate ${isSelected ? 'text-[#D35B22]' : 'text-[#171412]'}`}>
+                        {v.name}
+                      </p>
+                      <span className="text-[10px] text-[#78716C] font-medium block mt-0.5">Handcrafted</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* CENTER COLUMN: DEDICATED RELATIVE CENTRAL SHOWCASE CONTAINER */}
-          <div className="lg:col-span-6 order-1 lg:order-2 flex items-center justify-center px-2 sm:px-4">
+          <div className="lg:col-span-6 order-1 lg:order-2 flex flex-col items-center justify-center px-2 sm:px-4">
             
+            {/* Top 2 Features (Mobile / Tablet Display - Layer 20) */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 w-full max-w-[420px] mx-auto mb-3 xl:hidden">
+              {/* Premium Leather */}
+              <div className="flex flex-col items-center text-center p-1">
+                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1 flex-shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
+                <h4 className="font-display text-[11px] sm:text-xs font-bold text-[#171412] leading-tight">Premium Leather</h4>
+                <p className="font-sans text-[9px] sm:text-[10px] text-[#78716C] leading-snug mt-0.5">Luxury that lasts</p>
+              </div>
+
+              {/* Lightweight Design */}
+              <div className="flex flex-col items-center text-center p-1">
+                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1 flex-shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/>
+                    <line x1="16" y1="8" x2="2" y2="22"/>
+                    <line x1="17.5" y1="15" x2="9" y2="15"/>
+                  </svg>
+                </div>
+                <h4 className="font-display text-[11px] sm:text-xs font-bold text-[#171412] leading-tight">Lightweight Design</h4>
+                <p className="font-sans text-[9px] sm:text-[10px] text-[#78716C] leading-snug mt-0.5">Airy feel without limits</p>
+              </div>
+            </div>
+
             {/* Central Showcase Parent Container */}
-            <div className="relative w-full max-w-[440px] sm:max-w-[500px] lg:max-w-[540px] aspect-square mx-auto flex items-center justify-center">
+            <div className="relative w-full max-w-[340px] xs:max-w-[400px] sm:max-w-[480px] lg:max-w-[540px] aspect-square mx-auto flex items-center justify-center">
               
               {/* Soft Product Shadow (Layer 1) */}
               <div className="absolute bottom-[18%] left-1/2 -translate-x-1/2 w-[75%] h-[40px] bg-black/15 rounded-full blur-xl pointer-events-none z-[1]" />
@@ -331,6 +360,32 @@ export default function ExclusiveProductSection() {
               </div>
 
             </div>
+
+            {/* Bottom 2 Features (Mobile / Tablet Display - Layer 20) */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 w-full max-w-[420px] mx-auto mt-3 xl:hidden">
+              {/* All-Day Comfort */}
+              <div className="flex flex-col items-center text-center p-1">
+                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1 flex-shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                  </svg>
+                </div>
+                <h4 className="font-display text-[11px] sm:text-xs font-bold text-[#171412] leading-tight">All-Day Comfort</h4>
+                <p className="font-sans text-[9px] sm:text-[10px] text-[#78716C] leading-snug mt-0.5">Built for every journey</p>
+              </div>
+
+              {/* Durable Outsole */}
+              <div className="flex flex-col items-center text-center p-1">
+                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1 flex-shrink-0">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <h4 className="font-display text-[11px] sm:text-xs font-bold text-[#171412] leading-tight">Durable Outsole</h4>
+                <p className="font-sans text-[9px] sm:text-[10px] text-[#78716C] leading-snug mt-0.5">Made for everyday terrain</p>
+              </div>
+            </div>
+
           </div>
 
           {/* RIGHT COLUMN: Real Catalog Product Information & Purchase Panel */}
@@ -404,28 +459,6 @@ export default function ExclusiveProductSection() {
               <span className="w-8 h-px bg-[#D5CFC7]" />
             </div>
           </div>
-        </div>
-
-        {/* ── Feature Callouts Strip (Mobile / Tablet Display) ────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 xl:hidden mb-12 p-4 bg-white rounded-2xl border border-[#E8E2D8]">
-          {[
-            { title: 'Premium Leather', desc: 'Luxury that lasts', icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5' },
-            { title: 'Lightweight Design', desc: 'Airy feel without limits', icon: 'M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' },
-            { title: 'All-Day Comfort', desc: 'Built for every journey', icon: 'M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z' },
-            { title: 'Durable Outsole', desc: 'Made for everyday terrain', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
-          ].map((item) => (
-            <div key={item.title} className="flex items-center gap-2.5 p-2">
-              <div className="w-7 h-7 rounded-full bg-[#FAF7F2] border border-[#D35B22]/30 flex items-center justify-center text-[#D35B22] flex-shrink-0">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d={item.icon} />
-                </svg>
-              </div>
-              <div className="min-w-0">
-                <h5 className="font-display text-[11px] font-bold text-[#171412] leading-tight truncate">{item.title}</h5>
-                <p className="font-sans text-[9px] text-[#78716C] leading-none truncate mt-0.5">{item.desc}</p>
-              </div>
-            </div>
-          ))}
         </div>
 
       </div>
