@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import useCartStore from '../store/cartStore.js';
 import useAuthStore from '../store/authStore.js';
-import { placeOrder } from '../lib/api.js';
+import { placeOrder, getUserProfile } from '../lib/api.js';
 import { formatPrice, INDIAN_STATES } from '../lib/utils.js';
 import toast from 'react-hot-toast';
 
@@ -16,7 +16,7 @@ const SHIPPING_OPTIONS = [
 export default function Checkout() {
   const items = useCartStore((s) => s.items) || [];
   const clearCart = useCartStore((s) => s.clearCart);
-  const { user } = useAuthStore();
+  const { user, userProfile, setUserProfile } = useAuthStore();
 
   const subtotal = items.reduce((sum, i) => sum + (i.price || 0) * (i.qty || 1), 0);
 
@@ -26,13 +26,46 @@ export default function Checkout() {
   const [showSummaryMobile, setShowSummaryMobile] = useState(false);
 
   // Form state
-  const [contact, setContact] = useState({ email: user?.email || '', phone: '' });
+  const [contact, setContact] = useState({
+    email: userProfile?.email || user?.email || '',
+    phone: userProfile?.phone || ''
+  });
   const [address, setAddress] = useState({ firstName: '', lastName: '', address: '', city: '', state: 'Tamil Nadu', pincode: '' });
   const [shipping, setShipping] = useState('standard');
 
   useEffect(() => {
     document.title = 'Checkout | MAXYWALK';
-  }, []);
+    if (user?.email) {
+      getUserProfile().then((p) => {
+        if (p) {
+          setUserProfile(p);
+          setContact((prev) => ({
+            email: p.email || prev.email || user.email || '',
+            phone: p.phone !== undefined ? p.phone : prev.phone
+          }));
+        }
+      });
+    }
+  }, [user?.email, setUserProfile]);
+
+  useEffect(() => {
+    if (userProfile) {
+      setContact((prev) => ({
+        email: userProfile.email || prev.email || user?.email || '',
+        phone: userProfile.phone !== undefined ? userProfile.phone : prev.phone
+      }));
+      if (userProfile.name && !address.firstName) {
+        const parts = userProfile.name.trim().split(' ');
+        const first = parts[0] || '';
+        const last = parts.slice(1).join(' ') || '';
+        setAddress((prev) => ({
+          ...prev,
+          firstName: prev.firstName || first,
+          lastName: prev.lastName || last
+        }));
+      }
+    }
+  }, [userProfile, user]);
 
   const shippingOption = SHIPPING_OPTIONS.find((o) => o.id === shipping);
   const shippingCost = shipping === 'standard' && subtotal >= 1999 ? 0 : (shippingOption?.price || 0);
