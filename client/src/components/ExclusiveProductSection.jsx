@@ -10,6 +10,7 @@ export default function ExclusiveProductSection() {
   const navigate = useNavigate();
   const [product, setProduct] = useState(DEFAULT_EXCLUSIVE_PRODUCT);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
   const { addItem, openCart } = useCartStore();
   const { user } = useAuthStore();
@@ -36,6 +37,15 @@ export default function ExclusiveProductSection() {
   const selectedVariant = variants[selectedIndex] || variants[0];
   const selectedVariantId = selectedVariant?.id || (selectedVariant?.name ? selectedVariant.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);
   const isWishlisted = checkWishlisted(product.id, selectedVariantId, user);
+
+  // Auto-advance product image variant every 4.5 seconds when not hovered/dragged
+  useEffect(() => {
+    if (isHovered || isDragging.current || variants.length <= 1) return;
+    const interval = setInterval(() => {
+      setSelectedIndex((prev) => (prev + 1) % variants.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [isHovered, variants.length]);
 
   // Touch swipe handlers
   const handleTouchStart = (e) => {
@@ -128,7 +138,10 @@ export default function ExclusiveProductSection() {
   return (
     <section className="relative z-10 w-full bg-[#FAF7F2] py-14 sm:py-20 lg:py-24 overflow-hidden border-b border-[#E8E2D8]">
       {/* Soft Radial Ambient Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] sm:w-[850px] h-[450px] sm:h-[600px] bg-gradient-radial from-[#FCEEE1]/90 via-[#F7E6D4]/30 to-transparent blur-3xl pointer-events-none z-0" />
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] sm:w-[850px] h-[450px] sm:h-[600px] pointer-events-none z-0"
+        style={{ background: 'radial-gradient(ellipse at center, rgba(252, 238, 225, 0.7) 0%, rgba(247, 230, 212, 0.25) 50%, transparent 75%)' }}
+      />
 
       <div className="container-max px-4 sm:px-6 lg:px-8 relative z-10">
         
@@ -202,10 +215,10 @@ export default function ExclusiveProductSection() {
           <div className="lg:col-span-6 order-1 lg:order-2 flex flex-col items-center justify-center px-2 sm:px-4">
             
             {/* Top 2 Features (Mobile / Tablet Display - Layer 20) */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-6 w-full max-w-[420px] mx-auto mb-3 xl:hidden">
+            <div className="grid grid-cols-2 gap-4 sm:gap-8 w-full max-w-[420px] mx-auto mb-2 xl:hidden">
               {/* Premium Leather */}
               <div className="flex flex-col items-center text-center p-1">
-                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1 flex-shrink-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1.5 flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                   </svg>
@@ -216,7 +229,7 @@ export default function ExclusiveProductSection() {
 
               {/* Lightweight Design */}
               <div className="flex flex-col items-center text-center p-1">
-                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1 flex-shrink-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1.5 flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/>
                     <line x1="16" y1="8" x2="2" y2="22"/>
@@ -231,8 +244,14 @@ export default function ExclusiveProductSection() {
             {/* Central Showcase Parent Container */}
             <div className="relative w-full max-w-[340px] xs:max-w-[400px] sm:max-w-[480px] lg:max-w-[540px] aspect-square mx-auto flex items-center justify-center">
               
-              {/* Soft Product Shadow (Layer 1) */}
-              <div className="absolute bottom-[18%] left-1/2 -translate-x-1/2 w-[75%] h-[40px] bg-black/15 rounded-full blur-xl pointer-events-none z-[1]" />
+              {/* Soft Circular Stage Radial Glow (Layer 0) */}
+              <div
+                className="absolute inset-8 sm:inset-10 rounded-full pointer-events-none z-0"
+                style={{ background: 'radial-gradient(circle, rgba(255, 255, 255, 0.65) 0%, rgba(252, 238, 225, 0.3) 55%, transparent 75%)' }}
+              />
+
+              {/* Soft Contact Shadow (Layer 1) */}
+              <div className="absolute bottom-[16%] left-1/2 -translate-x-1/2 w-[55%] h-[20px] bg-black/10 rounded-full blur-xl pointer-events-none z-[1]" />
 
               {/* Open Orange Orbit SVG Frame & Connector Lines (Layer 2) */}
               <svg className="absolute inset-0 w-full h-full pointer-events-none z-[2]" viewBox="0 0 500 500">
@@ -332,40 +351,47 @@ export default function ExclusiveProductSection() {
                 <p className="font-sans text-[10px] text-[#78716C] leading-snug mt-0.5">Made for everyday terrain</p>
               </div>
 
-              {/* SWIPEABLE & DRAGGABLE PRODUCT IMAGE SLIDER (Layer 10) */}
+              {/* FLOATING CIRCULAR PRODUCT STAGE (Layer 10) - IN-PLACE CROSSFADE, ZERO SQUARE BOX */}
               <div
-                className="relative z-10 w-[80%] h-[80%] flex items-center justify-center overflow-hidden animate-float cursor-grab active:cursor-grabbing select-none touch-pan-y"
+                className="relative z-10 w-[82%] h-[82%] rounded-full flex items-center justify-center animate-float cursor-grab active:cursor-grabbing select-none touch-pan-y"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeaveCapture={() => setIsHovered(false)}
               >
-                <div
-                  className="w-full h-full flex transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
-                  style={{ transform: `translateX(-${selectedIndex * 100}%)` }}
-                >
-                  {variants.map((v) => (
-                    <div key={v.id || v.name} className="w-full h-full flex-shrink-0 flex items-center justify-center p-2">
+                {variants.map((v, idx) => {
+                  const isCurrent = selectedIndex === idx;
+                  return (
+                    <div
+                      key={v.id || v.name}
+                      className={`absolute inset-0 flex items-center justify-center p-2 sm:p-4 transition-all duration-500 ease-out pointer-events-none ${
+                        isCurrent
+                          ? 'opacity-100 scale-100 z-10'
+                          : 'opacity-0 scale-95 z-0'
+                      }`}
+                    >
                       <img
                         src={v.image}
                         alt={`${product.name} ${v.name}`}
-                        className="w-full h-full object-contain filter drop-shadow-[0_20px_25px_rgba(0,0,0,0.2)]"
+                        className="w-full h-full object-contain filter drop-shadow-[0_16px_24px_rgba(0,0,0,0.16)]"
                         draggable={false}
                       />
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
 
             </div>
 
             {/* Bottom 2 Features (Mobile / Tablet Display - Layer 20) */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-6 w-full max-w-[420px] mx-auto mt-3 xl:hidden">
+            <div className="grid grid-cols-2 gap-4 sm:gap-8 w-full max-w-[420px] mx-auto mt-2 xl:hidden">
               {/* All-Day Comfort */}
               <div className="flex flex-col items-center text-center p-1">
-                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1 flex-shrink-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1.5 flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
                   </svg>
@@ -376,7 +402,7 @@ export default function ExclusiveProductSection() {
 
               {/* Durable Outsole */}
               <div className="flex flex-col items-center text-center p-1">
-                <div className="w-8 h-8 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1 flex-shrink-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white border border-[#D35B22]/40 shadow-sm flex items-center justify-center text-[#D35B22] mb-1.5 flex-shrink-0">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                   </svg>
