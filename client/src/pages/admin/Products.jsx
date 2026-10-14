@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from './Layout.jsx';
-import { getProducts, createProduct, updateProduct, deleteProduct } from '../../lib/api.js';
+import { getProducts, createProduct, updateProduct, deleteProduct, compareProducts } from '../../lib/api.js';
 import { formatPrice } from '../../lib/utils.js';
 import toast from 'react-hot-toast';
 
@@ -177,11 +177,11 @@ export default function AdminProducts() {
 
       if (editProduct) {
         await updateProduct(editProduct.id, data);
-        setProducts((prev) => prev.map((p) => (p.id === editProduct.id ? { ...p, ...data } : p)));
+        setProducts((prev) => prev.map((p) => (p.id === editProduct.id ? { ...p, ...data } : p)).sort(compareProducts));
         toast.success('Product updated successfully!');
       } else {
         const created = await createProduct(data);
-        setProducts((prev) => [created, ...prev]);
+        setProducts((prev) => [created, ...prev].sort(compareProducts));
         toast.success('Product added successfully!');
       }
       setModalOpen(false);
