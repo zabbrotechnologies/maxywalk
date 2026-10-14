@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useCartStore from '../store/cartStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
-import { formatPrice } from '../lib/utils.js';
+import { formatPrice, sortSizes } from '../lib/utils.js';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore.js';
 
@@ -19,7 +19,8 @@ export default function ProductCard({ product }) {
   const isWishlisted = useWishlistStore((s) => s.isWishlisted);
 
   const wishlisted = isWishlisted(product.id, user);
-  const defaultSize = product.sizes?.[0] || 'Standard';
+  const sortedSizes = sortSizes(product.sizes);
+  const defaultSize = sortedSizes.length > 0 ? sortedSizes[0] : 'Standard';
 
   const validImages = useMemo(() => {
     if (Array.isArray(product.images) && product.images.length > 0) {

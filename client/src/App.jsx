@@ -39,6 +39,7 @@ class ErrorBoundary extends React.Component {
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import CartDrawer from './components/CartDrawer.jsx';
+import ScrollToTop from './components/ScrollToTop.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import AdminRoute from './components/AdminRoute.jsx';
 
@@ -135,6 +136,7 @@ export default function App() {
 
   return (
     <Router basename={import.meta.env.BASE_URL}>
+      <ScrollToTop />
       <Toaster
         position="top-right"
         toastOptions={{

@@ -5,7 +5,7 @@ import useCartStore from '../store/cartStore.js';
 import useAuthStore from '../store/authStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
 import ProductCard from '../components/ProductCard.jsx';
-import { formatPrice } from '../lib/utils.js';
+import { formatPrice, sortSizes } from '../lib/utils.js';
 import toast from 'react-hot-toast';
 
 export default function ProductDetail() {
@@ -36,13 +36,16 @@ export default function ProductDetail() {
 
     getProduct(id)
       .then((data) => {
-        setProduct(data);
         if (data) {
+          const sortedSizes = sortSizes(data.sizes);
+          data.sizes = sortedSizes;
+          setProduct(data);
           setSelectedColor(data.colors?.[0] || '');
-          if (data.sizes?.length > 0) setSelectedSize(data.sizes[0]);
+          setSelectedSize(sortedSizes.length > 0 ? sortedSizes[0] : '');
           document.title = `${data.name || 'Product'} | MAXYWALK`;
           return getProducts({ category: data.category, limit: 4 });
         }
+        setProduct(null);
         return { products: [] };
       })
       .then((d) => {
@@ -140,7 +143,8 @@ export default function ProductDetail() {
       navigate('/login');
       return;
     }
-    const effectiveSize = selectedSize || (product.sizes?.length ? product.sizes[0] : 'Standard');
+    const sortedSizes = sortSizes(product.sizes);
+    const effectiveSize = selectedSize || (sortedSizes.length > 0 ? sortedSizes[0] : 'Standard');
     const effectiveColor = selectedColor || (product.colors?.length ? product.colors[0] : 'Default');
     
     const productWithVariantImage = {
@@ -294,7 +298,7 @@ export default function ProductDetail() {
                   Select Size: <span className="text-secondary font-semibold">{selectedSize || 'Choose size'}</span>
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {product.sizes.map((size) => (
+                  {(sortSizes(product.sizes)).map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}

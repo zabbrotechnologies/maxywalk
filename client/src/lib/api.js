@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { supabase } from './supabaseClient.js';
+import { sortSizes } from './utils.js';
 
 // Legacy Axios configuration (kept for backwards compatibility if needed)
 const API_URL = import.meta.env?.VITE_API_URL || (import.meta.env?.DEV ? 'http://localhost:5001/api' : '/api');
@@ -195,7 +196,7 @@ export const getProducts = async (params = {}) => {
 
   const { data, error } = await query;
   
-  let list = Array.isArray(data) ? [...data] : [];
+  let list = Array.isArray(data) ? data.map((p) => ({ ...p, sizes: sortSizes(p.sizes) })) : [];
 
   if (error) {
     console.warn('Supabase getProducts error/fallback:', error);
@@ -237,8 +238,8 @@ export const getProducts = async (params = {}) => {
 export const getProduct = async (id) => {
   if (id === 'urbanedge-pro') {
     const { data } = await supabase.from('products').select('*').eq('id', id).maybeSingle();
-    if (data) return { ...DEFAULT_EXCLUSIVE_PRODUCT, ...data };
-    return DEFAULT_EXCLUSIVE_PRODUCT;
+    const merged = data ? { ...DEFAULT_EXCLUSIVE_PRODUCT, ...data } : DEFAULT_EXCLUSIVE_PRODUCT;
+    return { ...merged, sizes: sortSizes(merged.sizes) };
   }
 
   const cacheKey = `product_${id}`;
@@ -251,8 +252,9 @@ export const getProduct = async (id) => {
     return null;
   }
   
-  setCached(cacheKey, data);
-  return data;
+  const formatted = { ...data, sizes: sortSizes(data.sizes) };
+  setCached(cacheKey, formatted);
+  return formatted;
 };
 
 const ALLOWED_PRODUCT_KEYS = [

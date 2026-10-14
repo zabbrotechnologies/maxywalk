@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from './Layout.jsx';
 import { getProducts, createProduct, updateProduct, deleteProduct, compareProducts } from '../../lib/api.js';
-import { formatPrice } from '../../lib/utils.js';
+import { formatPrice, sortSizes } from '../../lib/utils.js';
 import toast from 'react-hot-toast';
 
 const CATEGORIES = ['slippers', 'sandals', 'belts', 'wallets'];
@@ -41,7 +41,7 @@ export default function AdminProducts() {
       category: p.category || 'slippers',
       price: p.price || '',
       originalPrice: p.original_price || p.originalPrice || '',
-      sizes: p.sizes || [],
+      sizes: sortSizes(p.sizes || []),
       colors: p.colors ? p.colors.join(', ') : '',
       images: p.images?.length ? p.images : [''],
       stock: p.stock ?? 10,
@@ -165,7 +165,7 @@ export default function AdminProducts() {
         price: parseFloat(form.price),
         original_price: form.originalPrice ? parseFloat(form.originalPrice) : null,
         colors: typeof form.colors === 'string' ? form.colors.split(',').map((c) => c.trim()).filter(Boolean) : (form.colors || ['Black']),
-        sizes: form.sizes?.length ? form.sizes : ['6', '7', '8', '9', '10'],
+        sizes: sortSizes(form.sizes?.length ? form.sizes : ['6', '7', '8', '9', '10']),
         images: finalImages,
         stock: isNaN(parseInt(form.stock)) ? 10 : parseInt(form.stock),
         material: form.material || 'Full-Grain Leather',
