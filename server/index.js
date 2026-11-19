@@ -35,8 +35,10 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', database: 'neon-postgresql', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
-  console.log(`MaxyWalk Express API server listening on http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`MaxyWalk Express API server listening on http://localhost:${PORT}`);
+  });
+}
 
 export default app;

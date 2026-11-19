@@ -201,6 +201,19 @@ router.get('/:id', async (req, res) => {
       images: finalImgs
     };
 
+    if (p.id === 'urbanedge-pro') {
+      normalized.variants = [
+        { id: 'black', name: 'Midnight Black', image: '/products/exclusive/black.png', hex: '#1F1E1D', colorHex: '#1F1E1D' },
+        { id: 'maroon', name: 'Maroon', image: '/products/exclusive/maroon.png', hex: '#5A2328', colorHex: '#5A2328' },
+        { id: 'sandal-wood', name: 'Sandal / Wood', image: '/products/exclusive/sandal_wood.png', hex: '#C28B53', colorHex: '#C28B53' },
+        { id: 'lightblue', name: 'Light Blue', image: '/products/exclusive/lightblue.png', hex: '#88A0B5', colorHex: '#88A0B5' },
+        { id: 'grey', name: 'Slate Grey', image: '/products/exclusive/gray.png', hex: '#6E6C6B', colorHex: '#6E6C6B' },
+        { id: 'olivegreen', name: 'Olive Green', image: '/products/exclusive/olivegreen.png', hex: '#535D4A', colorHex: '#535D4A' },
+        { id: 'rose', name: 'Rose', image: '/products/exclusive/rose.png', hex: '#B85B64', colorHex: '#B85B64' },
+        { id: 'lightpink', name: 'Light Pink', image: '/products/exclusive/lightpink.png', hex: '#D8A0A6', colorHex: '#D8A0A6' }
+      ];
+    }
+
     res.json(normalized);
   } catch (err) {
     console.error('Error fetching product:', err);

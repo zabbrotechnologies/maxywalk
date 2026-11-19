@@ -4,7 +4,12 @@ import { FALLBACK_PRODUCTS } from '../data/fallbackProducts.js';
 
 // Express API configuration backed exclusively by Neon PostgreSQL
 // Relative '/api' works seamlessly through Vite proxy in dev and Vercel serverless in prod
-const API_URL = import.meta.env?.VITE_API_URL || '/api';
+let API_URL = import.meta.env?.VITE_API_URL || '/api';
+if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+  if (API_URL.includes('localhost') || API_URL.includes('127.0.0.1')) {
+    API_URL = '/api';
+  }
+}
 export const api = axios.create({ baseURL: API_URL, timeout: 8000, withCredentials: true });
 
 // Lightweight in-memory cache for speed

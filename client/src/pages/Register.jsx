@@ -44,7 +44,7 @@ export default function Register() {
           window.google.accounts.id.renderButton(googleBtnRef.current, {
             theme: 'outline',
             size: 'large',
-            width: googleBtnRef.current.offsetWidth || 384,
+            width: Math.min(Math.max(googleBtnRef.current?.offsetWidth || 350, 200), 380),
             text: 'continue_with',
             shape: 'rectangular',
             logo_alignment: 'left',

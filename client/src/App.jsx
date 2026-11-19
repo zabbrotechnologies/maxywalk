@@ -154,21 +154,25 @@ export default function App() {
       />
 
       <Routes>
-        {/* Auth Pages — no public layout */}
+        {/* Auth Pages */}
         <Route
           path="/login"
           element={
-            <Suspense fallback={<PageLoader />}>
-              <Login />
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Login />
+              </Suspense>
+            </ErrorBoundary>
           }
         />
         <Route
           path="/register"
           element={
-            <Suspense fallback={<PageLoader />}>
-              <Register />
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Register />
+              </Suspense>
+            </ErrorBoundary>
           }
         />
 
