@@ -1,0 +1,106 @@
+[
+  {
+    "id": "cust-1790272617143",
+    "uid": "2d801db2-b9bc-4905-b436-ef51afb2a4ab",
+    "name": "Gokul Nath",
+    "email": "gokul392005@gmail.com",
+    "phone": "",
+    "created_at": "2026-09-24T17:56:57.143+00:00"
+  },
+  {
+    "id": "cust-1790272615080",
+    "uid": "6c3a8e0b-d85b-4951-a691-50aec50048c6",
+    "name": "Rajesh .k",
+    "email": "k.rajesh13042006@gmail.com",
+    "phone": "",
+    "created_at": "2026-09-24T17:56:55.08+00:00"
+  },
+  {
+    "id": "cust-1790091331785",
+    "uid": "a800d801-b4bf-4751-8490-740d2fa5fe4a",
+    "name": "Adhithyan",
+    "email": "adhithyanj07@gmail.com",
+    "phone": "+91 98765 43210",
+    "created_at": "2026-09-22T15:35:31.785+00:00"
+  },
+  {
+    "id": "cust-1790009184309",
+    "uid": "05e99293-3e0a-4819-95ca-0802a94cdff3",
+    "name": "prabhu prabu",
+    "email": "prabhujake@gmail.com",
+    "phone": "",
+    "created_at": "2026-09-21T16:46:24.309+00:00"
+  },
+  {
+    "id": "cust-1789749102774",
+    "uid": "7a542316-e8e3-4110-8966-cc277ee2dec5",
+    "name": "Zabbro",
+    "email": "zabbrotechnologies@gmail.com",
+    "phone": "",
+    "created_at": "2026-09-18T16:31:42.774+00:00"
+  },
+  {
+    "id": "cust-1789573403517",
+    "uid": "49eef88b-1eee-4df2-a61e-6df8b159eb7f",
+    "name": "Gowshigan V",
+    "email": "gowshigan20805@gmail.com",
+    "phone": "",
+    "created_at": "2026-09-16T15:43:23.517+00:00"
+  },
+  {
+    "id": "cust-1789193123954",
+    "uid": "9e2329ae-f9e3-4167-a0f7-7d7e1de77513",
+    "name": "Ver Host",
+    "email": "info.verhost@gmail.com",
+    "phone": "",
+    "created_at": "2026-09-12T06:05:23.954+00:00"
+  },
+  {
+    "id": "cust-1789192400744",
+    "uid": "f3dafdbc-6f7b-4afd-a535-3acc3086414a",
+    "name": "NARESH KUMAR M",
+    "email": "nareshkumarm583225243063@nprcolleges.org",
+    "phone": "",
+    "created_at": "2026-09-12T05:53:20.744+00:00"
+  },
+  {
+    "id": "cust-1789122558947",
+    "uid": "4baa13f6-2243-4206-9bf3-ccf35a019c51",
+    "name": "SANJAY S",
+    "email": "s.sanjay.01.03.2006@gmail.com",
+    "phone": "8248957918",
+    "created_at": "2026-09-11T10:29:18.947+00:00"
+  },
+  {
+    "id": "cust-1789121386679",
+    "uid": "418c5fe7-8b66-4aa5-9442-48e0e2f42e20",
+    "name": "muthu v",
+    "email": "muthuvelv3032@gmail.com",
+    "phone": "",
+    "created_at": "2026-09-11T10:09:46.679+00:00"
+  },
+  {
+    "id": "cust-1789120185408",
+    "uid": "f5ed8c26-19e0-4b54-a39a-8d2ddee4540f",
+    "name": "Sanjay S",
+    "email": "s.sanjayeffort@gmail.com",
+    "phone": "8248957918",
+    "created_at": "2026-09-11T09:49:45.408+00:00"
+  },
+  {
+    "id": "cust-1789120130680",
+    "uid": "cf2120bd-1c92-43e1-b973-1572ea141cbe",
+    "name": "Sanjay .S",
+    "email": "sanjaysamsung001@gmail.com",
+    "phone": "",
+    "created_at": "2026-09-11T09:48:50.68+00:00"
+  },
+  {
+    "id": "cust-1789016804487",
+    "uid": "5f14a167-4dda-4591-a81b-8942ee47ff72",
+    "name": "V. Kowshik",
+    "email": "sathyakalasathyakala112@gmail.com",
+    "phone": "+91 98765 43210",
+    "created_at": "2026-09-10T05:06:44.487+00:00"
+  }
+]

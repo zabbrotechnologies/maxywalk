@@ -64,7 +64,7 @@ export default function AdminProducts() {
       }
       
       try {
-        // Compress image using Canvas to prevent Supabase 1MB payload size limits
+        // Compress image using Canvas to optimize payload size for fast uploads
         const compressedBase64 = await new Promise((resolve) => {
           const reader = new FileReader();
           reader.onload = (event) => {

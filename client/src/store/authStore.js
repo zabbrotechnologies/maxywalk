@@ -1,36 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { supabase } from '../lib/supabaseClient.js';
-import { getUserProfile, updateUserProfile } from '../lib/api.js';
+import { api, getUserProfile, updateUserProfile, signIn, signUp, signInWithGoogle, signOut } from '../lib/api.js';
 import useCartStore from './cartStore.js';
 import useWishlistStore from './wishlistStore.js';
 
-const syncUserStores = async (user) => {
+const syncUserStores = (user) => {
   try {
     useCartStore.getState().setActiveUser(user);
     useWishlistStore.getState().syncAccountWishlist(user);
-
-    if (user && user.email && !user.email.toLowerCase().includes('admin')) {
-      const email = user.email.toLowerCase().trim();
-      const { data: existing } = await supabase.from('customers').select('*').eq('email', email).maybeSingle();
-      
-      const displayName = user.user_metadata?.full_name || user.user_metadata?.name || existing?.name || user.email.split('@')[0];
-      const phone = existing?.phone || user.user_metadata?.phone || '';
-
-      const updated = await updateUserProfile({
-        uid: user.id,
-        name: displayName,
-        email: email,
-        phone: phone
-      });
-
-      if (updated) {
-        useAuthStore.getState().setUserProfile({
-          ...updated,
-          role: email.includes('admin') ? 'admin' : 'customer'
-        });
-      }
-    }
   } catch (e) {
     console.error('Account sync error:', e);
   }
@@ -44,96 +21,90 @@ const useAuthStore = create(
       isLoading: true,
       isAdmin: false,
 
-      // Initialize auth listener
+      // Initialize auth listener & session check from Neon backend
       init: () => {
-        // Check current session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session?.user) {
-            get().handleAuthChange(session.user);
-          } else {
-            set({ isLoading: false });
-          }
-        });
-
-        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-            if (session?.user) {
-              get().handleAuthChange(session.user);
+        api.get('/auth/me')
+          .then((res) => {
+            if (res.data?.user) {
+              const u = res.data.user;
+              const isAdmin = u.role === 'admin' || (u.email && u.email.toLowerCase().includes('admin'));
+              set({ user: u, userProfile: u, isAdmin, isLoading: false });
+              syncUserStores(u);
+            } else {
+              set({ user: null, userProfile: null, isAdmin: false, isLoading: false });
             }
-          } else if (event === 'SIGNED_OUT') {
+          })
+          .catch(() => {
             set({ user: null, userProfile: null, isAdmin: false, isLoading: false });
-            syncUserStores(null);
-          }
-        });
-
-        return () => {
-          authListener.subscription.unsubscribe();
-        };
-      },
-
-      handleAuthChange: async (supabaseUser) => {
-        try {
-          const isAdmin = supabaseUser.email.toLowerCase().includes('admin');
-          const email = supabaseUser.email.toLowerCase().trim();
-
-          const { data: existingProfile } = await supabase.from('customers').select('*').eq('email', email).maybeSingle();
-
-          const displayName = existingProfile?.name || supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'Customer';
-          const phone = existingProfile?.phone || supabaseUser.user_metadata?.phone || '';
-
-          const profile = {
-            id: existingProfile?.id,
-            name: displayName,
-            email: email,
-            phone: phone,
-            role: isAdmin ? 'admin' : 'customer'
-          };
-          
-          set({
-            user: supabaseUser,
-            userProfile: profile,
-            isAdmin: isAdmin,
-            isLoading: false,
           });
-          syncUserStores(supabaseUser);
-        } catch (err) {
-          console.error('Auth change error:', err);
-          set({ user: supabaseUser, isLoading: false });
-          syncUserStores(supabaseUser);
-        }
+
+        return () => {};
       },
 
-      // Demo / Direct login helpers (Fallback/Testing)
+      login: async (email, password) => {
+        const data = await signIn(email, password);
+        if (data?.user) {
+          const u = data.user;
+          const isAdmin = u.role === 'admin' || (u.email && u.email.toLowerCase().includes('admin'));
+          set({ user: u, userProfile: u, isAdmin, isLoading: false });
+          syncUserStores(u);
+          return data;
+        }
+        throw new Error('Invalid login response');
+      },
+
+      loginWithGoogle: async (credential) => {
+        const data = await signInWithGoogle(credential);
+        if (data?.user) {
+          const u = data.user;
+          const isAdmin = u.role === 'admin' || (u.email && u.email.toLowerCase().includes('admin'));
+          set({ user: u, userProfile: u, isAdmin, isLoading: false });
+          syncUserStores(u);
+          return data;
+        }
+        throw new Error('Google authentication failed');
+      },
+
+      register: async (email, password, name, phone) => {
+        const data = await signUp(email, password, name, phone);
+        if (data?.user) {
+          const u = data.user;
+          const isAdmin = u.role === 'admin' || (u.email && u.email.toLowerCase().includes('admin'));
+          set({ user: u, userProfile: u, isAdmin, isLoading: false });
+          syncUserStores(u);
+          return data;
+        }
+        throw new Error('Invalid registration response');
+      },
+
       loginAsDemoAdmin: () => {
-        const mockAdminUser = { id: 'admin-demo-id', email: 'admin@maxywalk.com', user_metadata: { name: 'MaxyWalk Admin' } };
-        const mockProfile = { name: 'MaxyWalk Admin', role: 'admin', phone: '+91 94447 43465' };
-        set({ user: mockAdminUser, userProfile: mockProfile, isAdmin: true, isLoading: false });
+        const mockAdminUser = { id: 'admin-demo-id', email: 'admin@maxywalk.com', name: 'MaxyWalk Admin', role: 'admin' };
+        set({ user: mockAdminUser, userProfile: mockAdminUser, isAdmin: true, isLoading: false });
         syncUserStores(mockAdminUser);
         return mockAdminUser;
       },
+
       loginAsDemoUser: (name = 'Customer', email = 'user@example.com') => {
-        const mockUser = { id: `user-${Date.now()}`, email, user_metadata: { name } };
-        const mockProfile = { name, role: 'customer', phone: '+91 98765 43210' };
-        set({ user: mockUser, userProfile: mockProfile, isAdmin: false, isLoading: false });
+        const mockUser = { id: `user-${Date.now()}`, email, name, role: 'customer' };
+        set({ user: mockUser, userProfile: mockUser, isAdmin: false, isLoading: false });
         syncUserStores(mockUser);
         return mockUser;
       },
 
-      // Sign out
       logout: async () => {
-        await supabase.auth.signOut();
+        try {
+          await signOut();
+        } catch {}
         set({ user: null, userProfile: null, isAdmin: false });
+        syncUserStores(null);
       },
 
-      // Update profile
       setUserProfile: (profile) => {
         set({ userProfile: profile, isAdmin: profile?.role === 'admin' });
       },
 
-      // Get auth token (JWT)
-      getToken: async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        return session?.access_token || null;
+      getToken: () => {
+        return null; // Using secure HTTP-only cookies
       },
     }),
     {

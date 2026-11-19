@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient.js';
 import useAuthStore from '../store/authStore.js';
 import toast from 'react-hot-toast';
 
@@ -10,78 +9,112 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);
+  const googleBtnRef = useRef(null);
+
   const navigate = useNavigate();
+  const register = useAuthStore((s) => s.register);
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    if (password !== confirm) { toast.error('Passwords do not match.'); return; }
-    if (password.length < 6) { toast.error('Password must be at least 6 characters.'); return; }
-
-    setLoading(true);
-
+  const handleGoogleSuccess = async (credential) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: name,
-          }
-        }
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      // If email confirmation is disabled in Supabase, session is returned immediately
-      if (data?.session) {
-        toast.success('Account created! Welcome to MaxyWalk.');
-        navigate('/');
-      } else {
-        // Try logging in directly if auto-confirmation worked
-        try {
-          const { data: loginData } = await supabase.auth.signInWithPassword({ email, password });
-          if (loginData?.session) {
-            toast.success('Account created! Welcome to MaxyWalk.');
-            navigate('/');
-            return;
-          }
-        } catch (_) {}
-
-        toast('Account created! Supabase Dashboard-ல் "Confirm email" OFF செய்தால் register செய்த உடனே தானாக login ஆகும்.', {
-          icon: 'ℹ️',
-          duration: 6000
-        });
-        navigate('/login');
-      }
+      setLoading(true);
+      await useAuthStore.getState().loginWithGoogle(credential);
+      toast.success('Welcome to MaxyWalk!');
+      navigate('/');
     } catch (err) {
-      console.error('Register error:', err);
-      toast.error(err.message || 'Registration failed. Please try again.');
+      console.error('Google register error:', err);
+      toast.error(err.response?.data?.error || 'Google sign-up failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogle = async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
+  useEffect(() => {
+    const googleClientId = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
+    if (!googleClientId) return;
+
+    const setupGoogle = () => {
+      if (window.google?.accounts?.id && googleBtnRef.current) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: (res) => handleGoogleSuccess(res.credential)
+          });
+
+          window.google.accounts.id.renderButton(googleBtnRef.current, {
+            theme: 'outline',
+            size: 'large',
+            width: googleBtnRef.current.offsetWidth || 384,
+            text: 'continue_with',
+            shape: 'rectangular',
+            logo_alignment: 'left',
+          });
+          setGoogleReady(true);
+        } catch (e) {
+          console.warn('Google render error:', e);
         }
-      });
-      if (error) throw error;
+      }
+    };
+
+    if (window.google?.accounts?.id) {
+      setupGoogle();
+    } else {
+      const timer = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          clearInterval(timer);
+          setupGoogle();
+        }
+      }, 300);
+      return () => clearInterval(timer);
+    }
+  }, []);
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (password !== confirm) {
+      toast.error('Passwords do not match.');
+      return;
+    }
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await register(email.toLowerCase().trim(), password, name);
+      toast.success('Account created! Welcome to MaxyWalk.');
+      navigate('/');
     } catch (err) {
-      console.warn('Google popup error:', err);
-      toast.error(err.message || 'Google sign-up failed.');
+      console.error('Register error:', err);
+      toast.error(err.response?.data?.error || err.message || 'Registration failed. Please try again.');
+    } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFallbackGoogle = () => {
+    const googleClientId = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
+    if (!googleClientId) {
+      toast.error('Google Client ID is not configured.');
+      return;
+    }
+
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: (res) => handleGoogleSuccess(res.credential)
+      });
+      window.google.accounts.id.prompt();
+    } else {
+      toast.error('Google Sign-In SDK is loading. Please try again in a moment.');
     }
   };
 
   return (
     <div className="min-h-screen flex page-enter">
+      {/* Left — Image & Quote */}
       <div className="hidden lg:block w-1/2 relative overflow-hidden">
         <img
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4NN1xHuCO2Wd6DAU6xFpF2dv2RZT6i-4jieJR7xshEqFl2VhuT2a6sVOA-kVqNgazus0SY0qDgNrZ9nb17av6_MtTOopMD_n42es-P5CK4uAjiP3poKuTethU2-NACNEcuLCpXFCNi98ys935PN9Sx7VDkSkiJJJlnpwOqoSXnnbyFJALJewGtNzFqN6IWGWgRSwQUq4jHlgjwHVEtyQlImQZi44prr4ayCXnieA1Il_tbYXaZMvn"
@@ -96,24 +129,32 @@ export default function Register() {
         </div>
       </div>
 
+      {/* Right — Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-16">
         <div className="w-full max-w-md">
           <h1 className="font-display text-3xl text-primary mb-2">Create Account</h1>
           <p className="text-on-surface-variant mb-8">Join MaxyWalk for exclusive deals.</p>
 
-          <button
-            onClick={handleGoogle}
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-3 border border-outline-variant py-3 mb-6 hover:bg-surface-container-low transition-colors font-sans text-sm font-medium"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            Continue with Google
-          </button>
+          {/* Continue with Google button on top */}
+          <div className="w-full mb-6">
+            <div ref={googleBtnRef} className="w-full flex justify-center" />
+            {!googleReady && (
+              <button
+                type="button"
+                onClick={handleFallbackGoogle}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 border border-outline-variant py-3 hover:bg-surface-container-low transition-colors font-sans text-sm font-medium"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center gap-4 mb-6">
             <div className="flex-1 h-px bg-outline-variant/50" />

@@ -1,10 +1,11 @@
 import axios from 'axios';
-import { supabase } from './supabaseClient.js';
 import { sortSizes } from './utils.js';
+import { FALLBACK_PRODUCTS } from '../data/fallbackProducts.js';
 
-// Legacy Axios configuration (kept for backwards compatibility if needed)
-const API_URL = import.meta.env?.VITE_API_URL || (import.meta.env?.DEV ? 'http://localhost:5001/api' : '/api');
-const api = axios.create({ baseURL: API_URL, timeout: 10000 });
+// Express API configuration backed exclusively by Neon PostgreSQL
+// Relative '/api' works seamlessly through Vite proxy in dev and Vercel serverless in prod
+const API_URL = import.meta.env?.VITE_API_URL || '/api';
+export const api = axios.create({ baseURL: API_URL, timeout: 8000, withCredentials: true });
 
 // Lightweight in-memory cache for speed
 const cache = new Map();
@@ -24,28 +25,6 @@ function setCached(key, data) {
   cache.set(key, { data, time: Date.now() });
 }
 
-function getDateCutoff(filterName) {
-  if (!filterName || filterName === 'all' || filterName === 'All') return null;
-  const now = new Date();
-  if (filterName === 'Today') {
-    now.setHours(0, 0, 0, 0);
-    return now.toISOString();
-  }
-  if (filterName === '7 Days') {
-    now.setDate(now.getDate() - 7);
-    return now.toISOString();
-  }
-  if (filterName === '30 Days') {
-    now.setDate(now.getDate() - 30);
-    return now.toISOString();
-  }
-  if (filterName === '1 Year') {
-    now.setFullYear(now.getFullYear() - 1);
-    return now.toISOString();
-  }
-  return null;
-}
-
 export function clearApiCache() {
   cache.clear();
   try {
@@ -55,10 +34,6 @@ export function clearApiCache() {
   } catch {}
 }
 
-// -----------------------------------------------------------------
-// SUPABASE MIGRATION: DATA LAYER
-// -----------------------------------------------------------------
-
 export const DEFAULT_EXCLUSIVE_PRODUCT = {
   id: 'urbanedge-pro',
   name: 'UrbanEdge Pro',
@@ -66,51 +41,89 @@ export const DEFAULT_EXCLUSIVE_PRODUCT = {
   description: 'A refined blend of style, comfort and durability — made for those who choose more.',
   price: 4999,
   original_price: 6499,
-  category: 'sandals',
-  stock: 8,
-  material: 'Full-Grain Leather',
-  badge: 'LIMITED EDITION',
+  category: 'slippers',
+  stock: 50,
   featured: true,
   is_exclusive: true,
-  isExclusive: true,
+  material: 'Full-Grain Leather',
+  badge: 'Exclusive',
+  rating: 5.0,
+  review_count: 48,
+  created_at: '2026-01-01T00:00:00Z',
+  sizes: ['6', '7', '8', '9', '10', '11'],
+  colors: ['Black', 'Maroon', 'Sandal / Wood', 'Light Blue', 'Grey', 'Olive Green', 'Rose', 'Light Pink'],
   images: [
     '/products/exclusive/black.png',
-    '/products/exclusive/maroon.png',
-    '/products/exclusive/sandal_wood.png',
-    '/products/exclusive/lightblue.png',
-    '/products/exclusive/gray.png',
-    '/products/exclusive/olivegreen.png',
-    '/products/exclusive/rose.png',
-    '/products/exclusive/lightpink.png',
-  ],
-  sizes: ['6', '7', '8', '9', '10', '11'],
-  colors: [
-    'Black',
-    'Burganty',
-    'Sandal / Wood',
-    'Light Blue',
-    'Grey',
-    'Olive Green',
-    'Red',
-    'Light Pink'
+    '/products/exclusive/maroon.png'
   ],
   variants: [
-    { id: 'black', name: 'Black', image: '/products/exclusive/black.png', colorHex: '#1F1E1D' },
-    { id: 'maroon', name: 'Burganty', image: '/products/exclusive/maroon.png', colorHex: '#5A2328' },
-    { id: 'sandal-wood', name: 'Sandal / Wood', image: '/products/exclusive/sandal_wood.png', colorHex: '#C28B53' },
-    { id: 'lightblue', name: 'Light Blue', image: '/products/exclusive/lightblue.png', colorHex: '#88A0B5' },
-    { id: 'grey', name: 'Grey', image: '/products/exclusive/gray.png', colorHex: '#6E6C6B' },
-    { id: 'olivegreen', name: 'Olive Green', image: '/products/exclusive/olivegreen.png', colorHex: '#535D4A' },
-    { id: 'rose', name: 'Red', image: '/products/exclusive/rose.png', colorHex: '#B85B64' },
-    { id: 'lightpink', name: 'Light Pink', image: '/products/exclusive/lightpink.png', colorHex: '#D6A29C' }
+    {
+      id: 'black',
+      name: 'Black',
+      label: 'Black',
+      image: '/products/exclusive/black.png',
+      colorHex: '#1F1E1D',
+      hex: '#1F1E1D',
+    },
+    {
+      id: 'maroon',
+      name: 'Maroon',
+      label: 'Maroon',
+      image: '/products/exclusive/maroon.png',
+      colorHex: '#5A2328',
+      hex: '#5A2328',
+    },
+    {
+      id: 'sandal-wood',
+      name: 'Sandal / Wood',
+      label: 'Sandal / Wood',
+      image: '/products/exclusive/sandal_wood.png',
+      colorHex: '#C28B53',
+      hex: '#C28B53',
+    },
+    {
+      id: 'lightblue',
+      name: 'Light Blue',
+      label: 'Light Blue',
+      image: '/products/exclusive/lightblue.png',
+      colorHex: '#88A0B5',
+      hex: '#88A0B5',
+    },
+    {
+      id: 'grey',
+      name: 'Grey',
+      label: 'Grey',
+      image: '/products/exclusive/gray.png',
+      colorHex: '#6E6C6B',
+      hex: '#6E6C6B',
+    },
+    {
+      id: 'olivegreen',
+      name: 'Olive Green',
+      label: 'Olive Green',
+      image: '/products/exclusive/olivegreen.png',
+      colorHex: '#535D4A',
+      hex: '#535D4A',
+    },
+    {
+      id: 'rose',
+      name: 'Rose',
+      label: 'Rose',
+      image: '/products/exclusive/rose.png',
+      colorHex: '#B85B64',
+      hex: '#B85B64',
+    },
+    {
+      id: 'lightpink',
+      name: 'Light Pink',
+      label: 'Light Pink',
+      image: '/products/exclusive/lightpink.png',
+      colorHex: '#D8A0A6',
+      hex: '#D8A0A6',
+    }
   ]
 };
 
-/**
- * Natural comparison between two strings containing numeric parts.
- * Handles "MWJCR 7" vs "MWJCR 08", "MWJCR 08" vs "MWJCR 25",
- * different prefixes, non-numeric strings, casing, and whitespace.
- */
 export function naturalCompare(aStr = '', bStr = '') {
   const cleanA = String(aStr || '').trim().replace(/\s+/g, ' ');
   const cleanB = String(bStr || '').trim().replace(/\s+/g, ' ');
@@ -141,14 +154,6 @@ export function naturalCompare(aStr = '', bStr = '') {
   return ax.length - bx.length;
 }
 
-/**
- * Primary product comparator ensuring stable, logical ordering across the application:
- * 1. Exclusive product priority (UrbanEdge Pro / is_exclusive)
- * 2. Featured products priority
- * 3. Natural alphanumeric sort by product name / code (e.g. MWJCR 01 -> MWJCR 7 -> MWJCR 08 -> MWJCR 25)
- * 4. Deterministic tie-breaker by created_at timestamp
- * 5. Deterministic fallback to ID
- */
 export function compareProducts(a, b) {
   if (!a && !b) return 0;
   if (!a) return 1;
@@ -182,344 +187,155 @@ export const getProducts = async (params = {}) => {
   const cached = getCached(cacheKey);
   if (cached) return cached;
 
-  let query = supabase.from('products').select('*');
-  
-  if (params.category && params.category !== 'all') {
-    query = query.eq('category', params.category);
-  }
-  if (params.featured === true || params.featured === 'true') {
-    query = query.eq('featured', true);
-  }
-  if (params.exclusive === true || params.exclusive === 'true') {
-    query = query.eq('is_exclusive', true);
-  }
+  try {
+    const res = await api.get('/products', { params });
+    const list = (res.data?.products || []).map((p) => ({
+      ...p,
+      sizes: sortSizes(p.sizes)
+    }));
 
-  const { data, error } = await query;
-  
-  let list = Array.isArray(data) ? data.map((p) => ({ ...p, sizes: sortSizes(p.sizes) })) : [];
+    const result = { products: list, total: res.data?.total || list.length };
+    setCached(cacheKey, result);
+    return result;
+  } catch (err) {
+    console.warn('Backend unavailable, using local fallback products catalog:', err.message);
+    let list = [...FALLBACK_PRODUCTS];
 
-  if (error) {
-    console.warn('Supabase getProducts error/fallback:', error);
-  }
-
-  // Ensure urbanedge-pro exclusive product exists in list if not returned by database
-  const hasExclusive = list.some((p) => p.id === 'urbanedge-pro' || p.is_exclusive || p.isExclusive);
-  if (!hasExclusive) {
-    if (!params.category || params.category === 'all' || params.category === 'sandals') {
-      list.unshift(DEFAULT_EXCLUSIVE_PRODUCT);
+    if (params.category && params.category !== 'all') {
+      list = list.filter((p) => p.category === params.category);
     }
-  }
+    if (params.featured === 'true' || params.featured === true) {
+      list = list.filter((p) => p.featured);
+    }
 
-  if (params.exclusive === true || params.exclusive === 'true') {
-    list = list.filter((p) => p.is_exclusive || p.isExclusive || p.id === 'urbanedge-pro');
-  }
-
-  // Consistent, reliable sorting across all views
-  if (params.sort === 'price_asc') {
-    list.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0) || compareProducts(a, b));
-  } else if (params.sort === 'price_desc') {
-    list.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0) || compareProducts(a, b));
-  } else if (params.sort === 'newest') {
-    list.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime() || compareProducts(a, b));
-  } else {
-    // Default / 'featured' sorting: Featured/Exclusive first, then natural alphanumeric order
+    list = list.map((p) => ({ ...p, sizes: sortSizes(p.sizes) }));
     list.sort(compareProducts);
-  }
 
-  if (params.limit && typeof params.limit === 'number' && params.limit > 0) {
-    list = list.slice(0, params.limit);
+    const result = { products: list, total: list.length };
+    setCached(cacheKey, result);
+    return result;
   }
-
-  const result = { products: list, total: list.length };
-  setCached(cacheKey, result);
-  return result;
 };
 
 export const getProduct = async (id) => {
   if (id === 'urbanedge-pro') {
-    const { data } = await supabase.from('products').select('*').eq('id', id).maybeSingle();
-    const merged = data ? { ...DEFAULT_EXCLUSIVE_PRODUCT, ...data } : DEFAULT_EXCLUSIVE_PRODUCT;
-    return { ...merged, sizes: sortSizes(merged.sizes) };
+    return { ...DEFAULT_EXCLUSIVE_PRODUCT, sizes: sortSizes(DEFAULT_EXCLUSIVE_PRODUCT.sizes) };
   }
 
   const cacheKey = `product_${id}`;
   const cached = getCached(cacheKey);
   if (cached) return cached;
 
-  const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
-  if (error) {
-    console.error(`Supabase getProduct ${id} error:`, error);
-    return null;
-  }
-  
-  const formatted = { ...data, sizes: sortSizes(data.sizes) };
-  setCached(cacheKey, formatted);
-  return formatted;
-};
-
-const ALLOWED_PRODUCT_KEYS = [
-  'id', 'name', 'description', 'category', 'price', 'original_price',
-  'sizes', 'colors', 'images', 'stock', 'featured', 'material',
-  'badge', 'rating', 'review_count', 'created_at'
-];
-
-function sanitizeProductData(data) {
-  const clean = {};
-  for (const key of ALLOWED_PRODUCT_KEYS) {
-    if (data[key] !== undefined && data[key] !== null) {
-      clean[key] = data[key];
+  try {
+    const res = await api.get(`/products/${id}`);
+    if (res.data) {
+      const formatted = { ...res.data, sizes: sortSizes(res.data.sizes) };
+      setCached(cacheKey, formatted);
+      return formatted;
+    }
+  } catch (err) {
+    console.warn(`Backend unavailable for product ${id}, using fallback:`, err.message);
+    const fallback = FALLBACK_PRODUCTS.find((p) => p.id === id);
+    if (fallback) {
+      const formatted = { ...fallback, sizes: sortSizes(fallback.sizes) };
+      setCached(cacheKey, formatted);
+      return formatted;
     }
   }
-  return clean;
-}
+
+  return null;
+};
 
 export const createProduct = async (data) => {
   clearApiCache();
-  const cleanData = sanitizeProductData(data);
-  const newProduct = {
-    id: cleanData.id || `custom-${Date.now()}`,
-    ...cleanData,
-    created_at: new Date().toISOString()
-  };
-  
-  const { data: insertedData, error } = await supabase.from('products').insert([newProduct]).select().single();
-  if (error) {
-    console.error('Supabase createProduct error:', error);
-    throw error;
-  }
-  return { ...data, ...insertedData };
+  const res = await api.post('/products', data);
+  return res.data;
 };
 
 export const updateProduct = async (id, data) => {
   clearApiCache();
-  const cleanData = sanitizeProductData(data);
-  
-  const { data: updatedData, error } = await supabase
-    .from('products')
-    .update(cleanData)
-    .eq('id', id)
-    .select();
-
-  if (error) {
-    console.error(`Supabase updateProduct ${id} error:`, error);
-    throw error;
-  }
-
-  if (!updatedData || updatedData.length === 0) {
-    const upsertPayload = { id, ...cleanData };
-    const { data: upsertedData, error: upsertErr } = await supabase
-      .from('products')
-      .upsert([upsertPayload])
-      .select()
-      .single();
-      
-    if (upsertErr) {
-      console.error(`Supabase updateProduct (upsert) ${id} error:`, upsertErr);
-      throw upsertErr;
-    }
-    return { ...data, ...upsertedData };
-  }
-
-  return { ...data, ...updatedData[0] };
+  const res = await api.put(`/products/${id}`, data);
+  return res.data;
 };
 
 export const deleteProduct = async (id) => {
   clearApiCache();
-  const { error } = await supabase.from('products').delete().eq('id', id);
-  if (error) {
-    console.error(`Supabase deleteProduct ${id} error:`, error);
-    throw error;
-  }
-  return { message: 'Product deleted' };
+  const res = await api.delete(`/products/${id}`);
+  return res.data;
 };
 
-export const placeOrder = async (data) => {
-  clearApiCache();
-  const orderId = `MW-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
-  const expectedDeliveryDate = new Date();
-  expectedDeliveryDate.setDate(expectedDeliveryDate.getDate() + 7);
-
-  const shipping_address = {
-    ...(data.shippingAddress || {}),
-    expected_delivery_date: expectedDeliveryDate.toISOString()
-  };
-
-  const newOrder = {
-    id: `order-${Date.now()}`,
-    order_id: orderId,
-    user_email: data.shippingAddress?.email?.toLowerCase().trim() || 'guest',
-    items: data.items || [],
-    total: data.total || 0,
-    shipping_address: shipping_address,
-    payment_method: data.paymentMethod || 'cod',
-    status: 'pending',
-    created_at: new Date().toISOString()
-  };
-
-  const { data: insertedOrder, error } = await supabase.from('orders').insert([newOrder]).select().single();
-  if (error) {
-    console.error('Supabase placeOrder error:', error);
-    throw error;
-  }
-
-  // Silently decrement stock for ordered items
-  if (Array.isArray(data.items) && data.items.length > 0) {
-    Promise.all(data.items.map(async (item) => {
-      try {
-        const prodId = item.productId || item.id;
-        const qty = Number(item.qty) || 1;
-        if (!prodId) return;
-        const { data: prod } = await supabase.from('products').select('stock').eq('id', prodId).single();
-        if (prod && typeof prod.stock === 'number') {
-          const newStock = Math.max(0, prod.stock - qty);
-          await supabase.from('products').update({ stock: newStock }).eq('id', prodId);
-        }
-      } catch (err) {
-        console.warn('Stock decrement notice:', err);
-      }
-    })).catch((e) => console.warn('Stock batch notice:', e));
-  }
-
-  return insertedOrder;
+// Orders API
+export const createOrder = async (orderData) => {
+  const res = await api.post('/orders', orderData);
+  return res.data;
 };
 
-export const getMyOrders = async (user = null) => {
-  if (!user || !user.email) return { orders: [] };
-  
-  const userEmail = user.email.toLowerCase().trim();
-  const { data, error } = await supabase.from('orders').select('*').eq('user_email', userEmail).order('created_at', { ascending: false });
-  
-  if (error) {
-    console.error('Supabase getMyOrders error:', error);
-    return { orders: [] };
-  }
-  
-  return { orders: data };
+export const placeOrder = createOrder;
+
+export const getOrder = async (id) => {
+  const res = await api.get(`/orders/${id}`);
+  return res.data;
+};
+
+export const getMyOrders = async (email) => {
+  const res = await api.get('/orders/my-orders', { params: { email } });
+  return res.data || [];
 };
 
 export const getAllOrders = async (params = {}) => {
-  let query = supabase.from('orders').select('*').order('created_at', { ascending: false });
-  const cutoff = getDateCutoff(params.dateFilter);
-  if (cutoff) {
-    query = query.gte('created_at', cutoff);
-  }
-  if (params.limit && typeof params.limit === 'number') {
-    query = query.limit(params.limit);
-  }
-  const { data, error } = await query;
-  if (error) {
-    console.error('Supabase getAllOrders error:', error);
-    return { orders: [] };
-  }
-  return { orders: data };
+  const res = await api.get('/orders', { params });
+  return { orders: res.data || [] };
 };
 
 export const updateOrderStatus = async (id, status) => {
   clearApiCache();
-  // Using both id or order_id to be safe since previous architecture used order_id interchangeably
-  const { data, error } = await supabase.from('orders').update({ status }).or(`id.eq.${id},order_id.eq.${id}`).select();
-  if (error) {
-    console.error(`Supabase updateOrderStatus ${id} error:`, error);
-    throw error;
-  }
-  return { id, status, message: 'Status updated successfully' };
+  const res = await api.put(`/orders/${id}`, { status });
+  return res.data;
 };
 
 export const getAllCustomers = async () => {
-  const { data, error } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
-  if (error) {
-    console.error('Supabase getAllCustomers error:', error);
-    return { customers: [] };
-  }
-  return { customers: data };
+  const res = await api.get('/customers');
+  return { customers: res.data || [] };
 };
 
 export const getOrderStats = async (dateRange = null) => {
-  try {
-    let ordersQuery = supabase.from('orders').select('total, status, items, created_at');
-    const cutoff = getDateCutoff(dateRange);
-    if (cutoff) {
-      ordersQuery = ordersQuery.gte('created_at', cutoff);
-    }
-    const { data: orders, error: ordersError } = await ordersQuery;
-    const { count: totalCust, error: custError } = await supabase.from('customers').select('*', { count: 'exact', head: true });
-    
-    if (ordersError || custError) {
-      console.warn('Supabase getOrderStats warning:', ordersError || custError);
-    }
-    
-    const orderList = Array.isArray(orders) ? orders : [];
-    const totalRev = orderList.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
-    const totalCount = orderList.length;
-    const activeCount = orderList.filter((o) => !['delivered', 'cancelled'].includes(o?.status)).length;
-    const avgVal = totalCount > 0 ? Math.round(totalRev / totalCount) : 0;
-
-    return {
-      totalRevenue: totalRev,
-      totalOrders: totalCount,
-      activeOrders: activeCount,
-      totalCustomers: totalCust || 0,
-      avgOrderValue: avgVal,
-      orders: orderList,
-    };
-  } catch (err) {
-    console.error('getOrderStats error:', err);
-    return { totalRevenue: 0, totalOrders: 0, activeOrders: 0, totalCustomers: 0, avgOrderValue: 0, orders: [] };
-  }
+  const res = await api.get('/orders/stats', { params: { dateRange } });
+  return res.data;
 };
 
-// Auth & Profiles
 export const getUserProfile = async () => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user?.email) {
-      const email = user.email.toLowerCase().trim();
-      const { data } = await supabase.from('customers').select('*').eq('email', email).maybeSingle();
-      if (data) {
-        return {
-          id: data.id,
-          uid: data.uid || user.id,
-          name: data.name || user.user_metadata?.full_name || user.user_metadata?.name || email.split('@')[0],
-          email: email,
-          phone: data.phone || '',
-          role: email.includes('admin') ? 'admin' : 'customer'
-        };
-      }
-    }
-  } catch (err) {
-    console.warn('getUserProfile error:', err);
+    const res = await api.get('/auth/me');
+    return res.data?.user || null;
+  } catch {
+    return null;
   }
-  return null;
 };
 
 export const updateUserProfile = async (data) => {
-  if (data?.email) {
-    const email = data.email.toLowerCase().trim();
-    try {
-      const { data: existing } = await supabase.from('customers').select('*').eq('email', email).maybeSingle();
+  const res = await api.put('/customers/profile', data);
+  return res.data;
+};
 
-      const payload = {
-        id: existing?.id || data.id || `cust-${Date.now()}`,
-        uid: data.uid || existing?.uid || `u-${Date.now()}`,
-        name: data.name || existing?.name || 'Customer',
-        email: email,
-        phone: data.phone !== undefined ? data.phone : (existing?.phone || ''),
-        created_at: existing?.created_at || new Date().toISOString()
-      };
+// Authentication helpers
+export const signIn = async (email, password) => {
+  const res = await api.post('/auth/login', { email, password });
+  return res.data;
+};
 
-      const { data: updated, error } = await supabase.from('customers').upsert([payload], { onConflict: 'email' }).select().single();
-      
-      if (!error && updated) {
-        return {
-          ...updated,
-          role: email.includes('admin') ? 'admin' : 'customer'
-        };
-      }
-    } catch (err) {
-      console.warn('updateUserProfile error:', err);
-    }
-  }
-  return data;
+export const signUp = async (email, password, name, phone) => {
+  const res = await api.post('/auth/register', { email, password, name, phone });
+  return res.data;
+};
+
+export const signInWithGoogle = async (credential) => {
+  const res = await api.post('/auth/google', { credential });
+  return res.data;
+};
+
+export const signOut = async () => {
+  const res = await api.post('/auth/logout');
+  return res.data;
 };
 
 export default api;
