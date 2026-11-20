@@ -35,45 +35,64 @@ function customLookup(hostname, options, callback) {
 
 const httpsAgent = new https.Agent({
   lookup: customLookup,
-  keepAlive: false,
+  keepAlive: true,
+  keepAliveMsecs: 60000,
+  maxSockets: 64,
+  maxFreeSockets: 16,
+  timeout: 10000
 });
 
-export function query(sql, params = []) {
+export function query(sql, params = [], retries = 1) {
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify({ query: sql, params });
 
-    const req = https.request({
-      host: proxyHost,
-      port: 443,
-      path: '/sql',
-      method: 'POST',
-      agent: httpsAgent,
-      headers: {
-        'Host': proxyHost,
-        'Neon-Connection-String': databaseUrl,
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload)
-      }
-    }, (res) => {
-      let body = '';
-      res.on('data', chunk => body += chunk);
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(body);
-          if (res.statusCode >= 400) {
-            reject(new Error(parsed.message || body));
-          } else {
-            resolve(parsed.rows || []);
+    const execute = (attempt) => {
+      const req = https.request({
+        host: proxyHost,
+        port: 443,
+        path: '/sql',
+        method: 'POST',
+        agent: httpsAgent,
+        headers: {
+          'Host': proxyHost,
+          'Neon-Connection-String': databaseUrl,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload)
+        }
+      }, (res) => {
+        let body = '';
+        res.on('data', chunk => body += chunk);
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(body);
+            if (res.statusCode >= 400) {
+              reject(new Error(parsed.message || body));
+            } else {
+              resolve(parsed.rows || []);
+            }
+          } catch (e) {
+            reject(e);
           }
-        } catch (e) {
-          reject(e);
+        });
+      });
+
+      req.setTimeout(8000, () => {
+        req.destroy(new Error('Neon SQL query timed out after 8000ms'));
+      });
+
+      req.on('error', (err) => {
+        if (attempt < retries && (err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT')) {
+          setTimeout(() => execute(attempt + 1), 150);
+        } else {
+          reject(err);
         }
       });
-    });
 
-    req.on('error', reject);
-    req.write(payload);
-    req.end();
+      req.write(payload);
+      req.end();
+    };
+
+    execute(0);
   });
 }
 

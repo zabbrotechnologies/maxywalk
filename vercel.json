@@ -10,5 +10,13 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "regions": [
+    "cle1"
+  ],
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 15
+    }
+  }
 }

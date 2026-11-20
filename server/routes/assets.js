@@ -12,6 +12,10 @@ dotenv.config();
 const router = express.Router();
 const BUCKET = process.env.NEON_BUCKET_NAME || 'maxywalk-assets';
 
+// In-memory hot asset LRU cache for serverless instance (max 50 assets)
+const assetCache = new Map();
+const MAX_ASSET_CACHE_ENTRIES = 50;
+
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 function customLookup(hostname, options, callback) {
@@ -56,14 +60,34 @@ router.get('/*', async (req, res) => {
       return res.status(400).json({ error: 'Asset path is required' });
     }
 
+    // 0. Check in-memory hot asset cache first
+    const cachedAsset = assetCache.get(id);
+    if (cachedAsset) {
+      if (req.headers['if-none-match'] === cachedAsset.etag) {
+        return res.status(304).end();
+      }
+      res.set({
+        'Content-Type': cachedAsset.mime,
+        'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
+        'ETag': cachedAsset.etag
+      });
+      return res.send(cachedAsset.buffer);
+    }
+
     // 1. Try public.assets PostgreSQL database table first
     const rows = await query('SELECT mime_type, data, sha256 FROM public.assets WHERE id = $1 LIMIT 1;', [id]);
     if (rows.length > 0) {
       const asset = rows[0];
+      const etag = `"${asset.sha256}"`;
+
+      if (req.headers['if-none-match'] === etag) {
+        return res.status(304).end();
+      }
+
       res.set({
         'Content-Type': asset.mime_type || 'image/jpeg',
-        'Cache-Control': 'public, max-age=31536000, immutable',
-        'ETag': `"${asset.sha256}"`
+        'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
+        'ETag': etag
       });
 
       let buffer;
@@ -80,6 +104,13 @@ router.get('/*', async (req, res) => {
         buffer = Buffer.from(asset.data);
       }
 
+      // Populate hot asset memory cache
+      if (assetCache.size >= MAX_ASSET_CACHE_ENTRIES) {
+        const oldestKey = assetCache.keys().next().value;
+        assetCache.delete(oldestKey);
+      }
+      assetCache.set(id, { buffer, mime: asset.mime_type || 'image/jpeg', etag });
+
       return res.send(buffer);
     }
 
@@ -91,11 +122,26 @@ router.get('/*', async (req, res) => {
           Key: id
         }));
         const bytes = await s3Res.Body.transformToByteArray();
+        const buffer = Buffer.from(bytes);
+        const etag = s3Res.ETag || `"${crypto.createHash('md5').update(buffer).digest('hex')}"`;
+
+        if (req.headers['if-none-match'] === etag) {
+          return res.status(304).end();
+        }
+
         res.set({
           'Content-Type': s3Res.ContentType || 'image/jpeg',
-          'Cache-Control': 'public, max-age=31536000, immutable'
+          'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
+          'ETag': etag
         });
-        return res.send(Buffer.from(bytes));
+
+        if (assetCache.size >= MAX_ASSET_CACHE_ENTRIES) {
+          const oldestKey = assetCache.keys().next().value;
+          assetCache.delete(oldestKey);
+        }
+        assetCache.set(id, { buffer, mime: s3Res.ContentType || 'image/jpeg', etag });
+
+        return res.send(buffer);
       } catch (s3Err) {
         // Not in S3 either
       }

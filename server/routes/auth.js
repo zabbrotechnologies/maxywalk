@@ -2,12 +2,13 @@ import express from 'express';
 import crypto from 'crypto';
 import { query } from '../db.js';
 import { hashPassword, verifyPassword } from '../utils.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, invalidateSession } from '../middleware/auth.js';
+import { authRateLimiter } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-router.post('/register', async (req, res) => {
+router.post('/register', authRateLimiter, async (req, res) => {
   try {
     const { email, password, name, phone } = req.body;
     if (!email || !password) {
@@ -64,7 +65,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', authRateLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -182,6 +183,7 @@ router.post('/logout', async (req, res) => {
   try {
     const token = req.cookies?.maxywalk_session || req.headers.authorization?.replace('Bearer ', '');
     if (token) {
+      invalidateSession(token);
       await query('DELETE FROM public.sessions WHERE token = $1;', [token]);
     }
     res.clearCookie('maxywalk_session');

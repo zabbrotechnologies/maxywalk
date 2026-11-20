@@ -289,7 +289,15 @@ export const getMyOrders = async (email) => {
 
 export const getAllOrders = async (params = {}) => {
   const res = await api.get('/orders', { params });
-  return { orders: res.data || [] };
+  if (Array.isArray(res.data)) {
+    return { orders: res.data, total: res.data.length };
+  }
+  return {
+    orders: res.data?.orders || [],
+    total: res.data?.total || 0,
+    page: res.data?.page || 1,
+    totalPages: res.data?.totalPages || 1
+  };
 };
 
 export const updateOrderStatus = async (id, status) => {
@@ -298,9 +306,17 @@ export const updateOrderStatus = async (id, status) => {
   return res.data;
 };
 
-export const getAllCustomers = async () => {
-  const res = await api.get('/customers');
-  return { customers: res.data || [] };
+export const getAllCustomers = async (params = {}) => {
+  const res = await api.get('/customers', { params });
+  if (Array.isArray(res.data)) {
+    return { customers: res.data, total: res.data.length };
+  }
+  return {
+    customers: res.data?.customers || [],
+    total: res.data?.total || 0,
+    page: res.data?.page || 1,
+    totalPages: res.data?.totalPages || 1
+  };
 };
 
 export const getOrderStats = async (dateRange = null) => {

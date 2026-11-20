@@ -14,6 +14,15 @@ dotenv.config();
 const router = express.Router();
 const BUCKET = process.env.NEON_BUCKET_NAME || 'maxywalk-assets';
 
+// Fast in-memory cache for product catalog and details (TTL: 60s)
+const productCache = new Map();
+const PRODUCT_CACHE_TTL_MS = 60 * 1000;
+const MAX_PRODUCT_CACHE = 100;
+
+export function clearProductCache() {
+  productCache.clear();
+}
+
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 function customLookup(hostname, options, callback) {
@@ -107,7 +116,17 @@ async function processProductImages(productId, images = []) {
 
 router.get('/', async (req, res) => {
   try {
-    const { category, featured, exclusive, sort, limit } = req.query;
+    const { category, featured, exclusive, sort, limit, page } = req.query;
+
+    // Set Edge CDN caching headers for global acceleration
+    res.set('Cache-Control', 'public, max-age=15, s-maxage=60, stale-while-revalidate=300');
+
+    // Check in-memory cache for serverless instance
+    const cacheKey = `cat_${category || 'all'}_${featured || ''}_${exclusive || ''}_${sort || ''}_${limit || ''}_${page || '1'}`;
+    const cached = productCache.get(cacheKey);
+    if (cached && (Date.now() - cached.time) < PRODUCT_CACHE_TTL_MS) {
+      return res.json(cached.data);
+    }
 
     let sql = 'SELECT * FROM public.products';
     const conditions = [];
@@ -164,11 +183,27 @@ router.get('/', async (req, res) => {
       list.sort(compareProducts);
     }
 
-    if (limit && Number(limit) > 0) {
-      list = list.slice(0, Number(limit));
+    const total = list.length;
+    const pageNum = Math.max(Number(page) || 1, 1);
+    const pageSize = limit && Number(limit) > 0 ? Math.min(Number(limit), 100) : total;
+
+    if (page && limit) {
+      const startIndex = (pageNum - 1) * pageSize;
+      list = list.slice(startIndex, startIndex + pageSize);
+    } else if (limit && Number(limit) > 0) {
+      list = list.slice(0, pageSize);
     }
 
-    res.json({ products: list, total: list.length });
+    const result = { products: list, total, page: pageNum, totalPages: Math.ceil(total / (pageSize || 1)) };
+
+    // Store in instance cache
+    if (productCache.size >= MAX_PRODUCT_CACHE) {
+      const oldest = productCache.keys().next().value;
+      productCache.delete(oldest);
+    }
+    productCache.set(cacheKey, { data: result, time: Date.now() });
+
+    res.json(result);
   } catch (err) {
     console.error('Error fetching products:', err);
     res.status(500).json({ error: 'Failed to fetch products' });
@@ -178,6 +213,15 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+
+    res.set('Cache-Control', 'public, max-age=15, s-maxage=60, stale-while-revalidate=300');
+
+    const cacheKey = `product_${id}`;
+    const cached = productCache.get(cacheKey);
+    if (cached && (Date.now() - cached.time) < PRODUCT_CACHE_TTL_MS) {
+      return res.json(cached.data);
+    }
+
     const rows = await query('SELECT * FROM public.products WHERE id = $1 LIMIT 1;', [id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Product not found' });
@@ -213,6 +257,12 @@ router.get('/:id', async (req, res) => {
         { id: 'lightpink', name: 'Light Pink', image: '/products/exclusive/lightpink.png', hex: '#D8A0A6', colorHex: '#D8A0A6' }
       ];
     }
+
+    if (productCache.size >= MAX_PRODUCT_CACHE) {
+      const oldest = productCache.keys().next().value;
+      productCache.delete(oldest);
+    }
+    productCache.set(cacheKey, { data: normalized, time: Date.now() });
 
     res.json(normalized);
   } catch (err) {
@@ -259,6 +309,7 @@ router.post('/', requireAdmin, async (req, res) => {
     ];
 
     const rows = await query(sql, params);
+    clearProductCache();
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error('Error creating product:', err);
@@ -317,6 +368,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Product not found' });
     }
+    clearProductCache();
     res.json(rows[0]);
   } catch (err) {
     console.error('Error updating product:', err);
@@ -328,6 +380,7 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     await query('DELETE FROM public.products WHERE id = $1;', [id]);
+    clearProductCache();
     res.json({ success: true });
   } catch (err) {
     console.error('Error deleting product:', err);

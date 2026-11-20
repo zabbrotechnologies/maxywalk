@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import useCartStore from '../store/cartStore.js';
 import useAuthStore from '../store/authStore.js';
@@ -32,6 +32,7 @@ export default function Checkout() {
   });
   const [address, setAddress] = useState({ firstName: '', lastName: '', address: '', city: '', state: 'Tamil Nadu', pincode: '' });
   const [shipping, setShipping] = useState('standard');
+  const idempotencyKeyRef = useRef(`idem-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
 
   useEffect(() => {
     document.title = 'Checkout | MAXYWALK';
@@ -129,6 +130,7 @@ export default function Checkout() {
         subtotal,
         shippingCost,
         total,
+        idempotency_key: idempotencyKeyRef.current,
       };
 
       const order = await placeOrder(orderData);
