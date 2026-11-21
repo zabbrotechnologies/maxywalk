@@ -10,6 +10,7 @@ import productRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
 import customerRoutes from './routes/customers.js';
 import assetRoutes from './routes/assets.js';
+import paymentRoutes from './routes/payment.js';
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -30,6 +31,7 @@ app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(authenticate);
 
 // API Routes
+app.use('/api', paymentRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);

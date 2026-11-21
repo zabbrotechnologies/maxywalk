@@ -335,10 +335,11 @@ router.post('/razorpay/verify', async (req, res) => {
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
-    const isMatch = crypto.timingSafeEqual(
-      Buffer.from(expected),
-      Buffer.from(razorpay_signature)
-    );
+    const expectedBuffer = Buffer.from(expected);
+    const signatureBuffer = Buffer.from(razorpay_signature);
+
+    const isMatch = expectedBuffer.length === signatureBuffer.length &&
+      crypto.timingSafeEqual(expectedBuffer, signatureBuffer);
 
     if (!isMatch) {
       return res.status(400).json({ error: 'Invalid payment signature. Verification failed.' });

@@ -282,8 +282,13 @@ export const createRazorpayOrder = async (orderData) => {
   return res.data;
 };
 
+export const createStandardRazorpayOrder = async (amountInPaise, currency = 'INR', receipt = null) => {
+  const res = await api.post('/create-order', { amount: amountInPaise, currency, receipt });
+  return res.data;
+};
+
 export const verifyRazorpayPayment = async (paymentData) => {
-  const res = await api.post('/orders/razorpay/verify', paymentData);
+  const res = await api.post('/verify-payment', paymentData);
   return res.data;
 };
 
