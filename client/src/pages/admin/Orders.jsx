@@ -142,7 +142,30 @@ export default function AdminOrders() {
                 <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 pt-2 sm:pt-0 border-t sm:border-0 border-outline-variant/20">
                   <div className="text-left sm:text-right">
                     <span className="font-bold text-sm sm:text-base text-primary block">{formatPrice(order.total)}</span>
-                    <span className="text-[10px] text-green-700 font-bold uppercase tracking-wider">{order.payment_method?.toUpperCase() || 'COD'}</span>
+                    {(() => {
+                      const method = (order.payment_method || '').toLowerCase();
+                      const isPaid = order.payment_status === 'paid' || Boolean(order.razorpay_payment_id) || ['confirmed', 'crafting', 'dispatched', 'delivered'].includes((order.status || '').toLowerCase());
+                      if (method === 'razorpay') {
+                        if (isPaid) {
+                          return (
+                            <span className="text-[10px] text-green-700 font-bold uppercase tracking-wider flex items-center justify-start sm:justify-end gap-1">
+                              <span className="material-symbols-outlined text-xs">check_circle</span>
+                              Successfully Paid through Razorpay
+                            </span>
+                          );
+                        }
+                        return (
+                          <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider block">
+                            Razorpay (Pending)
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block">
+                          COD
+                        </span>
+                      );
+                    })()}
                   </div>
                   <button className="text-secondary flex items-center gap-0.5 text-xs font-bold">
                     <span>{expandedId === order.id ? 'Close' : 'Manage'}</span>
@@ -186,6 +209,20 @@ export default function AdminOrders() {
                               <p className="text-xs font-bold text-primary">{shippingAddr.fullName || (shippingAddr.firstName ? `${shippingAddr.firstName} ${shippingAddr.lastName || ''}`.trim() : order.userName || 'Customer')}</p>
                               <p className="text-xs text-on-surface-variant mt-0.5">📞 Phone: <a href={`tel:${shippingAddr.phone}`} className="text-secondary font-bold hover:underline">{shippingAddr.phone || 'N/A'}</a></p>
                               <p className="text-xs text-on-surface-variant">✉️ Email: {order.user_email || order.userEmail || 'N/A'}</p>
+                              <p className="text-xs text-on-surface-variant mt-0.5">
+                                💳 Payment: {(() => {
+                                  const method = (order.payment_method || '').toLowerCase();
+                                  const isPaid = order.payment_status === 'paid' || Boolean(order.razorpay_payment_id) || ['confirmed', 'crafting', 'dispatched', 'delivered'].includes((order.status || '').toLowerCase());
+                                  if (method === 'razorpay') {
+                                    return isPaid ? (
+                                      <span className="text-green-700 font-bold">Successfully Paid through Razorpay {order.razorpay_payment_id ? `(${order.razorpay_payment_id})` : ''}</span>
+                                    ) : (
+                                      <span className="text-amber-600 font-bold">Pending Payment (Razorpay)</span>
+                                    );
+                                  }
+                                  return <span className="font-bold">Cash on Delivery (COD)</span>;
+                                })()}
+                              </p>
                               <div className="mt-2 pt-2 border-t border-outline-variant/20 flex gap-2">
                                 {shippingAddr.phone && (
                                   <a
