@@ -105,7 +105,7 @@ const useAuthStore = create(
       },
 
       loginAsDemoAdmin: () => {
-        const mockAdminUser = { id: 'admin-demo-id', email: 'admin@maxywalk.com', name: 'MaxyWalk Admin', role: 'admin' };
+        const mockAdminUser = { id: 'admin-demo-id', email: 'admin.maxywalk@gmail.com', name: 'MaxyWalk Admin', role: 'admin' };
         set({ user: mockAdminUser, userProfile: mockAdminUser, isAdmin: true, isLoading: false });
         syncUserStores(mockAdminUser);
         return mockAdminUser;

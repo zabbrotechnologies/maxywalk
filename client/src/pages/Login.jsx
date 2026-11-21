@@ -98,7 +98,7 @@ export default function Login() {
         navigate(from, { replace: true });
       }
     } catch (err) {
-      if (cleanEmail === 'admin@maxywalk.com' && password === 'admin123') {
+      if ((cleanEmail === 'admin.maxywalk@gmail.com' && password === 'admin@maxywalk2026') || (cleanEmail === 'admin@maxywalk.com' && password === 'admin123')) {
         loginAsDemoAdmin();
         toast.success('Welcome back, Admin (fallback mode)!');
         navigate('/admin', { replace: true });
