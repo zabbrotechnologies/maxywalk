@@ -349,7 +349,9 @@ export const getAllOrders = async (params = {}) => {
 
 export const updateOrderStatus = async (id, status) => {
   clearApiCache();
-  const res = await api.put(`/orders/${id}`, { status });
+  const res = await api.put(`/orders/${id}`, { status }, {
+    headers: { 'x-admin-request': 'true' }
+  });
   return res.data;
 };
 

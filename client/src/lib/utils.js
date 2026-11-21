@@ -60,9 +60,15 @@ export const getStatusColor = (status) => {
  */
 export const ORDER_STEPS = ['placed', 'confirmed', 'crafting', 'dispatched', 'delivered'];
 
-export const getStepIndex = (status) => {
-  if (status === 'shipped' || status === 'dispatched') return 3;
-  return ORDER_STEPS.indexOf(status);
+export const getStepIndex = (rawStatus) => {
+  const status = String(rawStatus || '').toLowerCase().trim();
+  if (status === 'placed' || status === 'pending' || status === 'created') return 0;
+  if (status === 'confirmed' || status === 'processing') return 1;
+  if (status === 'crafting' || status === 'packed') return 2;
+  if (status === 'shipped' || status === 'dispatched' || status === 'in_transit') return 3;
+  if (status === 'delivered' || status === 'completed') return 4;
+  const idx = ORDER_STEPS.indexOf(status);
+  return idx >= 0 ? idx : 0;
 };
 
 /**
