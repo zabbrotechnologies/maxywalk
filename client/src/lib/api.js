@@ -277,6 +277,16 @@ export const createOrder = async (orderData) => {
 
 export const placeOrder = createOrder;
 
+export const createRazorpayOrder = async (orderData) => {
+  const res = await api.post('/orders/razorpay/create-order', orderData);
+  return res.data;
+};
+
+export const verifyRazorpayPayment = async (paymentData) => {
+  const res = await api.post('/orders/razorpay/verify', paymentData);
+  return res.data;
+};
+
 export const getOrder = async (id) => {
   const res = await api.get(`/orders/${id}`);
   return res.data;

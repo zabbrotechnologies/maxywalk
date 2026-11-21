@@ -2,9 +2,24 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import useCartStore from '../store/cartStore.js';
 import useAuthStore from '../store/authStore.js';
-import { placeOrder, getUserProfile } from '../lib/api.js';
+import { placeOrder, getUserProfile, createRazorpayOrder, verifyRazorpayPayment } from '../lib/api.js';
 import { formatPrice, INDIAN_STATES } from '../lib/utils.js';
 import toast from 'react-hot-toast';
+
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (typeof window !== 'undefined' && window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
 
 const STEPS = ['Information', 'Delivery', 'Payment'];
 
@@ -32,6 +47,7 @@ export default function Checkout() {
   });
   const [address, setAddress] = useState({ firstName: '', lastName: '', address: '', city: '', state: 'Tamil Nadu', pincode: '' });
   const [shipping, setShipping] = useState('standard');
+  const [paymentMethod, setPaymentMethod] = useState('razorpay');
   const idempotencyKeyRef = useRef(`idem-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
 
   useEffect(() => {
@@ -110,38 +126,117 @@ export default function Checkout() {
   const handlePlaceOrder = async () => {
     if (loading) return;
     setLoading(true);
-    try {
-      const orderData = {
-        items: items.map((i) => ({
-          productId: i.id,
-          name: i.name,
-          price: i.price,
-          qty: i.qty,
-          size: i.selectedSize,
-          color: i.selectedColor,
-          image: i.image,
-        })),
-        shippingAddress: {
-          ...address,
-          ...contact,
-          fullName: `${address.firstName} ${address.lastName}`.trim() || 'Customer',
-        },
-        paymentMethod: 'cod',
-        subtotal,
-        shippingCost,
-        total,
-        idempotency_key: idempotencyKeyRef.current,
-      };
 
-      const order = await placeOrder(orderData);
-      clearCart();
-      setOrderPlaced(order);
-      toast.success('Order placed successfully via Cash on Delivery!');
-    } catch (err) {
-      toast.error('Failed to place order. Please check all fields.');
-      console.error(err);
-    } finally {
-      setLoading(false);
+    const baseOrderPayload = {
+      items: items.map((i) => ({
+        productId: i.id,
+        name: i.name,
+        price: i.price,
+        qty: i.qty,
+        size: i.selectedSize,
+        color: i.selectedColor,
+        image: i.image,
+      })),
+      shippingAddress: {
+        ...address,
+        ...contact,
+        fullName: `${address.firstName} ${address.lastName}`.trim() || 'Customer',
+      },
+      shipping,
+      user_email: contact.email,
+      subtotal,
+      shippingCost,
+      total,
+      idempotency_key: idempotencyKeyRef.current,
+    };
+
+    if (paymentMethod === 'razorpay') {
+      try {
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          toast.error('Razorpay SDK failed to load. Please check your internet connection.');
+          setLoading(false);
+          return;
+        }
+
+        // 1. Create order on server
+        const rzpOrderData = await createRazorpayOrder(baseOrderPayload);
+
+        // 2. Open Razorpay Checkout modal
+        const options = {
+          key: rzpOrderData.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
+          amount: rzpOrderData.amount,
+          currency: rzpOrderData.currency || 'INR',
+          name: 'MAXYWALK',
+          description: 'Handcrafted Footwear & Goods',
+          image: '/logo.png',
+          order_id: rzpOrderData.razorpayOrderId,
+          handler: async function (response) {
+            try {
+              setLoading(true);
+              const verifyRes = await verifyRazorpayPayment({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                internal_order_id: rzpOrderData.internalId,
+              });
+
+              clearCart();
+              setOrderPlaced(verifyRes.order || rzpOrderData.order || { order_id: rzpOrderData.orderId });
+              toast.success('Payment successful via Razorpay!');
+            } catch (vErr) {
+              console.error('Signature verification error:', vErr);
+              toast.error(vErr.response?.data?.error || 'Payment verification failed. Please contact support.');
+            } finally {
+              setLoading(false);
+            }
+          },
+          prefill: {
+            name: `${address.firstName} ${address.lastName}`.trim(),
+            email: contact.email,
+            contact: contact.phone,
+          },
+          notes: {
+            address: `${address.address}, ${address.city}, ${address.state} - ${address.pincode}`,
+          },
+          theme: {
+            color: '#1F1E1D',
+          },
+          modal: {
+            ondismiss: function () {
+              setLoading(false);
+              toast('Payment cancelled. Your items remain saved in your cart.', { icon: 'ℹ️' });
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (resp) {
+          setLoading(false);
+          toast.error(`Payment failed: ${resp.error?.description || 'Transaction declined'}`);
+        });
+        rzp.open();
+      } catch (err) {
+        console.error('Razorpay order error:', err);
+        toast.error(err.response?.data?.error || err.message || 'Failed to initiate Razorpay payment.');
+        setLoading(false);
+      }
+    } else {
+      // Cash on Delivery
+      try {
+        const order = await placeOrder({
+          ...baseOrderPayload,
+          paymentMethod: 'cod',
+        });
+        clearCart();
+        setOrderPlaced(order);
+        toast.success('Order placed successfully via Cash on Delivery!');
+      } catch (err) {
+        toast.error('Failed to place order. Please check all fields.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -155,9 +250,24 @@ export default function Checkout() {
           </div>
           <h1 className="font-display text-2xl sm:text-3xl text-primary font-bold mb-2">Order Confirmed!</h1>
           <p className="text-xs sm:text-sm text-on-surface-variant mb-1">Thank you for ordering with MaxyWalk.</p>
-          <div className="my-4 p-4 bg-surface-container-low rounded-2xl border border-outline-variant/30 text-center">
-            <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Your Order ID</p>
-            <p className="font-display text-xl font-bold text-secondary mt-1">{orderPlaced.order_id || orderPlaced.orderId}</p>
+          <div className="my-4 p-4 bg-surface-container-low rounded-2xl border border-outline-variant/30 text-center space-y-2">
+            <div>
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Your Order ID</p>
+              <p className="font-display text-xl font-bold text-secondary mt-0.5">{orderPlaced.order_id || orderPlaced.orderId}</p>
+            </div>
+            <div className="pt-2 border-t border-outline-variant/20 flex items-center justify-between text-xs px-2">
+              <span className="text-on-surface-variant">Payment Mode</span>
+              <span className="font-bold text-primary">
+                {orderPlaced.payment_method === 'razorpay' || orderPlaced.payment_status === 'paid' ? (
+                  <span className="text-green-700 flex items-center gap-1 font-bold">
+                    <span className="material-symbols-outlined text-sm">verified</span>
+                    Paid via Razorpay
+                  </span>
+                ) : (
+                  'Cash on Delivery'
+                )}
+              </span>
+            </div>
           </div>
           <p className="text-xs text-on-surface-variant mb-6 leading-relaxed">
             Our artisan in Avadi is preparing your package. We will dispatch it and contact you on WhatsApp/Phone.
@@ -361,42 +471,107 @@ export default function Checkout() {
               </div>
             )}
 
-            {/* Step 2: Payment (Pure COD) */}
+            {/* Step 2: Payment (Razorpay Online + Cash on Delivery) */}
             {step === 2 && (
               <div className="space-y-6">
                 <section className="bg-white p-5 sm:p-6 rounded-3xl border border-outline-variant/40 shadow-lux">
-                  <h2 className="font-display text-xl sm:text-2xl text-primary font-bold mb-4">Payment Method</h2>
+                  <h2 className="font-display text-xl sm:text-2xl text-primary font-bold mb-4">Choose Payment Method</h2>
                   
-                  {/* Cash on Delivery Card */}
-                  <div className="p-5 rounded-2xl border-2 border-primary bg-surface-container-low flex items-start gap-4">
-                    <span className="material-symbols-outlined text-secondary text-3xl flex-shrink-0 mt-0.5">payments</span>
-                    <div className="space-y-1 flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-sm text-primary">Cash on Delivery (COD)</h3>
-                        <span className="px-2.5 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold uppercase rounded-full">Guaranteed</span>
+                  <div className="space-y-3.5">
+                    {/* Option 1: Razorpay Online Payment */}
+                    <label
+                      className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-4 block ${
+                        paymentMethod === 'razorpay'
+                          ? 'border-primary bg-surface-container-low shadow-sm'
+                          : 'border-outline-variant/40 bg-white hover:border-outline-variant'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="razorpay"
+                        checked={paymentMethod === 'razorpay'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="accent-primary w-4 h-4 mt-1"
+                      />
+                      <div className="space-y-1.5 flex-1">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-bold text-sm text-primary flex items-center gap-1.5">
+                            <span>Online Payment (UPI, Cards, NetBanking)</span>
+                            <span className="px-2 py-0.5 bg-amber-100 text-amber-900 text-[10px] font-bold uppercase rounded-full">Recommended</span>
+                          </h3>
+                          <span className="text-[11px] font-bold text-secondary">Instant Dispatch</span>
+                        </div>
+                        <p className="text-xs text-on-surface-variant leading-relaxed">
+                          Pay securely with Google Pay, PhonePe, Paytm, BHIM UPI, Credit/Debit Cards (Visa, Mastercard, RuPay), or Net Banking via Razorpay.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          <span className="px-2 py-0.5 bg-white border border-outline-variant/40 rounded text-[10px] font-bold text-primary">UPI</span>
+                          <span className="px-2 py-0.5 bg-white border border-outline-variant/40 rounded text-[10px] font-bold text-primary">GPay</span>
+                          <span className="px-2 py-0.5 bg-white border border-outline-variant/40 rounded text-[10px] font-bold text-primary">PhonePe</span>
+                          <span className="px-2 py-0.5 bg-white border border-outline-variant/40 rounded text-[10px] font-bold text-primary">Cards</span>
+                          <span className="px-2 py-0.5 bg-white border border-outline-variant/40 rounded text-[10px] font-bold text-primary">NetBanking</span>
+                        </div>
                       </div>
-                      <p className="text-xs text-on-surface-variant leading-relaxed">
-                        Pay with cash when your handcrafted footwear package is delivered directly to your door.
-                      </p>
-                    </div>
+                    </label>
+
+                    {/* Option 2: Cash on Delivery */}
+                    <label
+                      className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-4 block ${
+                        paymentMethod === 'cod'
+                          ? 'border-primary bg-surface-container-low shadow-sm'
+                          : 'border-outline-variant/40 bg-white hover:border-outline-variant'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="cod"
+                        checked={paymentMethod === 'cod'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="accent-primary w-4 h-4 mt-1"
+                      />
+                      <div className="space-y-1.5 flex-1">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-bold text-sm text-primary">Cash on Delivery (COD)</h3>
+                          <span className="px-2 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold uppercase rounded-full">Doorstep</span>
+                        </div>
+                        <p className="text-xs text-on-surface-variant leading-relaxed">
+                          Pay with cash when your handcrafted footwear package is delivered directly to your doorstep.
+                        </p>
+                      </div>
+                    </label>
                   </div>
 
                   <div className="mt-4 p-3 bg-surface-container rounded-xl flex items-center gap-2 text-xs text-on-surface-variant">
-                    <span className="material-symbols-outlined text-secondary text-base flex-shrink-0">verified</span>
-                    <span>No advance payment required. Safe doorstep inspection & cash handover.</span>
+                    <span className="material-symbols-outlined text-secondary text-base flex-shrink-0">lock</span>
+                    <span>All online transactions are encrypted via Razorpay with 256-bit bank-grade SSL security.</span>
                   </div>
                 </section>
 
                 <div className="pt-2 flex flex-col sm:flex-row justify-between gap-3">
-                  <button onClick={handlePlaceOrder} disabled={loading} className="btn-primary w-full sm:w-auto justify-center text-xs h-12 gap-2 font-bold order-1 sm:order-2">
-                    {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : (
+                  <button
+                    onClick={handlePlaceOrder}
+                    disabled={loading}
+                    className="btn-primary w-full sm:w-auto justify-center text-xs h-12 gap-2 font-bold order-1 sm:order-2"
+                  >
+                    {loading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : paymentMethod === 'razorpay' ? (
+                      <>
+                        <span className="material-symbols-outlined text-sm">lock</span>
+                        Pay with Razorpay · {formatPrice(total)}
+                      </>
+                    ) : (
                       <>
                         <span className="material-symbols-outlined text-sm">check_circle</span>
                         Confirm COD Order · {formatPrice(total)}
                       </>
                     )}
                   </button>
-                  <button onClick={handleBack} className="text-xs text-on-surface-variant hover:text-primary order-2 sm:order-1 text-center py-2">← Back to Delivery</button>
+                  <button onClick={handleBack} className="text-xs text-on-surface-variant hover:text-primary order-2 sm:order-1 text-center py-2">
+                    ← Back to Delivery
+                  </button>
                 </div>
               </div>
             )}
