@@ -142,6 +142,7 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
     }
 
     // If order exists in database, update payment status
+    let finalOrder = null;
     try {
       const orderRows = await query(
         `SELECT * FROM public.orders 
@@ -168,7 +169,7 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
           [order.id, paymentId, signature]
         );
 
-        const finalOrder = updatedOrders[0] || order;
+        finalOrder = updatedOrders[0] || order;
 
         // Queue PAYMENT_SUCCESS notification
         if (finalOrder.user_email) {
@@ -200,6 +201,8 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
             idempotencyKey: `order-placed-${finalOrder.id}`
           }).catch(e => console.warn('[Payment] Order placed confirmation notice:', e.message));
         }
+      } else if (orderRows.length > 0) {
+        finalOrder = orderRows[0];
       }
     } catch (dbErr) {
       console.warn('Note: Order DB status update bypassed:', dbErr.message);
@@ -209,7 +212,8 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
       success: true,
       message: 'Payment verified successfully',
       order_id: orderId,
-      payment_id: paymentId
+      payment_id: paymentId,
+      order: finalOrder
     });
   } catch (err) {
     console.error('Error verifying payment:', err);

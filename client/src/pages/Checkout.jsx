@@ -281,9 +281,9 @@ export default function Checkout() {
             }
           },
           prefill: {
-            name: `${address.firstName} ${address.lastName}`.trim(),
-            email: contact.email,
-            contact: contact.phone,
+            name: `${address.firstName} ${address.lastName}`.trim() || 'Customer',
+            email: (contact.email || '').trim(),
+            contact: (contact.phone || '').replace(/[^0-9]/g, '').slice(-10),
           },
           notes: {
             address: `${address.address}, ${address.city}, ${address.state} - ${address.pincode}`,

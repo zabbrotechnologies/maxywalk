@@ -386,11 +386,20 @@ async function callRazorpayAPI(endpoint, method = 'POST', data = null) {
 // 1. Create Razorpay Order
 router.post('/razorpay/create-order', orderRateLimiter, async (req, res) => {
   try {
-    const { items, shipping_address, shipping, user_email } = req.body;
+    const { items, shipping_address, shippingAddress, shipping, user_email, userEmail } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Order must contain at least one item' });
     }
+
+    const resolvedShipping = shipping_address || shippingAddress || {};
+    const resolvedEmail = (
+      user_email ||
+      userEmail ||
+      req.user?.email ||
+      resolvedShipping.email ||
+      'guest@maxywalk.com'
+    ).toLowerCase().trim();
 
     // Verify stock & calculate server-side grand total
     let subtotal = 0;
@@ -426,7 +435,7 @@ router.post('/razorpay/create-order', orderRateLimiter, async (req, res) => {
       receipt: orderNum,
       notes: {
         internal_order_id: id,
-        user_email: user_email || req.user?.email || 'guest@maxywalk.com'
+        user_email: resolvedEmail
       }
     });
 
@@ -442,10 +451,10 @@ router.post('/razorpay/create-order', orderRateLimiter, async (req, res) => {
     const params = [
       id,
       orderNum,
-      user_email || req.user?.email || 'guest@maxywalk.com',
+      resolvedEmail,
       JSON.stringify(items || []),
       grandTotal,
-      JSON.stringify(shipping_address || {}),
+      JSON.stringify(resolvedShipping),
       rzpOrder.id
     ];
 
@@ -537,10 +546,42 @@ router.post('/razorpay/verify', async (req, res) => {
       [order.id, razorpay_payment_id, razorpay_signature]
     );
 
+    const finalOrder = updated[0] || order;
+
+    // Queue PAYMENT_SUCCESS and ORDER_PLACED notification
+    if (finalOrder.user_email) {
+      const addr = typeof finalOrder.shipping_address === 'string' ? JSON.parse(finalOrder.shipping_address || '{}') : (finalOrder.shipping_address || {});
+      const customerFullName = addr.fullName || `${addr.firstName || ''} ${addr.lastName || ''}`.trim() || 'Valued Customer';
+
+      await queueEmail({
+        orderId: finalOrder.order_id || finalOrder.id,
+        recipientEmail: finalOrder.user_email,
+        eventType: 'PAYMENT_SUCCESS',
+        subject: `Payment Successful — MAXYWALK Order #${finalOrder.order_id || finalOrder.id}`,
+        templateData: {
+          order: finalOrder,
+          amount: finalOrder.total,
+          paymentMethod: 'Online / Razorpay',
+          paymentRef: razorpay_payment_id,
+          date: new Date()
+        },
+        idempotencyKey: `pay-success-${razorpay_payment_id}`
+      }).catch((e) => console.warn('[Orders] Payment success email notice:', e.message));
+
+      await queueEmail({
+        orderId: finalOrder.order_id || finalOrder.id,
+        recipientEmail: finalOrder.user_email,
+        eventType: 'ORDER_PLACED',
+        subject: `Your MAXYWALK Order Has Been Confirmed! — #${finalOrder.order_id || finalOrder.id}`,
+        templateData: { order: finalOrder, customerName: customerFullName },
+        idempotencyKey: `order-placed-${finalOrder.id}`
+      }).catch((e) => console.warn('[Orders] Order placed confirmation notice:', e.message));
+    }
+
     res.json({
       success: true,
       message: 'Payment verified successfully',
-      order: updated[0] || order
+      order: finalOrder
     });
   } catch (err) {
     console.error('Error verifying payment:', err);
