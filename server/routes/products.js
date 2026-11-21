@@ -6,7 +6,6 @@ import https from 'https';
 import { query } from '../db.js';
 import { compareProducts, sortSizes } from '../utils.js';
 import { requireAdmin } from '../middleware/auth.js';
-import { queueNewProductAnnouncement } from '../services/emailQueue.js';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { NodeHttpHandler } from '@smithy/node-http-handler';
 import dotenv from 'dotenv';
@@ -311,19 +310,6 @@ router.post('/', requireAdmin, async (req, res) => {
 
     const rows = await query(sql, params);
     clearProductCache();
-
-    // Automatically trigger Product Announcement Campaign for newly published products
-    const savedProduct = rows[0];
-    if (savedProduct && !data.draft && !data.is_draft) {
-      try {
-        const campaign = await queueNewProductAnnouncement(savedProduct);
-        if (campaign) {
-          console.log(`[Products] Product announcement campaign processed for "${savedProduct.name}" (Campaign: ${campaign.id})`);
-        }
-      } catch (err) {
-        console.warn('[Products] Announcement campaign notice:', err.message);
-      }
-    }
 
     res.status(201).json(rows[0]);
   } catch (err) {
