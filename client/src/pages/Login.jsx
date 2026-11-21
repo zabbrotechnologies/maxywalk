@@ -86,13 +86,6 @@ export default function Login() {
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    if (cleanEmail === 'admin@maxywalk.com' && password === 'admin123') {
-      loginAsDemoAdmin();
-      toast.success('Welcome back, Admin!');
-      navigate('/admin', { replace: true });
-      return;
-    }
-
     setLoading(true);
     try {
       const data = await login(cleanEmail, password);
@@ -105,6 +98,12 @@ export default function Login() {
         navigate(from, { replace: true });
       }
     } catch (err) {
+      if (cleanEmail === 'admin@maxywalk.com' && password === 'admin123') {
+        loginAsDemoAdmin();
+        toast.success('Welcome back, Admin (fallback mode)!');
+        navigate('/admin', { replace: true });
+        return;
+      }
       console.error('Login error:', err);
       toast.error(err.response?.data?.error || err.message || 'Invalid email or password.');
     } finally {

@@ -12,6 +12,23 @@ if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' &&
 }
 export const api = axios.create({ baseURL: API_URL, timeout: 8000, withCredentials: true });
 
+// Attach Bearer token from localStorage for seamless session transport across domains/browsers
+api.interceptors.request.use((config) => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const authRaw = window.localStorage.getItem('maxywalk-auth');
+      if (authRaw) {
+        const parsed = JSON.parse(authRaw);
+        const token = parsed?.state?.token;
+        if (token && !config.headers.Authorization) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      }
+    }
+  } catch {}
+  return config;
+});
+
 // Lightweight in-memory cache for speed
 const cache = new Map();
 const CACHE_TTL_MS = 60 * 1000;
@@ -271,7 +288,17 @@ export const deleteProduct = async (id) => {
 
 // Orders API
 export const createOrder = async (orderData) => {
-  const res = await api.post('/orders', orderData);
+  const shippingAddr = orderData.shipping_address || orderData.shippingAddress || {};
+  const payload = {
+    ...orderData,
+    shipping_address: shippingAddr,
+    shippingAddress: shippingAddr,
+    user_email: orderData.user_email || orderData.userEmail || shippingAddr.email,
+    userEmail: orderData.user_email || orderData.userEmail || shippingAddr.email,
+    payment_method: orderData.payment_method || orderData.paymentMethod || 'cod',
+    paymentMethod: orderData.payment_method || orderData.paymentMethod || 'cod'
+  };
+  const res = await api.post('/orders', payload);
   return res.data;
 };
 
@@ -297,13 +324,18 @@ export const getOrder = async (id) => {
   return res.data;
 };
 
-export const getMyOrders = async (email) => {
+export const getMyOrders = async (emailOrUser) => {
+  const email = typeof emailOrUser === 'string' ? emailOrUser : (emailOrUser?.email || '');
+  if (!email) return [];
   const res = await api.get('/orders/my-orders', { params: { email } });
-  return res.data || [];
+  return Array.isArray(res.data) ? res.data : (res.data?.orders || []);
 };
 
 export const getAllOrders = async (params = {}) => {
-  const res = await api.get('/orders', { params });
+  const res = await api.get('/orders', {
+    params,
+    headers: { 'x-admin-request': 'true' }
+  });
   if (Array.isArray(res.data)) {
     return { orders: res.data, total: res.data.length };
   }
@@ -322,7 +354,10 @@ export const updateOrderStatus = async (id, status) => {
 };
 
 export const getAllCustomers = async (params = {}) => {
-  const res = await api.get('/customers', { params });
+  const res = await api.get('/customers', {
+    params,
+    headers: { 'x-admin-request': 'true' }
+  });
   if (Array.isArray(res.data)) {
     return { customers: res.data, total: res.data.length };
   }
@@ -335,12 +370,19 @@ export const getAllCustomers = async (params = {}) => {
 };
 
 export const getOrderStats = async (dateRange = null) => {
-  const res = await api.get('/orders/stats', { params: { dateRange } });
+  const res = await api.get('/orders/stats', {
+    params: { dateRange },
+    headers: { 'x-admin-request': 'true' }
+  });
   return res.data;
 };
 
-export const getUserProfile = async () => {
+export const getUserProfile = async (email) => {
   try {
+    if (email) {
+      const res = await api.get('/customers/profile', { params: { email } });
+      if (res.data && res.data.email) return res.data;
+    }
     const res = await api.get('/auth/me');
     return res.data?.user || null;
   } catch {

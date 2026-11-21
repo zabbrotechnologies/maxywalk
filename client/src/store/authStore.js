@@ -18,18 +18,28 @@ const useAuthStore = create(
     (set, get) => ({
       user: null,
       userProfile: null,
+      token: null,
       isLoading: true,
       isAdmin: false,
 
       // Initialize auth listener & session check from Neon backend
       init: () => {
         api.get('/auth/me')
-          .then((res) => {
+          .then(async (res) => {
             if (res.data?.user) {
               const u = res.data.user;
               const isAdmin = u.role === 'admin' || (u.email && u.email.toLowerCase().includes('admin'));
-              set({ user: u, userProfile: u, isAdmin, isLoading: false });
-              syncUserStores(u);
+              
+              // Also fetch detailed profile including saved addresses
+              try {
+                const fullProfile = await getUserProfile(u.email);
+                const merged = fullProfile ? { ...u, ...fullProfile } : u;
+                set({ user: merged, userProfile: merged, isAdmin, isLoading: false });
+                syncUserStores(merged);
+              } catch {
+                set({ user: u, userProfile: u, isAdmin, isLoading: false });
+                syncUserStores(u);
+              }
             } else {
               set({ user: null, userProfile: null, isAdmin: false, isLoading: false });
             }
@@ -45,9 +55,17 @@ const useAuthStore = create(
         const data = await signIn(email, password);
         if (data?.user) {
           const u = data.user;
+          const token = data.token || null;
           const isAdmin = u.role === 'admin' || (u.email && u.email.toLowerCase().includes('admin'));
-          set({ user: u, userProfile: u, isAdmin, isLoading: false });
-          syncUserStores(u);
+          
+          let fullProfile = null;
+          try {
+            fullProfile = await getUserProfile(u.email);
+          } catch {}
+          const merged = fullProfile ? { ...u, ...fullProfile } : u;
+
+          set({ user: merged, userProfile: merged, token, isAdmin, isLoading: false });
+          syncUserStores(merged);
           return data;
         }
         throw new Error('Invalid login response');
@@ -57,9 +75,17 @@ const useAuthStore = create(
         const data = await signInWithGoogle(credential);
         if (data?.user) {
           const u = data.user;
+          const token = data.token || null;
           const isAdmin = u.role === 'admin' || (u.email && u.email.toLowerCase().includes('admin'));
-          set({ user: u, userProfile: u, isAdmin, isLoading: false });
-          syncUserStores(u);
+          
+          let fullProfile = null;
+          try {
+            fullProfile = await getUserProfile(u.email);
+          } catch {}
+          const merged = fullProfile ? { ...u, ...fullProfile } : u;
+
+          set({ user: merged, userProfile: merged, token, isAdmin, isLoading: false });
+          syncUserStores(merged);
           return data;
         }
         throw new Error('Google authentication failed');
@@ -69,8 +95,9 @@ const useAuthStore = create(
         const data = await signUp(email, password, name, phone);
         if (data?.user) {
           const u = data.user;
+          const token = data.token || null;
           const isAdmin = u.role === 'admin' || (u.email && u.email.toLowerCase().includes('admin'));
-          set({ user: u, userProfile: u, isAdmin, isLoading: false });
+          set({ user: u, userProfile: u, token, isAdmin, isLoading: false });
           syncUserStores(u);
           return data;
         }
@@ -85,7 +112,7 @@ const useAuthStore = create(
       },
 
       loginAsDemoUser: (name = 'Customer', email = 'user@example.com') => {
-        const mockUser = { id: `user-${Date.now()}`, email, name, role: 'customer' };
+        const mockUser = { id: `user-${Date.now()}`, email, name, role: 'customer', addresses: [] };
         set({ user: mockUser, userProfile: mockUser, isAdmin: false, isLoading: false });
         syncUserStores(mockUser);
         return mockUser;
@@ -95,21 +122,34 @@ const useAuthStore = create(
         try {
           await signOut();
         } catch {}
-        set({ user: null, userProfile: null, isAdmin: false });
+        set({ user: null, userProfile: null, token: null, isAdmin: false });
         syncUserStores(null);
       },
 
       setUserProfile: (profile) => {
-        set({ userProfile: profile, isAdmin: profile?.role === 'admin' });
+        set((state) => {
+          const updatedProfile = { ...(state.userProfile || {}), ...profile };
+          const updatedUser = { ...(state.user || {}), ...profile };
+          return {
+            userProfile: updatedProfile,
+            user: updatedUser,
+            isAdmin: updatedProfile?.role === 'admin' || state.isAdmin
+          };
+        });
       },
 
       getToken: () => {
-        return null; // Using secure HTTP-only cookies
+        return get().token;
       },
     }),
     {
       name: 'maxywalk-auth',
-      partialize: (state) => ({ user: state.user, userProfile: state.userProfile, isAdmin: state.isAdmin }),
+      partialize: (state) => ({
+        user: state.user,
+        userProfile: state.userProfile,
+        token: state.token,
+        isAdmin: state.isAdmin
+      }),
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.isLoading = false;

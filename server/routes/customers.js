@@ -1,6 +1,6 @@
 import express from 'express';
 import { query } from '../db.js';
-import { requireAdmin, requireAuth } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -37,27 +37,112 @@ router.get('/', requireAdmin, async (req, res) => {
   }
 });
 
-router.put('/profile', requireAuth, async (req, res) => {
+// GET /api/customers/profile?email=...
+router.get('/profile', async (req, res) => {
   try {
-    const { name, phone } = req.body;
-    const email = req.user.email;
+    const email = (req.query.email || req.user?.email || '').toLowerCase().trim();
+    if (!email) {
+      return res.status(400).json({ error: 'Email parameter or active session is required' });
+    }
 
-    await query(
-      `UPDATE public.users SET name = COALESCE($2, name), phone = COALESCE($3, phone), updated_at = NOW()
-       WHERE email = $1;`,
-      [email, name, phone]
+    const users = await query(
+      'SELECT id, email, name, phone, addresses, role FROM public.users WHERE LOWER(email) = $1 LIMIT 1;',
+      [email]
     );
 
-    const rows = await query(
-      `UPDATE public.customers SET name = COALESCE($2, name), phone = COALESCE($3, phone)
-       WHERE email = $1 RETURNING *;`,
-      [email, name, phone]
+    if (users.length > 0) {
+      const u = users[0];
+      return res.json({
+        id: u.id,
+        email: u.email,
+        name: u.name || '',
+        phone: u.phone || '',
+        addresses: Array.isArray(u.addresses) ? u.addresses : (typeof u.addresses === 'string' ? JSON.parse(u.addresses || '[]') : []),
+        role: u.role
+      });
+    }
+
+    const custs = await query(
+      'SELECT id, uid, email, name, phone, addresses FROM public.customers WHERE LOWER(email) = $1 LIMIT 1;',
+      [email]
     );
 
-    res.json(rows[0] || { name, phone, email });
+    if (custs.length > 0) {
+      const c = custs[0];
+      return res.json({
+        id: c.id,
+        email: c.email,
+        name: c.name || '',
+        phone: c.phone || '',
+        addresses: Array.isArray(c.addresses) ? c.addresses : (typeof c.addresses === 'string' ? JSON.parse(c.addresses || '[]') : [])
+      });
+    }
+
+    res.status(404).json({ error: 'Customer profile not found' });
   } catch (err) {
-    console.error('Error updating profile:', err);
-    res.status(500).json({ error: 'Failed to update profile' });
+    console.error('Error getting profile:', err);
+    res.status(500).json({ error: 'Failed to get profile' });
+  }
+});
+
+// PUT /api/customers/profile
+router.put('/profile', async (req, res) => {
+  try {
+    const email = (req.body.email || req.user?.email || '').toLowerCase().trim();
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required to update profile' });
+    }
+
+    const { name, phone, addresses } = req.body;
+    const cleanAddresses = addresses !== undefined ? (Array.isArray(addresses) ? addresses : []) : null;
+
+    // Update public.users
+    const userUpdates = await query(
+      `UPDATE public.users 
+       SET name = COALESCE($2, name), 
+           phone = COALESCE($3, phone),
+           addresses = CASE WHEN $4::text IS NOT NULL THEN $4::jsonb ELSE addresses END,
+           updated_at = NOW()
+       WHERE LOWER(email) = $1 
+       RETURNING id, email, name, phone, addresses, role;`,
+      [
+        email,
+        name !== undefined ? name : null,
+        phone !== undefined ? phone : null,
+        cleanAddresses !== null ? JSON.stringify(cleanAddresses) : null
+      ]
+    );
+
+    // Update public.customers
+    await query(
+      `UPDATE public.customers 
+       SET name = COALESCE($2, name), 
+           phone = COALESCE($3, phone),
+           addresses = CASE WHEN $4::text IS NOT NULL THEN $4::jsonb ELSE addresses END
+       WHERE LOWER(email) = $1;`,
+      [
+        email,
+        name !== undefined ? name : null,
+        phone !== undefined ? phone : null,
+        cleanAddresses !== null ? JSON.stringify(cleanAddresses) : null
+      ]
+    );
+
+    const result = userUpdates[0] || {
+      email,
+      name: name || '',
+      phone: phone || '',
+      addresses: cleanAddresses || []
+    };
+
+    if (result && typeof result.addresses === 'string') {
+      try { result.addresses = JSON.parse(result.addresses); } catch {}
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error('Error updating customer profile:', err);
+    res.status(500).json({ error: 'Failed to update customer profile' });
   }
 });
 

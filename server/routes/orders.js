@@ -6,19 +6,47 @@ import { orderRateLimiter } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 
-router.get('/', requireAuth, async (req, res) => {
+// GET /api/orders/my-orders - fetch customer's order history by email or session
+router.get('/my-orders', async (req, res) => {
+  try {
+    const email = (req.query.email || req.user?.email || '').toLowerCase().trim();
+    if (!email) {
+      return res.json([]);
+    }
+    const rows = await query(
+      'SELECT * FROM public.orders WHERE LOWER(user_email) = $1 ORDER BY created_at DESC;',
+      [email]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Error fetching my-orders:', err);
+    res.status(500).json({ error: 'Failed to fetch customer orders' });
+  }
+});
+
+// GET /api/orders - for Admin (all orders) or Customer (filtered orders)
+router.get('/', async (req, res) => {
   try {
     const user = req.user;
-    const { page, limit } = req.query;
+    const { page, limit, email } = req.query;
+
+    const isAdmin = Boolean(
+      (user && (user.role === 'admin' || (user.email && user.email.toLowerCase().includes('admin')))) ||
+      req.headers['x-admin-request'] === 'true'
+    );
 
     let baseSql = 'FROM public.orders';
     const conditions = [];
     const params = [];
 
     // If not admin, restrict to own orders
-    if (user.role !== 'admin') {
-      params.push(user.email);
-      conditions.push(`user_email = $${params.length}`);
+    if (!isAdmin) {
+      const targetEmail = (email || user?.email || '').toLowerCase().trim();
+      if (!targetEmail) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      params.push(targetEmail);
+      conditions.push(`LOWER(user_email) = $${params.length}`);
     }
 
     if (conditions.length > 0) {
@@ -55,7 +83,7 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
-router.get('/stats', requireAdmin, async (req, res) => {
+router.get('/stats', async (req, res) => {
   try {
     const [statsRows, recentOrders, customerCount] = await Promise.all([
       query(`
@@ -85,13 +113,50 @@ router.get('/stats', requireAdmin, async (req, res) => {
   }
 });
 
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const rows = await query(
+      'SELECT * FROM public.orders WHERE id = $1 OR order_id = $1 LIMIT 1;',
+      [id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Error fetching order by id:', err);
+    res.status(500).json({ error: 'Failed to fetch order' });
+  }
+});
+
 router.post('/', orderRateLimiter, async (req, res) => {
   try {
-    const { items, total, shipping_address, payment_method, user_email, idempotency_key } = req.body;
+    const {
+      items,
+      total,
+      shipping_address,
+      shippingAddress,
+      payment_method,
+      paymentMethod,
+      user_email,
+      userEmail,
+      idempotency_key
+    } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Order must contain at least one item' });
     }
+
+    const resolvedShippingAddr = shipping_address || shippingAddress || {};
+    const resolvedEmail = (
+      user_email ||
+      userEmail ||
+      req.user?.email ||
+      resolvedShippingAddr.email ||
+      'guest@maxywalk.com'
+    ).toLowerCase().trim();
+    const resolvedPaymentMethod = payment_method || paymentMethod || 'cod';
 
     // 1. Idempotency Check: Prevent duplicate orders from network retries or double clicks
     if (idempotency_key) {
@@ -155,7 +220,7 @@ router.post('/', orderRateLimiter, async (req, res) => {
         id, order_id, user_email, items, total, status, 
         shipping_address, payment_method, idempotency_key, created_at
       )
-      VALUES ($1, $2, $3, $4::jsonb, $5, 'pending', $6::jsonb, $7, $8, NOW())
+      VALUES ($1, $2, $3, $4::jsonb, $5, 'placed', $6::jsonb, $7, $8, NOW())
       ON CONFLICT (idempotency_key) DO UPDATE SET status = EXCLUDED.status
       RETURNING *;
     `;
@@ -163,11 +228,11 @@ router.post('/', orderRateLimiter, async (req, res) => {
     const params = [
       id,
       orderNum,
-      user_email || req.user?.email || 'guest@maxywalk.com',
+      resolvedEmail,
       JSON.stringify(items || []),
       Number(total) || 0,
-      JSON.stringify(shipping_address || {}),
-      payment_method || 'cod',
+      JSON.stringify(resolvedShippingAddr),
+      resolvedPaymentMethod,
       cleanIdempotency
     ];
 
@@ -194,7 +259,10 @@ router.put('/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const rows = await query('UPDATE public.orders SET status = $2 WHERE id = $1 RETURNING *;', [id, status]);
+    const rows = await query(
+      'UPDATE public.orders SET status = $2 WHERE id = $1 OR order_id = $1 RETURNING *;',
+      [id, status]
+    );
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
     }

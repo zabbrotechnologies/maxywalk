@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import useCartStore from '../store/cartStore.js';
 import useAuthStore from '../store/authStore.js';
-import { placeOrder, getUserProfile, createRazorpayOrder, verifyRazorpayPayment } from '../lib/api.js';
+import { placeOrder, getUserProfile, updateUserProfile, createRazorpayOrder, verifyRazorpayPayment } from '../lib/api.js';
 import { formatPrice, INDIAN_STATES } from '../lib/utils.js';
 import toast from 'react-hot-toast';
 
@@ -40,49 +40,109 @@ export default function Checkout() {
   const [orderPlaced, setOrderPlaced] = useState(null);
   const [showSummaryMobile, setShowSummaryMobile] = useState(false);
 
+  // Saved Addresses & Switcher state
+  const [savedAddresses, setSavedAddresses] = useState(
+    Array.isArray(userProfile?.addresses) ? userProfile.addresses : (Array.isArray(user?.addresses) ? user.addresses : [])
+  );
+  const [selectedAddressId, setSelectedAddressId] = useState('new');
+
   // Form state
   const [contact, setContact] = useState({
     email: userProfile?.email || user?.email || '',
-    phone: userProfile?.phone || ''
+    phone: userProfile?.phone || user?.phone || ''
   });
   const [address, setAddress] = useState({ firstName: '', lastName: '', address: '', city: '', state: 'Tamil Nadu', pincode: '' });
   const [shipping, setShipping] = useState('standard');
   const [paymentMethod, setPaymentMethod] = useState('razorpay');
   const idempotencyKeyRef = useRef(`idem-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
 
+  // Auto-extract customer info and saved addresses on mount
   useEffect(() => {
     document.title = 'Checkout | MAXYWALK';
-    if (user?.email) {
-      getUserProfile().then((p) => {
+    const activeEmail = user?.email || userProfile?.email;
+    if (activeEmail) {
+      getUserProfile(activeEmail).then((p) => {
         if (p) {
           setUserProfile(p);
           setContact((prev) => ({
-            email: p.email || prev.email || user.email || '',
-            phone: p.phone !== undefined ? p.phone : prev.phone
+            email: p.email || prev.email || activeEmail,
+            phone: p.phone !== undefined && p.phone !== '' ? p.phone : prev.phone
           }));
+          if (Array.isArray(p.addresses)) {
+            setSavedAddresses(p.addresses);
+          }
         }
       });
     }
-  }, [user?.email, setUserProfile]);
+  }, [user?.email, userProfile?.email, setUserProfile]);
 
+  // Synchronize profile changes and default address pre-fill
   useEffect(() => {
+    const list = Array.isArray(userProfile?.addresses)
+      ? userProfile.addresses
+      : (Array.isArray(user?.addresses) ? user.addresses : []);
+    setSavedAddresses(list);
+
     if (userProfile) {
       setContact((prev) => ({
         email: userProfile.email || prev.email || user?.email || '',
-        phone: userProfile.phone !== undefined ? userProfile.phone : prev.phone
+        phone: userProfile.phone !== undefined && userProfile.phone !== '' ? userProfile.phone : prev.phone
       }));
-      if (userProfile.name && !address.firstName) {
-        const parts = userProfile.name.trim().split(' ');
-        const first = parts[0] || '';
-        const last = parts.slice(1).join(' ') || '';
-        setAddress((prev) => ({
-          ...prev,
-          firstName: prev.firstName || first,
-          lastName: prev.lastName || last
-        }));
+    }
+
+    if (list.length > 0) {
+      const def = list.find((a) => a.isDefault) || list[0];
+      if (def && (selectedAddressId === 'new' || !selectedAddressId)) {
+        setSelectedAddressId(def.id);
+        setAddress({
+          firstName: def.firstName || def.fullName?.split(' ')[0] || '',
+          lastName: def.lastName || def.fullName?.split(' ').slice(1).join(' ') || '',
+          address: def.address || '',
+          city: def.city || '',
+          state: def.state || 'Tamil Nadu',
+          pincode: def.pincode || ''
+        });
+        if (def.phone) {
+          setContact((prev) => ({ ...prev, phone: prev.phone || def.phone }));
+        }
       }
+    } else if (userProfile?.name && !address.firstName) {
+      const parts = userProfile.name.trim().split(' ');
+      setAddress((prev) => ({
+        ...prev,
+        firstName: prev.firstName || parts[0] || '',
+        lastName: prev.lastName || parts.slice(1).join(' ') || ''
+      }));
     }
   }, [userProfile, user]);
+
+  const handleSelectSavedAddress = (addr) => {
+    setSelectedAddressId(addr.id);
+    setAddress({
+      firstName: addr.firstName || addr.fullName?.split(' ')[0] || '',
+      lastName: addr.lastName || addr.fullName?.split(' ').slice(1).join(' ') || '',
+      address: addr.address || '',
+      city: addr.city || '',
+      state: addr.state || 'Tamil Nadu',
+      pincode: addr.pincode || ''
+    });
+    if (addr.phone) {
+      setContact((prev) => ({ ...prev, phone: addr.phone }));
+    }
+  };
+
+  const handleSelectNewAddress = () => {
+    setSelectedAddressId('new');
+    const parts = (userProfile?.name || user?.displayName || '').trim().split(' ');
+    setAddress({
+      firstName: parts[0] || '',
+      lastName: parts.slice(1).join(' ') || '',
+      address: '',
+      city: '',
+      state: 'Tamil Nadu',
+      pincode: ''
+    });
+  };
 
   const shippingOption = SHIPPING_OPTIONS.find((o) => o.id === shipping);
   const shippingCost = shipping === 'standard' && subtotal >= 1999 ? 0 : (shippingOption?.price || 0);
@@ -126,32 +186,56 @@ export default function Checkout() {
   const handlePlaceOrder = async () => {
     if (loading) return;
     setLoading(true);
-
-    const baseOrderPayload = {
-      items: items.map((i) => ({
-        productId: i.id,
-        name: i.name,
-        price: i.price,
-        qty: i.qty,
-        size: i.selectedSize,
-        color: i.selectedColor,
-        image: i.image,
-      })),
-      shippingAddress: {
+    try {
+      const fullShippingAddress = {
         ...address,
         ...contact,
         fullName: `${address.firstName} ${address.lastName}`.trim() || 'Customer',
-      },
-      shipping,
-      user_email: contact.email,
-      subtotal,
-      shippingCost,
-      total,
-      idempotency_key: idempotencyKeyRef.current,
-    };
+      };
 
-    if (paymentMethod === 'razorpay') {
-      try {
+      const baseOrderPayload = {
+        items: items.map((i) => ({
+          productId: i.id,
+          name: i.name,
+          price: i.price,
+          qty: i.qty,
+          size: i.selectedSize,
+          color: i.selectedColor,
+          image: i.image,
+        })),
+        shippingAddress: fullShippingAddress,
+        shipping_address: fullShippingAddress,
+        user_email: contact.email || user?.email,
+        userEmail: contact.email || user?.email,
+        shipping,
+        subtotal,
+        shippingCost,
+        total,
+        idempotency_key: idempotencyKeyRef.current,
+      };
+
+      const handleAutoSaveAddress = () => {
+        const userEmail = user?.email || userProfile?.email;
+        if (userEmail && (selectedAddressId === 'new' || savedAddresses.length === 0)) {
+          try {
+            const newSavedAddr = {
+              id: `addr-${Date.now()}`,
+              ...address,
+              phone: contact.phone,
+              fullName: `${address.firstName} ${address.lastName}`.trim() || 'Customer',
+              isDefault: savedAddresses.length === 0
+            };
+            const updatedAddresses = [newSavedAddr, ...savedAddresses];
+            updateUserProfile({
+              email: userEmail,
+              phone: contact.phone || userProfile?.phone,
+              addresses: updatedAddresses
+            }).then((res) => setUserProfile(res)).catch(() => {});
+          } catch {}
+        }
+      };
+
+      if (paymentMethod === 'razorpay') {
         const loaded = await loadRazorpayScript();
         if (!loaded) {
           toast.error('Razorpay SDK failed to load. Please check your internet connection.');
@@ -160,7 +244,11 @@ export default function Checkout() {
         }
 
         // 1. Create order on server
-        const rzpOrderData = await createRazorpayOrder(baseOrderPayload);
+        const rzpOrderData = await createRazorpayOrder({
+          ...baseOrderPayload,
+          paymentMethod: 'razorpay',
+          payment_method: 'razorpay'
+        });
 
         // 2. Open Razorpay Checkout modal
         const options = {
@@ -182,6 +270,7 @@ export default function Checkout() {
               });
 
               clearCart();
+              handleAutoSaveAddress();
               setOrderPlaced(verifyRes.order || rzpOrderData.order || { order_id: rzpOrderData.orderId });
               toast.success('Payment successful via Razorpay!');
             } catch (vErr) {
@@ -216,27 +305,23 @@ export default function Checkout() {
           toast.error(`Payment failed: ${resp.error?.description || 'Transaction declined'}`);
         });
         rzp.open();
-      } catch (err) {
-        console.error('Razorpay order error:', err);
-        toast.error(err.response?.data?.error || err.message || 'Failed to initiate Razorpay payment.');
-        setLoading(false);
-      }
-    } else {
-      // Cash on Delivery
-      try {
+      } else {
+        // Cash on Delivery
         const order = await placeOrder({
           ...baseOrderPayload,
           paymentMethod: 'cod',
+          payment_method: 'cod'
         });
         clearCart();
+        handleAutoSaveAddress();
         setOrderPlaced(order);
         toast.success('Order placed successfully via Cash on Delivery!');
-      } catch (err) {
-        toast.error('Failed to place order. Please check all fields.');
-        console.error(err);
-      } finally {
-        setLoading(false);
       }
+    } catch (err) {
+      console.error('Order placement error:', err);
+      toast.error('Failed to place order. Please check all fields.');
+    } finally {
+      setLoading(false);
     }
   };
 
