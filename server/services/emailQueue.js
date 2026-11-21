@@ -209,7 +209,13 @@ export async function queueNewProductAnnouncement(product) {
     [campaignId, queuedTotal]
   );
 
-  triggerQueueProcessorSoon();
+  // In serverless environments, process the announcement batch immediately within the request lifecycle
+  try {
+    await processEmailQueue({ batchSize: 50 });
+  } catch (err) {
+    console.warn('[EmailQueue] Immediate campaign processing notice:', err.message);
+  }
+
   return { id: campaignId, status: 'processing', total_recipients: totalRecipients, queued_count: queuedTotal };
 }
 
@@ -251,7 +257,7 @@ export async function processEmailQueue({ batchSize = 10 } = {}) {
 
     for (const job of jobs) {
       // Mark as processing
-      await query("UPDATE public.email_notification_queue SET status = 'processing' WHERE id = $1;", [job.id]);
+      await query("UPDATE public.email_notification_queue SET status = 'processing', updated_at = NOW() WHERE id = $1;", [job.id]);
 
       let rendered = null;
       const data = typeof job.template_data === 'string' ? JSON.parse(job.template_data || '{}') : (job.template_data || {});

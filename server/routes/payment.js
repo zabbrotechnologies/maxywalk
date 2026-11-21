@@ -144,7 +144,7 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
     // If order exists in database, update payment status
     try {
       const orderRows = await query(
-        `SELECT id, status, payment_status, items FROM public.orders 
+        `SELECT * FROM public.orders 
          WHERE razorpay_order_id = $1 LIMIT 1;`,
         [orderId]
       );
@@ -160,29 +160,45 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
           }
         }
 
-        await query(
+        const updatedOrders = await query(
           `UPDATE public.orders 
            SET status = 'confirmed', payment_status = 'paid', razorpay_payment_id = $2, razorpay_signature = $3 
-           WHERE id = $1;`,
+           WHERE id = $1
+           RETURNING *;`,
           [order.id, paymentId, signature]
         );
 
+        const finalOrder = updatedOrders[0] || order;
+
         // Queue PAYMENT_SUCCESS notification
-        if (order.user_email) {
+        if (finalOrder.user_email) {
+          const addr = typeof finalOrder.shipping_address === 'string' ? JSON.parse(finalOrder.shipping_address || '{}') : (finalOrder.shipping_address || {});
+          const customerFullName = addr.fullName || `${addr.firstName || ''} ${addr.lastName || ''}`.trim() || 'Valued Customer';
+
           await queueEmail({
-            orderId: order.order_id || order.id,
-            recipientEmail: order.user_email,
+            orderId: finalOrder.order_id || finalOrder.id,
+            recipientEmail: finalOrder.user_email,
             eventType: 'PAYMENT_SUCCESS',
-            subject: `Payment Successful — MAXYWALK Order #${order.order_id || order.id}`,
+            subject: `Payment Successful — MAXYWALK Order #${finalOrder.order_id || finalOrder.id}`,
             templateData: {
-              order,
-              amount: order.total,
+              order: finalOrder,
+              amount: finalOrder.total,
               paymentMethod: 'Online / Razorpay',
               paymentRef: paymentId,
               date: new Date()
             },
             idempotencyKey: `pay-success-${paymentId}`
           }).catch(e => console.warn('[Payment] Success email notice:', e.message));
+
+          // Also ensure ORDER_PLACED is confirmed for the customer
+          await queueEmail({
+            orderId: finalOrder.order_id || finalOrder.id,
+            recipientEmail: finalOrder.user_email,
+            eventType: 'ORDER_PLACED',
+            subject: `Your MAXYWALK Order Has Been Confirmed! — #${finalOrder.order_id || finalOrder.id}`,
+            templateData: { order: finalOrder, customerName: customerFullName },
+            idempotencyKey: `order-placed-${finalOrder.id}`
+          }).catch(e => console.warn('[Payment] Order placed confirmation notice:', e.message));
         }
       }
     } catch (dbErr) {

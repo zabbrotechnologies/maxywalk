@@ -11,12 +11,18 @@
       "destination": "/index.html"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/admin/emails/process-queue?cron_key=maxywalk_cron_secret_2026",
+      "schedule": "*/2 * * * *"
+    }
+  ],
   "regions": [
     "cle1"
   ],
   "functions": {
     "api/index.js": {
-      "maxDuration": 15
+      "maxDuration": 30
     }
   }
 }

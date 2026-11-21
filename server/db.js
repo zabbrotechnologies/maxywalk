@@ -76,13 +76,13 @@ export function query(sql, params = [], retries = 1) {
         });
       });
 
-      req.setTimeout(8000, () => {
-        req.destroy(new Error('Neon SQL query timed out after 8000ms'));
+      req.setTimeout(15000, () => {
+        req.destroy(new Error('Neon SQL query timed out after 15000ms'));
       });
 
       req.on('error', (err) => {
-        if (attempt < retries && (err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT')) {
-          setTimeout(() => execute(attempt + 1), 150);
+        if (attempt < retries && (err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT' || err.message?.includes('timed out'))) {
+          setTimeout(() => execute(attempt + 1), 200);
         } else {
           reject(err);
         }

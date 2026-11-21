@@ -163,19 +163,22 @@ router.post('/admin/retry/:id', requireAdminOrCron, async (req, res) => {
 });
 
 /**
- * POST /api/admin/emails/process-queue
- * Manually trigger or cron-trigger queue batch processing
+ * POST / GET /api/admin/emails/process-queue
+ * Manually trigger (POST) or Vercel Cron trigger (GET) queue batch processing
  */
-router.post(['/admin/process-queue', '/process-queue'], requireAdminOrCron, async (req, res) => {
+const handleProcessQueue = async (req, res) => {
   try {
-    const batchSize = Math.min(Number(req.query.batch_size || req.body.batch_size) || 15, 50);
+    const batchSize = Math.min(Number(req.query.batch_size || req.body?.batch_size) || 25, 50);
     const result = await processEmailQueue({ batchSize });
     res.json({ success: true, ...result });
   } catch (err) {
     console.error('Error processing queue:', err);
     res.status(500).json({ error: 'Failed to process email queue' });
   }
-});
+};
+
+router.post(['/admin/process-queue', '/process-queue'], requireAdminOrCron, handleProcessQueue);
+router.get(['/admin/process-queue', '/process-queue'], requireAdminOrCron, handleProcessQueue);
 
 /**
  * GET /api/emails/unsubscribe?token=...

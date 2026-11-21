@@ -315,13 +315,14 @@ router.post('/', requireAdmin, async (req, res) => {
     // Automatically trigger Product Announcement Campaign for newly published products
     const savedProduct = rows[0];
     if (savedProduct && !data.draft && !data.is_draft) {
-      queueNewProductAnnouncement(savedProduct)
-        .then((campaign) => {
-          if (campaign) {
-            console.log(`[Products] Product announcement queued for "${savedProduct.name}" (Campaign: ${campaign.id})`);
-          }
-        })
-        .catch((err) => console.warn('[Products] Announcement campaign notice:', err.message));
+      try {
+        const campaign = await queueNewProductAnnouncement(savedProduct);
+        if (campaign) {
+          console.log(`[Products] Product announcement campaign processed for "${savedProduct.name}" (Campaign: ${campaign.id})`);
+        }
+      } catch (err) {
+        console.warn('[Products] Announcement campaign notice:', err.message);
+      }
     }
 
     res.status(201).json(rows[0]);
