@@ -359,11 +359,11 @@ router.put('/:id', async (req, res) => {
 
 // Helper for Razorpay REST API
 async function callRazorpayAPI(endpoint, method = 'POST', data = null) {
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keyId = (process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID || '').trim();
+  const keySecret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
 
   if (!keyId || !keySecret) {
-    throw new Error('Razorpay credentials not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.');
+    throw new Error('Razorpay credentials not configured in Vercel environment variables. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.');
   }
 
   const authHeader = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
@@ -485,9 +485,9 @@ router.post('/razorpay/verify', async (req, res) => {
       return res.status(400).json({ error: 'Missing Razorpay signature parameters' });
     }
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const keySecret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
     if (!keySecret) {
-      return res.status(500).json({ error: 'Razorpay secret key not configured on server' });
+      return res.status(500).json({ error: 'Razorpay secret key not configured on server. Please add RAZORPAY_KEY_SECRET in Vercel settings.' });
     }
 
     // HMAC SHA-256 signature verification

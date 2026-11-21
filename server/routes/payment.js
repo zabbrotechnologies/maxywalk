@@ -7,12 +7,12 @@ const router = express.Router();
 
 // Helper to call Razorpay API
 async function callRazorpay(endpoint, method = 'POST', data = null) {
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keyId = (process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID || '').trim();
+  const keySecret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
 
   if (!keyId || !keySecret) {
-    const err = new Error('Razorpay credentials not configured in environment');
-    err.status = 401;
+    const err = new Error('Razorpay credentials not configured in Vercel environment variables. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.');
+    err.status = 500;
     throw err;
   }
 
@@ -98,11 +98,11 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
       });
     }
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const keySecret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
     if (!keySecret) {
       return res.status(500).json({
         success: false,
-        error: 'Razorpay key secret not configured on server'
+        error: 'Razorpay key secret not configured on server. Please add RAZORPAY_KEY_SECRET in Vercel settings.'
       });
     }
 

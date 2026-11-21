@@ -319,7 +319,7 @@ export default function Checkout() {
       }
     } catch (err) {
       console.error('Order placement error:', err);
-      toast.error('Failed to place order. Please check all fields.');
+      toast.error(err.response?.data?.error || err.message || 'Failed to place order. Please check all fields.');
     } finally {
       setLoading(false);
     }
