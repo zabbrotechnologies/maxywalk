@@ -75,6 +75,7 @@ export default function Navbar() {
     { to: '/shop?category=sandals', label: 'Sandals' },
     { to: '/shop?category=belts', label: 'Belts' },
     { to: '/shop?category=wallets', label: 'Wallets' },
+    { to: '/contact', label: 'Contact' },
   ];
 
   const isActive = (to) => location.pathname + location.search === to;
@@ -390,6 +391,14 @@ export default function Navbar() {
                   <div className="pt-3 px-3 py-1 font-sans text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
                     Customer Care
                   </div>
+                  <Link
+                    to="/contact"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 text-xs text-primary font-bold hover:bg-surface-container-low rounded-xl"
+                  >
+                    <span className="material-symbols-outlined text-base text-secondary">contact_support</span>
+                    <span>Contact & Location</span>
+                  </Link>
                   <a
                     href="https://wa.me/919444743465?text=Hi%20Prabhu%20Traders!%20I%20have%20an%20inquiry."
                     target="_blank"

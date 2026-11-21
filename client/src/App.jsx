@@ -51,6 +51,11 @@ const Login = lazy(() => import('./pages/Login.jsx'));
 const Register = lazy(() => import('./pages/Register.jsx'));
 const Checkout = lazy(() => import('./pages/Checkout.jsx'));
 const Account = lazy(() => import('./pages/Account.jsx'));
+const TermsConditions = lazy(() => import('./pages/TermsConditions.jsx'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'));
+const ShippingPolicy = lazy(() => import('./pages/ShippingPolicy.jsx'));
+const RefundPolicy = lazy(() => import('./pages/RefundPolicy.jsx'));
+const ContactUs = lazy(() => import('./pages/ContactUs.jsx'));
 
 // Code-split Admin Pages (Only downloaded when admin visits)
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard.jsx'));
@@ -232,6 +237,11 @@ export default function App() {
         <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
         <Route path="/shop" element={<PublicLayout><Shop /></PublicLayout>} />
         <Route path="/product/:id" element={<PublicLayout><ProductDetail /></PublicLayout>} />
+        <Route path="/terms" element={<PublicLayout><TermsConditions /></PublicLayout>} />
+        <Route path="/privacy" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
+        <Route path="/shipping" element={<PublicLayout><ShippingPolicy /></PublicLayout>} />
+        <Route path="/refund-policy" element={<PublicLayout><RefundPolicy /></PublicLayout>} />
+        <Route path="/contact" element={<PublicLayout><ContactUs /></PublicLayout>} />
 
         {/* Protected User Routes */}
         <Route

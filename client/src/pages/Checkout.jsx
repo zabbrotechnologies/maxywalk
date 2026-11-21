@@ -442,6 +442,22 @@ export default function Checkout() {
           </div>
         </div>
       </main>
+
+      {/* Checkout Compliance Footer */}
+      <footer className="mt-12 py-6 border-t border-outline-variant/30 bg-surface-container-low text-center text-xs text-on-surface-variant">
+        <div className="container-max px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-[11px]">
+            © {new Date().getFullYear()} PRABHU TRADERS · MAXYWALK LEATHER FOOTWEAR
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4 text-[11px]">
+            <Link to="/terms" target="_blank" className="hover:underline">Terms & Conditions</Link>
+            <Link to="/privacy" target="_blank" className="hover:underline">Privacy Policy</Link>
+            <Link to="/shipping" target="_blank" className="hover:underline">Shipping Policy</Link>
+            <Link to="/refund-policy" target="_blank" className="hover:underline">Refund Policy</Link>
+            <Link to="/contact" target="_blank" className="hover:underline">Contact Us</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
