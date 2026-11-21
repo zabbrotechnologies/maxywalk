@@ -421,7 +421,7 @@ router.post('/razorpay/create-order', orderRateLimiter, async (req, res) => {
     }
 
     const isExpress = shipping === 'express';
-    const shippingCost = isExpress ? 149 : (subtotal >= 1999 ? 0 : 149);
+    const shippingCost = isExpress ? 149 : 0;
     const grandTotal = subtotal + shippingCost;
     const amountInPaise = Math.round(grandTotal * 100);
 

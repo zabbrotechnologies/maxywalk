@@ -24,7 +24,7 @@ function loadRazorpayScript() {
 const STEPS = ['Information', 'Delivery', 'Payment'];
 
 const SHIPPING_OPTIONS = [
-  { id: 'standard', label: 'Standard Delivery', desc: '5–7 business days', price: 0, freeAbove: 1999 },
+  { id: 'standard', label: 'Standard Delivery', desc: '5–7 business days', price: 0 },
   { id: 'express', label: 'Express Delivery', desc: '2–3 business days', price: 149 },
 ];
 
@@ -145,7 +145,7 @@ export default function Checkout() {
   };
 
   const shippingOption = SHIPPING_OPTIONS.find((o) => o.id === shipping);
-  const shippingCost = shipping === 'standard' && subtotal >= 1999 ? 0 : (shippingOption?.price || 0);
+  const shippingCost = shippingOption?.price || 0;
   const total = subtotal + shippingCost;
 
   const isEmailValid = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e?.trim() || '');
@@ -533,7 +533,7 @@ export default function Checkout() {
                   <h2 className="font-display text-xl sm:text-2xl text-primary font-bold mb-4">Choose Shipping Method</h2>
                   <div className="space-y-3">
                     {SHIPPING_OPTIONS.map((opt) => {
-                      const price = opt.id === 'standard' && subtotal >= 1999 ? 0 : opt.price;
+                      const price = opt.price;
                       return (
                         <label key={opt.id} className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-colors ${shipping === opt.id ? 'border-primary bg-surface-container-low' : 'border-outline-variant bg-white'}`}>
                           <input type="radio" name="shipping" value={opt.id} checked={shipping === opt.id} onChange={(e) => setShipping(e.target.value)} className="accent-primary w-4 h-4" />
