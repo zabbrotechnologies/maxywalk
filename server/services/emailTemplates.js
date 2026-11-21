@@ -1,0 +1,721 @@
+/**
+ * MAXYWALK Luxury Email Template System
+ * Responsive, Gmail-compatible HTML email templates with plain-text fallbacks.
+ */
+
+export function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+export function formatInr(amount) {
+  const num = Number(amount) || 0;
+  return '₹' + num.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+}
+
+export function getFullImageUrl(img, siteUrl = 'https://maxywalk.com') {
+  if (!img) return 'https://placehold.co/400x500/1F1E1D/FAF7F2?text=MAXYWALK';
+  if (img.startsWith('http://') || img.startsWith('https://')) return img;
+  if (img.startsWith('data:')) return 'https://placehold.co/400x500/1F1E1D/FAF7F2?text=MAXYWALK';
+  const cleanPath = img.startsWith('/') ? img : '/' + img;
+  return `${siteUrl}${cleanPath}`;
+}
+
+// Master Layout Wrapper
+function masterLayout({ preheader = '', contentHtml, siteUrl = 'https://maxywalk.com', isPromotional = false, unsubscribeUrl = '' }) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAXYWALK</title>
+  <!--[if mso]>
+  <style type="text/css">
+    body, table, td, p, a { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important; }
+  </style>
+  <![endif]-->
+</head>
+<body style="margin: 0; padding: 0; background-color: #FAF7F2; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1F1E1D;">
+  <!-- Preheader text for inbox preview -->
+  <div style="display: none; max-height: 0px; overflow: hidden; opacity: 0; font-size: 1px; line-height: 1px;">
+    ${escapeHtml(preheader)} &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #FAF7F2; padding: 24px 12px;">
+    <tr>
+      <td align="center">
+        <!-- Main Card (600px Max) -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #FFFFFF; border-radius: 16px; border: 1px solid #E8E2D8; overflow: hidden; box-shadow: 0 4px 16px rgba(31, 30, 29, 0.04);">
+          
+          <!-- Brand Header -->
+          <tr>
+            <td align="center" style="padding: 32px 24px 24px 24px; background-color: #1F1E1D; border-bottom: 2px solid #D35B22;">
+              <a href="${siteUrl}" target="_blank" style="text-decoration: none; display: inline-block;">
+                <span style="font-family: Georgia, 'Times New Roman', serif; font-size: 26px; font-weight: bold; letter-spacing: 4px; color: #FFFFFF; text-transform: uppercase;">
+                  MAXYWALK
+                </span>
+              </a>
+              <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 2.5px; color: #D35B22; margin-top: 6px; font-weight: bold;">
+                Handcrafted Pure Leather Footwear
+              </div>
+            </td>
+          </tr>
+
+          <!-- Dynamic Content Body -->
+          <tr>
+            <td style="padding: 32px 28px;">
+              ${contentHtml}
+            </td>
+          </tr>
+
+          <!-- Professional Footer -->
+          <tr>
+            <td style="padding: 24px 28px; background-color: #FAF7F2; border-top: 1px solid #E8E2D8; font-size: 12px; color: #78716C; text-align: center; line-height: 1.6;">
+              <p style="margin: 0 0 8px 0; font-weight: bold; color: #1F1E1D;">MAXYWALK LEATHER ARTISANS</p>
+              <p style="margin: 0 0 12px 0;">Handcrafted in Avadi, Chennai, Tamil Nadu, India.</p>
+              
+              <p style="margin: 0 0 16px 0;">
+                <a href="${siteUrl}/shop" style="color: #D35B22; text-decoration: none; font-weight: bold; margin: 0 8px;">Footwear Collection</a> &bull;
+                <a href="${siteUrl}/account?tab=orders" style="color: #D35B22; text-decoration: none; font-weight: bold; margin: 0 8px;">My Orders</a> &bull;
+                <a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22; text-decoration: none; font-weight: bold; margin: 0 8px;">Customer Support</a>
+              </p>
+
+              ${isPromotional && unsubscribeUrl ? `
+              <p style="margin: 12px 0 0 0; font-size: 11px; color: #A8A29E;">
+                You received this product announcement because you are a registered customer of MAXYWALK.
+                <br>
+                <a href="${unsubscribeUrl}" style="color: #78716C; text-decoration: underline;">Unsubscribe from new product announcements</a>.
+                Essential order receipts will continue to be delivered.
+              </p>
+              ` : `
+              <p style="margin: 12px 0 0 0; font-size: 11px; color: #A8A29E;">
+                This is a transactional communication regarding your MAXYWALK account or purchase.
+              </p>
+              `}
+              
+              <p style="margin: 12px 0 0 0; font-size: 11px; color: #A8A29E;">
+                &copy; ${new Date().getFullYear()} MAXYWALK. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+// 1. CUSTOMER_REGISTERED
+export function renderWelcomeEmail({ name = 'Customer', email, siteUrl = 'https://maxywalk.com' }) {
+  const firstName = escapeHtml(name.split(' ')[0] || 'Customer');
+  const subject = 'Welcome to MAXYWALK — Your Journey Starts Here!';
+  const exploreUrl = `${siteUrl}/shop`;
+
+  const contentHtml = `
+    <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 0 0 16px 0; font-weight: bold;">
+      Welcome to the MAXYWALK Family, ${firstName}!
+    </h2>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 16px 0;">
+      Your MAXYWALK account has been created successfully. We are delighted to welcome you to our community of discerning individuals who value authentic handcrafted leather craftsmanship.
+    </p>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 24px 0;">
+      Every pair of MAXYWALK footwear is sculpted from full-grain leather by master artisans in Avadi, engineered for refined elegance, uncompromised comfort, and enduring longevity.
+    </p>
+
+    <!-- Key Perks Box -->
+    <div style="background-color: #FAF7F2; border-left: 4px solid #D35B22; padding: 16px 20px; border-radius: 8px; margin-bottom: 28px;">
+      <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: #D35B22; margin: 0 0 8px 0; font-weight: bold;">
+        Your Account Privileges
+      </h3>
+      <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #57534E; line-height: 1.6;">
+        <li>1-Click Checkout with multiple saved delivery addresses.</li>
+        <li>Live real-time order tracking from workshop to doorstep.</li>
+        <li>Exclusive access to seasonal limited-edition leather drops.</li>
+      </ul>
+    </div>
+
+    <!-- CTA Button -->
+    <div style="text-align: center; margin-bottom: 28px;">
+      <a href="${exploreUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
+        Explore Footwear Collection &rarr;
+      </a>
+    </div>
+
+    <p style="font-size: 13px; line-height: 1.6; color: #78716C; margin: 0;">
+      Need any assistance with sizing or styling? Reach out directly to our artisan concierge at
+      <a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22; font-weight: bold; text-decoration: none;">sales.maxywalk@gmail.com</a>.
+    </p>
+  `;
+
+  const html = masterLayout({
+    preheader: `Welcome to MAXYWALK, ${firstName}! Step into handcrafted pure leather footwear.`,
+    contentHtml,
+    siteUrl,
+    isPromotional: false
+  });
+
+  const text = `Welcome to MAXYWALK, ${name}! Your account was created successfully. Explore our handcrafted pure leather collection at ${exploreUrl}.`;
+  return { subject, html, text };
+}
+
+// 2. ORDER_PLACED
+export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteUrl = 'https://maxywalk.com' }) {
+  const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
+  const subject = `Your MAXYWALK Order Has Been Confirmed! — #${orderId}`;
+  const firstName = escapeHtml(customerName.split(' ')[0] || 'Customer');
+  const items = Array.isArray(order.items) ? order.items : [];
+  const total = formatInr(order.total);
+  const subtotal = formatInr(order.subtotal || order.total);
+  const shippingCost = order.shippingCost ? formatInr(order.shippingCost) : 'FREE';
+  const shippingAddr = order.shipping_address || order.shippingAddress || {};
+  const viewOrderUrl = `${siteUrl}/account?tab=orders`;
+
+  const itemsHtml = items.map((item) => {
+    const imgUrl = getFullImageUrl(item.image, siteUrl);
+    const size = item.size || item.selectedSize || 'Standard';
+    const color = item.color || item.selectedColor || '';
+    const qty = item.qty || 1;
+    const price = formatInr(item.price);
+    const itemTotal = formatInr((item.price || 0) * qty);
+
+    return `
+      <tr>
+        <td style="padding: 12px 0; border-bottom: 1px solid #E8E2D8; width: 70px; vertical-align: top;">
+          <img src="${imgUrl}" alt="${escapeHtml(item.name)}" width="64" height="74" style="display: block; border-radius: 8px; border: 1px solid #E8E2D8; object-fit: contain; background: #FAF7F2;">
+        </td>
+        <td style="padding: 12px 14px; border-bottom: 1px solid #E8E2D8; vertical-align: top;">
+          <div style="font-weight: bold; font-size: 14px; color: #1F1E1D;">${escapeHtml(item.name)}</div>
+          <div style="font-size: 12px; color: #78716C; margin-top: 3px;">
+            ${color ? escapeHtml(color) + ' &bull; ' : ''}Size ${escapeHtml(size)} &bull; Qty ${qty}
+          </div>
+          <div style="font-size: 12px; color: #57534E; margin-top: 3px;">${price} each</div>
+        </td>
+        <td align="right" style="padding: 12px 0; border-bottom: 1px solid #E8E2D8; font-weight: bold; font-size: 14px; color: #1F1E1D; vertical-align: top;">
+          ${itemTotal}
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  const contentHtml = `
+    <div style="display: inline-block; background-color: #FAF7F2; color: #D35B22; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">
+      Order Placed Successfully
+    </div>
+    <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 0 0 8px 0; font-weight: bold;">
+      Thank You for Your Order, ${firstName}!
+    </h2>
+    <p style="font-size: 14px; line-height: 1.6; color: #57534E; margin: 0 0 24px 0;">
+      We have received your order <strong>#${orderId}</strong>. Our artisans in Avadi have begun preparing your package.
+    </p>
+
+    <!-- Order Items Table -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
+      <thead>
+        <tr>
+          <th align="left" colspan="2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #78716C; padding-bottom: 8px; border-bottom: 2px solid #1F1E1D;">Item Summary</th>
+          <th align="right" style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #78716C; padding-bottom: 8px; border-bottom: 2px solid #1F1E1D;">Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsHtml}
+      </tbody>
+    </table>
+
+    <!-- Pricing Summary -->
+    <div style="background-color: #FAF7F2; padding: 18px 20px; border-radius: 12px; margin-bottom: 24px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 13px; line-height: 1.8;">
+        <tr>
+          <td style="color: #78716C;">Subtotal</td>
+          <td align="right" style="font-weight: bold; color: #1F1E1D;">${subtotal}</td>
+        </tr>
+        <tr>
+          <td style="color: #78716C;">Shipping Charges</td>
+          <td align="right" style="font-weight: bold; color: #1F1E1D;">${shippingCost}</td>
+        </tr>
+        <tr>
+          <td style="padding-top: 10px; border-top: 1px solid #E8E2D8; font-size: 15px; font-weight: bold; color: #1F1E1D;">Order Total</td>
+          <td align="right" style="padding-top: 10px; border-top: 1px solid #E8E2D8; font-size: 16px; font-weight: bold; color: #D35B22;">${total}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Shipping Address & Details -->
+    <div style="background-color: #FFFFFF; border: 1px solid #E8E2D8; padding: 16px 20px; border-radius: 12px; margin-bottom: 28px;">
+      <h3 style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: #1F1E1D; margin: 0 0 8px 0; font-weight: bold;">
+        Delivery Destination
+      </h3>
+      <p style="font-size: 13px; line-height: 1.6; color: #44403C; margin: 0;">
+        <strong>${escapeHtml(shippingAddr.fullName || customerName)}</strong><br>
+        ${escapeHtml(shippingAddr.address || '')}<br>
+        ${escapeHtml(shippingAddr.city || '')}, ${escapeHtml(shippingAddr.state || '')} - ${escapeHtml(shippingAddr.pincode || '')}<br>
+        ${shippingAddr.phone ? 'Phone: ' + escapeHtml(shippingAddr.phone) : ''}
+      </p>
+    </div>
+
+    <!-- View Order CTA -->
+    <div style="text-align: center; margin-bottom: 24px;">
+      <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
+        Track &amp; View Order &rarr;
+      </a>
+    </div>
+  `;
+
+  const html = masterLayout({
+    preheader: `Your MAXYWALK Order #${orderId} is confirmed! Total: ${total}.`,
+    contentHtml,
+    siteUrl
+  });
+
+  const text = `Your MAXYWALK Order #${orderId} has been confirmed! Total: ${total}. View your order details at: ${viewOrderUrl}`;
+  return { subject, html, text };
+}
+
+// 3. PAYMENT_SUCCESS
+export function renderPaymentSuccessEmail({ order, amount, paymentMethod = 'Online / Razorpay', paymentRef, date = new Date(), siteUrl = 'https://maxywalk.com' }) {
+  const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
+  const subject = `Payment Successful — MAXYWALK Order #${orderId}`;
+  const formattedAmount = formatInr(amount || order.total);
+  const formattedDate = new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const viewOrderUrl = `${siteUrl}/account?tab=orders`;
+
+  const contentHtml = `
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="display: inline-block; width: 56px; height: 56px; line-height: 56px; border-radius: 50%; background-color: #ECFDF5; border: 2px solid #10B981; font-size: 28px; color: #10B981; text-align: center;">
+        &#10003;
+      </div>
+      <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 16px 0 6px 0; font-weight: bold;">
+        Payment Received
+      </h2>
+      <p style="font-size: 14px; color: #57534E; margin: 0;">
+        We have verified and confirmed your payment for Order <strong>#${orderId}</strong>.
+      </p>
+    </div>
+
+    <!-- Receipt Details Box -->
+    <div style="background-color: #FAF7F2; border: 1px solid #E8E2D8; border-radius: 12px; padding: 20px; margin-bottom: 28px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 13px; line-height: 2;">
+        <tr>
+          <td style="color: #78716C;">Order Reference</td>
+          <td align="right" style="font-weight: bold; color: #1F1E1D;">#${orderId}</td>
+        </tr>
+        <tr>
+          <td style="color: #78716C;">Payment Amount</td>
+          <td align="right" style="font-weight: bold; color: #D35B22; font-size: 15px;">${formattedAmount}</td>
+        </tr>
+        <tr>
+          <td style="color: #78716C;">Payment Method</td>
+          <td align="right" style="font-weight: bold; color: #1F1E1D;">${escapeHtml(paymentMethod)}</td>
+        </tr>
+        ${paymentRef ? `
+        <tr>
+          <td style="color: #78716C;">Transaction Ref</td>
+          <td align="right" style="font-family: monospace; font-size: 12px; color: #1F1E1D;">${escapeHtml(paymentRef)}</td>
+        </tr>
+        ` : ''}
+        <tr>
+          <td style="color: #78716C;">Date of Payment</td>
+          <td align="right" style="font-weight: bold; color: #1F1E1D;">${formattedDate}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 24px;">
+      <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
+        View Order Status &rarr;
+      </a>
+    </div>
+  `;
+
+  const html = masterLayout({
+    preheader: `Payment of ${formattedAmount} verified for MAXYWALK Order #${orderId}.`,
+    contentHtml,
+    siteUrl
+  });
+
+  const text = `Payment of ${formattedAmount} successful for MAXYWALK Order #${orderId}. View order at ${viewOrderUrl}`;
+  return { subject, html, text };
+}
+
+// 4. PAYMENT_FAILED
+export function renderPaymentFailedEmail({ order, amount, retryUrl, siteUrl = 'https://maxywalk.com' }) {
+  const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
+  const subject = `Payment Unsuccessful — MAXYWALK Order #${orderId}`;
+  const formattedAmount = formatInr(amount || order.total);
+  const checkoutUrl = retryUrl || `${siteUrl}/checkout`;
+
+  const contentHtml = `
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="display: inline-block; width: 56px; height: 56px; line-height: 56px; border-radius: 50%; background-color: #FEF2F2; border: 2px solid #EF4444; font-size: 28px; color: #EF4444; text-align: center;">
+        &#10007;
+      </div>
+      <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 16px 0 6px 0; font-weight: bold;">
+        Payment Unsuccessful
+      </h2>
+      <p style="font-size: 14px; color: #57534E; margin: 0;">
+        We were unable to complete the payment of <strong>${formattedAmount}</strong> for Order <strong>#${orderId}</strong>.
+      </p>
+    </div>
+
+    <p style="font-size: 14px; line-height: 1.6; color: #44403C; margin-bottom: 24px;">
+      Don't worry — your selected items have not been lost. You can securely retry payment using any card, UPI, Net Banking, or choose Cash on Delivery.
+    </p>
+
+    <div style="text-align: center; margin-bottom: 28px;">
+      <a href="${checkoutUrl}" target="_blank" style="display: inline-block; background-color: #D35B22; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
+        Complete Payment Now &rarr;
+      </a>
+    </div>
+
+    <p style="font-size: 12px; color: #78716C; text-align: center; margin: 0;">
+      If your account was debited, the amount will be automatically refunded by your bank within 3–5 business days. For assistance, email <a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22;">sales.maxywalk@gmail.com</a>.
+    </p>
+  `;
+
+  const html = masterLayout({
+    preheader: `Payment could not be completed for Order #${orderId}. Click to retry securely.`,
+    contentHtml,
+    siteUrl
+  });
+
+  const text = `Payment could not be completed for MAXYWALK Order #${orderId}. Retry payment at: ${checkoutUrl}`;
+  return { subject, html, text };
+}
+
+// 5. ORDER_PROCESSING
+export function renderOrderProcessingEmail({ order, customerName = 'Customer', siteUrl = 'https://maxywalk.com' }) {
+  const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
+  const subject = `Your MAXYWALK Order Is Being Prepared! — #${orderId}`;
+  const firstName = escapeHtml(customerName.split(' ')[0] || 'Customer');
+  const viewOrderUrl = `${siteUrl}/account?tab=orders`;
+
+  const contentHtml = `
+    <div style="display: inline-block; background-color: #FAF7F2; color: #D35B22; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">
+      Order In Production
+    </div>
+    <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 0 0 16px 0; font-weight: bold;">
+      Your Footwear Is in the Workshop, ${firstName}!
+    </h2>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 16px 0;">
+      Great news! Order <strong>#${orderId}</strong> has been verified and is currently being processed by our crafting team.
+    </p>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 24px 0;">
+      Each piece undergoes rigorous material inspection, precision leather cutting, and structural hand-stitching to ensure maximum comfort and durability.
+    </p>
+
+    <div style="text-align: center; margin-bottom: 24px;">
+      <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
+        Track Crafting Progress &rarr;
+      </a>
+    </div>
+  `;
+
+  const html = masterLayout({
+    preheader: `Order #${orderId} is now being prepared by our master artisans.`,
+    contentHtml,
+    siteUrl
+  });
+
+  const text = `Order #${orderId} is being prepared by our artisans. Track progress at: ${viewOrderUrl}`;
+  return { subject, html, text };
+}
+
+// 6. ORDER_PACKED
+export function renderOrderPackedEmail({ order, customerName = 'Customer', siteUrl = 'https://maxywalk.com' }) {
+  const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
+  const subject = `Your MAXYWALK Order Is Packed! — #${orderId}`;
+  const firstName = escapeHtml(customerName.split(' ')[0] || 'Customer');
+  const viewOrderUrl = `${siteUrl}/account?tab=orders`;
+
+  const contentHtml = `
+    <div style="display: inline-block; background-color: #FAF7F2; color: #D35B22; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">
+      Quality Passed &amp; Packed
+    </div>
+    <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 0 0 16px 0; font-weight: bold;">
+      Your Order Is Packed &amp; Ready, ${firstName}!
+    </h2>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 16px 0;">
+      Your handcrafted footwear for Order <strong>#${orderId}</strong> has completed finishing and passed our quality check.
+    </p>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 24px 0;">
+      It has been securely boxed in our signature packaging and is currently staged for courier handover and dispatch.
+    </p>
+
+    <div style="text-align: center; margin-bottom: 24px;">
+      <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
+        View Order Status &rarr;
+      </a>
+    </div>
+  `;
+
+  const html = masterLayout({
+    preheader: `Order #${orderId} is packed and ready for dispatch.`,
+    contentHtml,
+    siteUrl
+  });
+
+  const text = `Order #${orderId} is packed and ready for courier pickup. View details at: ${viewOrderUrl}`;
+  return { subject, html, text };
+}
+
+// 7. ORDER_SHIPPED
+export function renderOrderShippedEmail({ order, customerName = 'Customer', trackingInfo = {}, siteUrl = 'https://maxywalk.com' }) {
+  const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
+  const subject = `Your MAXYWALK Order Has Been Shipped! — #${orderId}`;
+  const firstName = escapeHtml(customerName.split(' ')[0] || 'Customer');
+  const courier = escapeHtml(trackingInfo.courier || 'Blue Dart / Delhivery');
+  const trackingNumber = escapeHtml(trackingInfo.trackingNumber || trackingInfo.tracking_number || order.tracking_number || 'Available in tracking link');
+  const trackUrl = trackingInfo.trackingUrl || trackingInfo.track_url || `${siteUrl}/account?tab=orders`;
+
+  const contentHtml = `
+    <div style="display: inline-block; background-color: #FAF7F2; color: #D35B22; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">
+      Dispatched
+    </div>
+    <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 0 0 16px 0; font-weight: bold;">
+      Your Footwear Is on Its Way, ${firstName}!
+    </h2>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 24px 0;">
+      Order <strong>#${orderId}</strong> has been handed over to our delivery partner and is en route to your shipping destination.
+    </p>
+
+    <!-- Tracking Details Box -->
+    <div style="background-color: #FAF7F2; border: 1px solid #E8E2D8; border-radius: 12px; padding: 20px; margin-bottom: 28px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 13px; line-height: 2;">
+        <tr>
+          <td style="color: #78716C;">Courier Partner</td>
+          <td align="right" style="font-weight: bold; color: #1F1E1D;">${courier}</td>
+        </tr>
+        <tr>
+          <td style="color: #78716C;">AWB / Tracking Number</td>
+          <td align="right" style="font-family: monospace; font-size: 13px; font-weight: bold; color: #D35B22;">${trackingNumber}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 24px;">
+      <a href="${trackUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
+        Track Your Shipment &rarr;
+      </a>
+    </div>
+  `;
+
+  const html = masterLayout({
+    preheader: `Order #${orderId} has been shipped via ${courier}. Track live now.`,
+    contentHtml,
+    siteUrl
+  });
+
+  const text = `Order #${orderId} has been shipped via ${courier}. Tracking Number: ${trackingNumber}. Track at: ${trackUrl}`;
+  return { subject, html, text };
+}
+
+// 8. OUT_FOR_DELIVERY
+export function renderOutForDeliveryEmail({ order, customerName = 'Customer', trackingInfo = {}, siteUrl = 'https://maxywalk.com' }) {
+  const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
+  const subject = `Your MAXYWALK Order Is Out for Delivery! — #${orderId}`;
+  const firstName = escapeHtml(customerName.split(' ')[0] || 'Customer');
+  const trackUrl = trackingInfo.trackingUrl || `${siteUrl}/account?tab=orders`;
+
+  const contentHtml = `
+    <div style="display: inline-block; background-color: #ECFDF5; color: #047857; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">
+      Arriving Today
+    </div>
+    <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 0 0 16px 0; font-weight: bold;">
+      Your Package Is Out for Delivery, ${firstName}!
+    </h2>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 16px 0;">
+      Our delivery associate is in your area and will be delivering Order <strong>#${orderId}</strong> today.
+    </p>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 24px 0;">
+      Please ensure someone is available at the delivery destination to receive the package.
+    </p>
+
+    <div style="text-align: center; margin-bottom: 24px;">
+      <a href="${trackUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
+        Track Live Status &rarr;
+      </a>
+    </div>
+  `;
+
+  const html = masterLayout({
+    preheader: `Order #${orderId} is out for delivery today.`,
+    contentHtml,
+    siteUrl
+  });
+
+  const text = `Order #${orderId} is out for delivery today! Track at: ${trackUrl}`;
+  return { subject, html, text };
+}
+
+// 9. ORDER_DELIVERED
+export function renderOrderDeliveredEmail({ order, customerName = 'Customer', deliveryDate = new Date(), siteUrl = 'https://maxywalk.com' }) {
+  const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
+  const subject = `Your MAXYWALK Order Has Been Delivered! — #${orderId}`;
+  const firstName = escapeHtml(customerName.split(' ')[0] || 'Customer');
+  const formattedDate = new Date(deliveryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const viewOrderUrl = `${siteUrl}/account?tab=orders`;
+
+  const contentHtml = `
+    <div style="display: inline-block; background-color: #ECFDF5; color: #047857; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">
+      Successfully Delivered
+    </div>
+    <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 0 0 16px 0; font-weight: bold;">
+      Delivered, ${firstName}! Step into Luxury.
+    </h2>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 16px 0;">
+      Your package for Order <strong>#${orderId}</strong> was delivered on <strong>${formattedDate}</strong>.
+    </p>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 24px 0;">
+      We hope your new handcrafted leather footwear exceeds your expectations. To keep your leather soft and lustrous for years, nourish it periodically with a quality natural leather conditioner.
+    </p>
+
+    <div style="text-align: center; margin-bottom: 24px;">
+      <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
+        View Delivered Order &rarr;
+      </a>
+    </div>
+
+    <p style="font-size: 13px; line-height: 1.6; color: #78716C; margin: 0;">
+      Questions or sizing support? We are always here at <a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22;">sales.maxywalk@gmail.com</a>.
+    </p>
+  `;
+
+  const html = masterLayout({
+    preheader: `Order #${orderId} was delivered successfully on ${formattedDate}.`,
+    contentHtml,
+    siteUrl
+  });
+
+  const text = `Your MAXYWALK Order #${orderId} has been delivered. View order at ${viewOrderUrl}`;
+  return { subject, html, text };
+}
+
+// 10. ORDER_CANCELLED
+export function renderOrderCancelledEmail({ order, customerName = 'Customer', cancellationDate = new Date(), reason = '', siteUrl = 'https://maxywalk.com' }) {
+  const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
+  const subject = `Your MAXYWALK Order Has Been Cancelled — #${orderId}`;
+  const firstName = escapeHtml(customerName.split(' ')[0] || 'Customer');
+  const formattedDate = new Date(cancellationDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  const contentHtml = `
+    <div style="display: inline-block; background-color: #FEF2F2; color: #B91C1C; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">
+      Order Cancelled
+    </div>
+    <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 0 0 16px 0; font-weight: bold;">
+      Order #${orderId} Has Been Cancelled
+    </h2>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 16px 0;">
+      Hello ${firstName}, your order <strong>#${orderId}</strong> was cancelled on <strong>${formattedDate}</strong>${reason ? ` for the following reason: <em>${escapeHtml(reason)}</em>` : ''}.
+    </p>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 24px 0;">
+      If you did not request this cancellation or have any inquiries, please contact our customer care team immediately at
+      <a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22; font-weight: bold; text-decoration: none;">sales.maxywalk@gmail.com</a>.
+    </p>
+
+    <div style="text-align: center; margin-bottom: 24px;">
+      <a href="${siteUrl}/shop" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
+        Browse Store &rarr;
+      </a>
+    </div>
+  `;
+
+  const html = masterLayout({
+    preheader: `Notice: Order #${orderId} has been cancelled.`,
+    contentHtml,
+    siteUrl
+  });
+
+  const text = `Order #${orderId} was cancelled on ${formattedDate}. For support, email sales.maxywalk@gmail.com.`;
+  return { subject, html, text };
+}
+
+// 11. NEW_PRODUCT_PUBLISHED (Promotional Announcement)
+export function renderNewProductAnnouncementEmail({ product, customerName = 'Valued Customer', siteUrl = 'https://maxywalk.com', unsubscribeUrl = '' }) {
+  const prodName = escapeHtml(product.name || 'Handcrafted Footwear');
+  const subject = `New Arrival at MAXYWALK — Discover ${prodName}!`;
+  const firstName = escapeHtml(customerName.split(' ')[0] || 'Customer');
+  const price = formatInr(product.price);
+  const origPrice = product.original_price || product.originalPrice ? formatInr(product.original_price || product.originalPrice) : null;
+  const description = escapeHtml(product.description || 'A timeless blend of pure full-grain leather, anatomical footbed support, and master craftsmanship.');
+  const mainImage = getFullImageUrl(Array.isArray(product.images) ? product.images[0] : product.images, siteUrl);
+  const productUrl = `${siteUrl}/product/${product.id}`;
+  const shopUrl = `${siteUrl}/shop`;
+
+  const sizes = Array.isArray(product.sizes) ? product.sizes.join(', ') : '';
+
+  const contentHtml = `
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="display: inline-block; background-color: #FAF7F2; color: #D35B22; padding: 4px 14px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; border: 1px solid #E8E2D8;">
+        NEW ARRIVAL &bull; LIMITED CRAFT
+      </div>
+      <h2 style="font-family: Georgia, serif; font-size: 28px; color: #1F1E1D; margin: 0 0 10px 0; font-weight: bold; line-height: 1.3;">
+        Introducing ${prodName}
+      </h2>
+      <p style="font-size: 14px; color: #78716C; margin: 0;">
+        Crafted exclusively for discerning footsteps, ${firstName}.
+      </p>
+    </div>
+
+    <!-- Product Showcase Card -->
+    <div style="background-color: #FAF7F2; border-radius: 16px; border: 1px solid #E8E2D8; padding: 20px; text-align: center; margin-bottom: 28px;">
+      <a href="${productUrl}" target="_blank" style="text-decoration: none; display: block;">
+        <img src="${mainImage}" alt="${prodName}" width="480" style="width: 100%; max-width: 480px; height: auto; max-height: 380px; object-fit: contain; border-radius: 12px; background-color: #FFFFFF; border: 1px solid #E8E2D8; margin-bottom: 16px;">
+      </a>
+
+      <div style="padding: 0 8px;">
+        <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 16px 0;">
+          ${description}
+        </p>
+
+        <!-- Pricing Tag -->
+        <div style="margin-bottom: 16px;">
+          <span style="font-size: 24px; font-weight: bold; color: #D35B22; font-family: Georgia, serif;">
+            ${price}
+          </span>
+          ${origPrice ? `
+          <span style="font-size: 15px; color: #A8A29E; text-decoration: line-through; margin-left: 8px;">
+            ${origPrice}
+          </span>
+          ` : ''}
+        </div>
+
+        ${sizes ? `
+        <div style="font-size: 12px; color: #78716C; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px;">
+          Available Sizes: <strong style="color: #1F1E1D;">${escapeHtml(sizes)}</strong>
+        </div>
+        ` : ''}
+
+        <!-- Dual CTA Buttons -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td align="center">
+              <a href="${productUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 32px; border-radius: 8px; text-decoration: none; margin: 4px;">
+                View Product Details &rarr;
+              </a>
+              <a href="${shopUrl}" target="_blank" style="display: inline-block; background-color: #FFFFFF; color: #1F1E1D; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 28px; border-radius: 8px; text-decoration: none; border: 1px solid #1F1E1D; margin: 4px;">
+                Shop All Footwear
+              </a>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  `;
+
+  const html = masterLayout({
+    preheader: `New Arrival at MAXYWALK: ${prodName} is now live! Price: ${price}.`,
+    contentHtml,
+    siteUrl,
+    isPromotional: true,
+    unsubscribeUrl
+  });
+
+  const text = `New Arrival at MAXYWALK: Discover ${prodName}! Price: ${price}. View details at: ${productUrl} (To unsubscribe from announcements, visit ${unsubscribeUrl})`;
+  return { subject, html, text };
+}

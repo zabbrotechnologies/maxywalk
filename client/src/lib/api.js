@@ -418,4 +418,42 @@ export const signOut = async () => {
   return res.data;
 };
 
+
+// Email Management API (Admin only)
+export const getEmailOverview = async () => {
+  const res = await api.get('/admin/emails/overview', {
+    headers: { 'x-admin-request': 'true' }
+  });
+  return res.data;
+};
+
+export const getEmailCampaigns = async () => {
+  const res = await api.get('/admin/emails/campaigns', {
+    headers: { 'x-admin-request': 'true' }
+  });
+  return res.data?.campaigns || [];
+};
+
+export const getEmailHistory = async (params = {}) => {
+  const res = await api.get('/admin/emails/history', {
+    params,
+    headers: { 'x-admin-request': 'true' }
+  });
+  return res.data;
+};
+
+export const retryFailedEmail = async (id) => {
+  const res = await api.post(`/admin/emails/retry/${id}`, {}, {
+    headers: { 'x-admin-request': 'true' }
+  });
+  return res.data;
+};
+
+export const processEmailQueueNow = async (batchSize = 25) => {
+  const res = await api.post('/admin/emails/process-queue', { batch_size: batchSize }, {
+    headers: { 'x-admin-request': 'true' }
+  });
+  return res.data;
+};
+
 export default api;

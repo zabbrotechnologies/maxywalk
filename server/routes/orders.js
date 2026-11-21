@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { query } from '../db.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { orderRateLimiter } from '../middleware/rateLimit.js';
+import { queueEmail } from '../services/emailQueue.js';
 
 const router = express.Router();
 
@@ -248,6 +249,21 @@ router.post('/', orderRateLimiter, async (req, res) => {
       return res.status(200).json(rows[0]);
     }
 
+    // Queue ORDER_PLACED confirmation email
+    const createdOrder = rows[0];
+    const customerFullName = resolvedShippingAddr.fullName || 
+      `${resolvedShippingAddr.firstName || ''} ${resolvedShippingAddr.lastName || ''}`.trim() || 
+      'Valued Customer';
+
+    queueEmail({
+      orderId: createdOrder.order_id || createdOrder.id,
+      recipientEmail: resolvedEmail,
+      eventType: 'ORDER_PLACED',
+      subject: `Your MAXYWALK Order Has Been Confirmed! — #${createdOrder.order_id || createdOrder.id}`,
+      templateData: { order: createdOrder, customerName: customerFullName },
+      idempotencyKey: `order-placed-${createdOrder.id}`
+    }).catch((e) => console.warn('[Orders] Order placed email queue notice:', e.message));
+
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error('Error creating order:', err);
@@ -281,6 +297,57 @@ router.put('/:id', async (req, res) => {
 
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const updatedOrder = rows[0];
+    const targetEmail = updatedOrder.user_email;
+    const addr = typeof updatedOrder.shipping_address === 'string' ? JSON.parse(updatedOrder.shipping_address || '{}') : (updatedOrder.shipping_address || {});
+    const recipientName = addr.fullName || `${addr.firstName || ''} ${addr.lastName || ''}`.trim() || 'Valued Customer';
+
+    // Map order status to notification event
+    let eventType = null;
+    let eventSubject = null;
+    const orderIdLabel = updatedOrder.order_id || updatedOrder.id;
+
+    if (cleanStatus === 'confirmed' || cleanStatus === 'processing') {
+      eventType = 'ORDER_PROCESSING';
+      eventSubject = `Your MAXYWALK Order Is Being Prepared! — #${orderIdLabel}`;
+    } else if (cleanStatus === 'crafting' || cleanStatus === 'packed') {
+      eventType = 'ORDER_PACKED';
+      eventSubject = `Your MAXYWALK Order Is Packed! — #${orderIdLabel}`;
+    } else if (cleanStatus === 'dispatched' || cleanStatus === 'shipped') {
+      eventType = 'ORDER_SHIPPED';
+      eventSubject = `Your MAXYWALK Order Has Been Shipped! — #${orderIdLabel}`;
+    } else if (cleanStatus === 'out_for_delivery') {
+      eventType = 'OUT_FOR_DELIVERY';
+      eventSubject = `Your MAXYWALK Order Is Out for Delivery! — #${orderIdLabel}`;
+    } else if (cleanStatus === 'delivered') {
+      eventType = 'ORDER_DELIVERED';
+      eventSubject = `Your MAXYWALK Order Has Been Delivered! — #${orderIdLabel}`;
+    } else if (cleanStatus === 'cancelled') {
+      eventType = 'ORDER_CANCELLED';
+      eventSubject = `Your MAXYWALK Order Has Been Cancelled — #${orderIdLabel}`;
+    }
+
+    if (eventType && targetEmail) {
+      queueEmail({
+        orderId: orderIdLabel,
+        recipientEmail: targetEmail,
+        eventType,
+        subject: eventSubject,
+        templateData: {
+          order: updatedOrder,
+          customerName: recipientName,
+          trackingInfo: {
+            courier: addr.courier || 'Blue Dart / Delhivery',
+            trackingNumber: updatedOrder.tracking_number || addr.tracking_number || 'Available in tracking link',
+            trackingUrl: addr.tracking_url || 'https://maxywalk.com/account?tab=orders'
+          },
+          cancellationDate: new Date(),
+          reason: req.body.reason || 'Requested by customer or administrative update'
+        },
+        idempotencyKey: `order-status-${updatedOrder.id}-${cleanStatus}`
+      }).catch((e) => console.warn(`[Orders] Status email ${eventType} queue notice:`, e.message));
     }
 
     res.json(rows[0]);

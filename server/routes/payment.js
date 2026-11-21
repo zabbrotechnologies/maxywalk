@@ -1,6 +1,7 @@
 import express from 'express';
 import crypto from 'crypto';
 import { query } from '../db.js';
+import { queueEmail } from '../services/emailQueue.js';
 
 const router = express.Router();
 
@@ -118,6 +119,22 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
       crypto.timingSafeEqual(expectedBuffer, signatureBuffer);
 
     if (!isMatch) {
+      // Queue PAYMENT_FAILED email if order exists
+      try {
+        const failedOrders = await query('SELECT * FROM public.orders WHERE razorpay_order_id = $1 LIMIT 1;', [orderId]);
+        if (failedOrders.length > 0 && failedOrders[0].user_email) {
+          const fo = failedOrders[0];
+          queueEmail({
+            orderId: fo.order_id || fo.id,
+            recipientEmail: fo.user_email,
+            eventType: 'PAYMENT_FAILED',
+            subject: `Payment Unsuccessful — MAXYWALK Order #${fo.order_id || fo.id}`,
+            templateData: { order: fo, amount: fo.total },
+            idempotencyKey: `pay-failed-${orderId}`
+          }).catch(e => console.warn('[Payment] Failed email notice:', e.message));
+        }
+      } catch {}
+
       return res.status(400).json({
         success: false,
         error: 'Signature verification failed'
@@ -149,6 +166,24 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
            WHERE id = $1;`,
           [order.id, paymentId, signature]
         );
+
+        // Queue PAYMENT_SUCCESS notification
+        if (order.user_email) {
+          queueEmail({
+            orderId: order.order_id || order.id,
+            recipientEmail: order.user_email,
+            eventType: 'PAYMENT_SUCCESS',
+            subject: `Payment Successful — MAXYWALK Order #${order.order_id || order.id}`,
+            templateData: {
+              order,
+              amount: order.total,
+              paymentMethod: 'Online / Razorpay',
+              paymentRef: paymentId,
+              date: new Date()
+            },
+            idempotencyKey: `pay-success-${paymentId}`
+          }).catch(e => console.warn('[Payment] Success email notice:', e.message));
+        }
       }
     } catch (dbErr) {
       console.warn('Note: Order DB status update bypassed:', dbErr.message);

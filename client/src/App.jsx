@@ -62,6 +62,7 @@ const AdminDashboard = lazy(() => import('./pages/admin/Dashboard.jsx'));
 const AdminProducts = lazy(() => import('./pages/admin/Products.jsx'));
 const AdminOrders = lazy(() => import('./pages/admin/Orders.jsx'));
 const AdminCustomers = lazy(() => import('./pages/admin/Customers.jsx'));
+const AdminEmails = lazy(() => import('./pages/admin/Emails.jsx'));
 
 // Auth Store
 import useAuthStore from './store/authStore.js';

@@ -11,6 +11,7 @@ import orderRoutes from './routes/orders.js';
 import customerRoutes from './routes/customers.js';
 import assetRoutes from './routes/assets.js';
 import paymentRoutes from './routes/payment.js';
+import emailRoutes from './routes/emails.js';
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -37,6 +38,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/assets', assetRoutes);
+app.use('/api/emails', emailRoutes);
+app.use('/api/admin/emails', emailRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', database: 'neon-postgresql', timestamp: new Date().toISOString() });
