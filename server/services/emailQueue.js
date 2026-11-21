@@ -49,7 +49,8 @@ export async function queueEmail({
   subject,
   templateData = {},
   notificationCategory = 'transactional',
-  idempotencyKey = null
+  idempotencyKey = null,
+  immediate = true
 }) {
   if (!recipientEmail || !emailProvider.isValidEmail(recipientEmail)) {
     console.warn(`[EmailQueue] Skipping queue insertion for invalid email: "${recipientEmail}"`);
@@ -86,8 +87,17 @@ export async function queueEmail({
       ]
     );
 
-    // Asynchronously kick off background processing without blocking current thread
-    triggerQueueProcessorSoon();
+    // For transactional customer emails in serverless, process immediately within the function lifecycle
+    if (immediate && notificationCategory === 'transactional') {
+      try {
+        await processEmailQueue({ batchSize: 1 });
+      } catch (e) {
+        console.warn('[EmailQueue] Immediate delivery notice:', e.message);
+      }
+    } else {
+      triggerQueueProcessorSoon();
+    }
+
     return rows[0] || null;
   } catch (err) {
     console.error(`[EmailQueue] Error queuing ${eventType} to ${cleanEmail}:`, err.message);
@@ -216,6 +226,14 @@ export async function processEmailQueue({ batchSize = 10 } = {}) {
   const siteUrl = process.env.CLIENT_URL || 'https://maxywalk.com';
 
   try {
+    // Unstick any jobs that were frozen midway in a recycled serverless container
+    await query(`
+      UPDATE public.email_notification_queue 
+      SET status = 'pending' 
+      WHERE status = 'processing' 
+        AND updated_at < NOW() - INTERVAL '3 minutes';
+    `);
+
     // Atomically claim up to batchSize jobs
     const jobs = await query(
       `SELECT * FROM public.email_notification_queue

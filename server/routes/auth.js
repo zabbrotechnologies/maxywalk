@@ -57,7 +57,7 @@ router.post('/register', authRateLimiter, async (req, res) => {
     });
 
     // Queue Welcome Email for newly registered customer
-    queueEmail({
+    await queueEmail({
       customerId: userId,
       recipientEmail: cleanEmail,
       eventType: 'CUSTOMER_REGISTERED',
@@ -162,7 +162,7 @@ router.post('/google', async (req, res) => {
       user = { id: userId, email: cleanEmail, name, phone: '', role };
 
       // Queue Welcome Email for first-time Google sign-up
-      queueEmail({
+      await queueEmail({
         customerId: userId,
         recipientEmail: cleanEmail,
         eventType: 'CUSTOMER_REGISTERED',

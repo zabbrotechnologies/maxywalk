@@ -255,7 +255,7 @@ router.post('/', orderRateLimiter, async (req, res) => {
       `${resolvedShippingAddr.firstName || ''} ${resolvedShippingAddr.lastName || ''}`.trim() || 
       'Valued Customer';
 
-    queueEmail({
+    await queueEmail({
       orderId: createdOrder.order_id || createdOrder.id,
       recipientEmail: resolvedEmail,
       eventType: 'ORDER_PLACED',
@@ -330,7 +330,7 @@ router.put('/:id', async (req, res) => {
     }
 
     if (eventType && targetEmail) {
-      queueEmail({
+      await queueEmail({
         orderId: orderIdLabel,
         recipientEmail: targetEmail,
         eventType,

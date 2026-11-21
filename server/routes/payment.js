@@ -124,7 +124,7 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
         const failedOrders = await query('SELECT * FROM public.orders WHERE razorpay_order_id = $1 LIMIT 1;', [orderId]);
         if (failedOrders.length > 0 && failedOrders[0].user_email) {
           const fo = failedOrders[0];
-          queueEmail({
+          await queueEmail({
             orderId: fo.order_id || fo.id,
             recipientEmail: fo.user_email,
             eventType: 'PAYMENT_FAILED',
@@ -169,7 +169,7 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
 
         // Queue PAYMENT_SUCCESS notification
         if (order.user_email) {
-          queueEmail({
+          await queueEmail({
             orderId: order.order_id || order.id,
             recipientEmail: order.user_email,
             eventType: 'PAYMENT_SUCCESS',
