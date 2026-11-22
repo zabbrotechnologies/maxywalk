@@ -15,16 +15,16 @@ const SLIDES = [
     image: "/products/slipper.png",
   },
   {
-    id: "belts", num: "02", label: "Belts",
-    tagline: "CRAFTED PRECISION",
-    desc: "Full-grain leather belts with stainless hardware. Every stitch placed with purpose.",
-    image: "/products/belt.png",
+    id: "shoes", num: "02", label: "Shoes",
+    tagline: "TIMELESS ELEGANCE",
+    desc: "Premium handcrafted leather shoes combining classic artisanal styling with supreme everyday durability.",
+    image: "/products/shoe.png",
   },
   {
-    id: "wallets", num: "03", label: "Wallets",
-    tagline: "SLIM SOPHISTICATION",
-    desc: "Slim minimalist wallets in premium leather. Carry less, carry better.",
-    image: "/products/wallet.png",
+    id: "mules", num: "03", label: "Mules",
+    tagline: "EFFORTLESS LUXURY",
+    desc: "Sophisticated dual-strap leather mules designed for distinct casual luxury and unmatched comfort.",
+    image: "/products/mule.png",
   },
   {
     id: "sandals", num: "04", label: "Sandals",
@@ -510,7 +510,7 @@ export default function HeroSection() {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </Link>
                 <a
-                  href="https://wa.me/919444743465?text=Hi%20Prabhu%20Traders!%20I%20want%20to%20order%20custom%20footwear."
+                  href="https://wa.me/919444743465?text=Hi%20MAXYWALK!%20I%20want%20to%20order%20custom%20footwear."
                   target="_blank" rel="noopener noreferrer"
                   style={{
                     display: "inline-flex", alignItems: "center", gap: "0.45rem",

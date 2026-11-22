@@ -30,7 +30,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="font-display text-lg sm:text-xl font-bold text-primary mb-3">1. Overview</h2>
             <p>
-              This Privacy Policy describes how <strong>PRABHU TRADERS</strong> (trading as <strong>MAXYWALK</strong>) collects, uses, stores, and protects your personal data when you visit our website or make a purchase. We value your privacy and comply with the Information Technology Act, 2000, and associated IT Rules of India.
+              This Privacy Policy describes how <strong>MAXYWALK</strong> collects, uses, stores, and protects your personal data when you visit our website or make a purchase. We value your privacy and comply with the Information Technology Act, 2000, and associated IT Rules of India.
             </p>
           </section>
 
@@ -92,7 +92,7 @@ export default function PrivacyPolicy() {
 
           <section className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/30">
             <h3 className="font-bold text-primary mb-1">Privacy Inquiries</h3>
-            <p>PRABHU TRADERS · MAXYWALK</p>
+            <p>MAXYWALK Footwear</p>
             <p>6 A, V Main Road, Kovilpathagai, Avadi, Chennai, Tamil Nadu 600062</p>
             <p>Email: <a href="mailto:support.maxywalk@gmail.com" className="text-secondary font-bold">support.maxywalk@gmail.com</a> | Phone: <a href="tel:+919444743465" className="text-secondary font-bold">+91 94447 43465</a></p>
           </section>

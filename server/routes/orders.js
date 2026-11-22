@@ -157,7 +157,7 @@ router.post('/', orderRateLimiter, async (req, res) => {
       resolvedShippingAddr.email ||
       'guest@maxywalk.com'
     ).toLowerCase().trim();
-    const resolvedPaymentMethod = payment_method || paymentMethod || 'cod';
+    const resolvedPaymentMethod = payment_method || paymentMethod || 'razorpay';
 
     // 1. Idempotency Check: Prevent duplicate orders from network retries or double clicks
     if (idempotency_key) {

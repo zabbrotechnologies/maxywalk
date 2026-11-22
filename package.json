@@ -1,7 +1,7 @@
 {
-  "name": "prabhu-traders",
+  "name": "maxywalk",
   "version": "1.0.0",
-  "description": "Prabhu Traders / MAXYWALK - Premium Leather E-Commerce",
+  "description": "MAXYWALK - Premium Leather Footwear E-Commerce",
   "type": "module",
   "scripts": {
     "build": "cd client && npm run build",

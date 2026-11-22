@@ -58,7 +58,7 @@ export default function Footer() {
               MAXYWALK
             </Link>
             <p className="text-xs text-on-surface-variant leading-relaxed">
-              Operated by <strong>PRABHU TRADERS</strong>. Handcrafting premium custom leather slippers, sandals, belts, and accessories in Avadi since 2010.
+              Handcrafting premium custom leather slippers, shoes, mules, and sandals in Avadi since 2010 under the registered brand <strong>MAXYWALK</strong>.
             </p>
 
             {/* Complete Physical Business Contact Details */}
@@ -66,7 +66,7 @@ export default function Footer() {
               <div className="flex items-start gap-2">
                 <span className="material-symbols-outlined text-base text-secondary mt-0.5 flex-shrink-0">location_on</span>
                 <span>
-                  <strong>PRABHU TRADERS</strong><br />
+                  <strong>MAXYWALK</strong><br />
                   6 A, V Main Road, Kovilpathagai, Avadi, Chennai, Tamil Nadu – 600062
                 </span>
               </div>
@@ -106,10 +106,11 @@ export default function Footer() {
             <ul className="space-y-2 text-xs">
               {[
                 { to: '/shop', label: 'All Footwear' },
-                { to: '/shop?category=slippers', label: 'Leather Slippers' },
+                { to: '/shop?category=slippers', label: 'Slippers & Mules' },
+                { to: '/shop?category=shoes', label: 'Handcrafted Shoes' },
                 { to: '/shop?category=sandals', label: 'Handcrafted Sandals' },
-                { to: '/shop?category=belts', label: 'Full-Grain Belts' },
-                { to: '/shop?category=wallets', label: 'Leather Wallets' },
+                { to: '/shop?category=mens', label: "Men's Collection" },
+                { to: '/shop?category=womens', label: "Women's Collection" },
               ].map((l) => (
                 <li key={l.to}>
                   <Link to={l.to} className="text-on-surface-variant hover:text-secondary transition-colors block py-0.5">
@@ -194,7 +195,7 @@ export default function Footer() {
                 <span className="px-2 py-1 bg-white border border-outline-variant/40 rounded font-bold text-primary">UPI</span>
                 <span className="px-2 py-1 bg-white border border-outline-variant/40 rounded font-bold text-primary">GPay / PhonePe</span>
                 <span className="px-2 py-1 bg-white border border-outline-variant/40 rounded font-bold text-primary">Cards / NetBanking</span>
-                <span className="px-2 py-1 bg-white border border-outline-variant/40 rounded font-bold text-primary">Cash on Delivery</span>
+                <span className="px-2 py-1 bg-white border border-outline-variant/40 rounded font-bold text-primary">100% Prepaid</span>
               </div>
             </div>
           </div>
@@ -205,7 +206,7 @@ export default function Footer() {
       <div className="border-t border-outline-variant/30 py-4 px-4 bg-surface-container-high">
         <div className="container-max flex flex-col sm:flex-row justify-between items-center gap-2 text-center">
           <p className="text-[10px] sm:text-xs text-on-surface-variant font-sans uppercase tracking-wider">
-            © {new Date().getFullYear()} PRABHU TRADERS · MAXYWALK LEATHER FOOTWEAR · ALL RIGHTS RESERVED
+            © {new Date().getFullYear()} MAXYWALK LEATHER FOOTWEAR · ALL RIGHTS RESERVED
           </p>
           <div className="flex items-center gap-4 text-[11px] text-on-surface-variant">
             <Link to="/terms" className="hover:underline">Terms</Link>

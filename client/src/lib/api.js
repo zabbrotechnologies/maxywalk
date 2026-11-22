@@ -295,8 +295,8 @@ export const createOrder = async (orderData) => {
     shippingAddress: shippingAddr,
     user_email: orderData.user_email || orderData.userEmail || shippingAddr.email,
     userEmail: orderData.user_email || orderData.userEmail || shippingAddr.email,
-    payment_method: orderData.payment_method || orderData.paymentMethod || 'cod',
-    paymentMethod: orderData.payment_method || orderData.paymentMethod || 'cod'
+    payment_method: orderData.payment_method || orderData.paymentMethod || 'razorpay',
+    paymentMethod: orderData.payment_method || orderData.paymentMethod || 'razorpay'
   };
   const res = await api.post('/orders', payload);
   return res.data;

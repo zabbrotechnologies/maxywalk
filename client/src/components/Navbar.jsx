@@ -70,11 +70,11 @@ export default function Navbar() {
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/shop', label: 'Shop All' },
-    { to: '/shop?category=slippers', label: 'Slippers' },
+    { to: '/shop?category=slippers', label: 'Slippers & Mules' },
     { to: '/shop?category=shoes', label: 'Shoes' },
     { to: '/shop?category=sandals', label: 'Sandals' },
-    { to: '/shop?category=belts', label: 'Belts' },
-    { to: '/shop?category=wallets', label: 'Wallets' },
+    { to: '/shop?category=mens', label: "Men's" },
+    { to: '/shop?category=womens', label: "Women's" },
     { to: '/contact', label: 'Contact' },
   ];
 
@@ -278,7 +278,7 @@ export default function Navbar() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search slippers, sandals, belts..."
+                placeholder="Search slippers, shoes, sandals, mules..."
                 className="flex-1 input-hairline text-sm py-2 px-3 focus:outline-none"
               />
               <button type="submit" className="btn-primary py-0 px-4 h-9 text-xs flex-shrink-0">
@@ -400,7 +400,7 @@ export default function Navbar() {
                     <span>Contact & Location</span>
                   </Link>
                   <a
-                    href="https://wa.me/919444743465?text=Hi%20Prabhu%20Traders!%20I%20have%20an%20inquiry."
+                    href="https://wa.me/919444743465?text=Hi%20MAXYWALK!%20I%20have%20an%20inquiry."
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-3 py-2 text-xs text-green-700 font-bold hover:bg-green-50 rounded-xl"

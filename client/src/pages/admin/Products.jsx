@@ -4,7 +4,7 @@ import { getProducts, createProduct, updateProduct, deleteProduct, compareProduc
 import { formatPrice, sortSizes } from '../../lib/utils.js';
 import toast from 'react-hot-toast';
 
-const CATEGORIES = ['slippers', 'sandals', 'belts', 'wallets'];
+const CATEGORIES = ['slippers', 'shoes', 'sandals', 'mens', 'womens'];
 const EMPTY_FORM = { name: '', description: '', category: 'slippers', price: '', originalPrice: '', sizes: [], colors: [], images: [''], stock: 10, featured: false, is_exclusive: false, material: 'Full-Grain Leather', badge: '' };
 
 export default function AdminProducts() {

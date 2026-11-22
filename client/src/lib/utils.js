@@ -94,8 +94,8 @@ export const CATEGORIES = [
   { value: 'slippers', label: 'Slippers & Mules' },
   { value: 'shoes', label: 'Shoes' },
   { value: 'sandals', label: 'Sandals' },
-  { value: 'belts', label: 'Belts' },
-  { value: 'wallets', label: 'Wallets' },
+  { value: 'mens', label: "Men's" },
+  { value: 'womens', label: "Women's" },
 ];
 
 /**

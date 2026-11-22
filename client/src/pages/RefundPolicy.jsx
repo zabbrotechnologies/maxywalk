@@ -45,7 +45,7 @@ export default function RefundPolicy() {
                 <strong>Before Dispatch:</strong> You may cancel your order free of charge at any time before it has been dispatched from our Avadi workshop (usually within 12–24 hours of placing the order). Call or WhatsApp us at <strong>+91 94447 43465</strong> with your Order ID. A 100% full refund will be initiated immediately.
               </li>
               <li>
-                <strong>After Dispatch:</strong> Once the order has been handed over to our courier partner, it cannot be cancelled in transit. You may accept the delivery and initiate a standard 7-day return, or refuse delivery for COD shipments.
+                <strong>After Dispatch:</strong> Once the order has been handed over to our courier partner, it cannot be cancelled in transit. You may accept the delivery and initiate a standard 7-day return or exchange.
               </li>
             </ul>
           </section>
@@ -91,11 +91,6 @@ export default function RefundPolicy() {
                     <td className="p-3 border border-outline-variant/30">Reversed automatically to original payment account via Razorpay</td>
                     <td className="p-3 border border-outline-variant/30 font-bold text-primary">5 to 7 business days</td>
                   </tr>
-                  <tr>
-                    <td className="p-3 border border-outline-variant/30 font-bold">Cash on Delivery (COD)</td>
-                    <td className="p-3 border border-outline-variant/30">Direct Bank NEFT / IMPS transfer or UPI transfer (to customer's verified bank account)</td>
-                    <td className="p-3 border border-outline-variant/30 font-bold text-primary">2 to 4 business days</td>
-                  </tr>
                 </tbody>
               </table>
             </div>
@@ -113,7 +108,7 @@ export default function RefundPolicy() {
 
           <section className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/30">
             <h3 className="font-bold text-primary mb-1">Customer Support & Returns Desk</h3>
-            <p><strong>PRABHU TRADERS · MAXYWALK</strong></p>
+            <p><strong>MAXYWALK Footwear</strong></p>
             <p>6 A, V Main Road, Kovilpathagai, Avadi, Chennai, Tamil Nadu 600062</p>
             <p>Helpline / WhatsApp: <a href="tel:+919444743465" className="text-secondary font-bold">+91 94447 43465</a> (Monday – Sunday: 9 AM to 9 PM IST)</p>
             <p>Email: <a href="mailto:support.maxywalk@gmail.com" className="text-secondary font-bold">support.maxywalk@gmail.com</a></p>

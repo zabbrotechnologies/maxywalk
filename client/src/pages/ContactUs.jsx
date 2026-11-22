@@ -49,9 +49,9 @@ export default function ContactUs() {
 
               <div className="space-y-4 text-xs sm:text-sm text-on-surface-variant">
                 <div>
-                  <p className="text-[10px] uppercase font-bold tracking-wider text-secondary">Legal Entity Name</p>
-                  <p className="font-bold text-primary text-base">PRABHU TRADERS</p>
-                  <p className="text-[11px] text-on-surface-variant">Operating registered brand <strong>MAXYWALK</strong></p>
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-secondary">Brand & Entity Name</p>
+                  <p className="font-bold text-primary text-base">MAXYWALK</p>
+                  <p className="text-[11px] text-on-surface-variant">Premium Handcrafted Leather Footwear</p>
                 </div>
 
                 <div className="flex items-start gap-3 pt-2">
@@ -107,7 +107,7 @@ export default function ContactUs() {
                   <span>Chat on WhatsApp</span>
                 </a>
                 <a
-                  href="https://maps.google.com/?q=Prabhu+Traders+Avadi+Tamil+Nadu"
+                  href="https://maps.google.com/?q=MAXYWALK+Avadi+Tamil+Nadu"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-outline w-full justify-center text-xs h-11"
@@ -154,7 +154,7 @@ export default function ContactUs() {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="e.g. Prabhu R"
+                      placeholder="e.g. Rajesh Kumar"
                       className="input-hairline text-sm"
                     />
                   </div>

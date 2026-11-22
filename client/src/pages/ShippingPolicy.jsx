@@ -115,9 +115,9 @@ export default function ShippingPolicy() {
           </section>
 
           <section>
-            <h2 className="font-display text-lg sm:text-xl font-bold text-primary mb-3">5. Cash on Delivery (COD) Guidelines</h2>
+            <h2 className="font-display text-lg sm:text-xl font-bold text-primary mb-3">5. 100% Secure Online Payment (Prepaid Orders)</h2>
             <p>
-              Cash on Delivery is available for verified addresses. Please ensure an authorized individual is present at the delivery location with the exact cash amount. In the event of repeated refused COD deliveries, future orders may require prepaid online payment.
+              All orders are processed and dispatched with instant priority upon verified online payment via Razorpay. We accept UPI (Google Pay, PhonePe, Paytm, BHIM), Credit & Debit Cards, and Net Banking with 256-bit bank-grade SSL security.
             </p>
           </section>
 
@@ -130,7 +130,7 @@ export default function ShippingPolicy() {
 
           <section className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/30">
             <h3 className="font-bold text-primary mb-1">Dispatch Hub & Contact Details</h3>
-            <p><strong>PRABHU TRADERS · MAXYWALK</strong></p>
+            <p><strong>MAXYWALK Footwear</strong></p>
             <p>6 A, V Main Road, Kovilpathagai, Avadi, Chennai, Tamil Nadu 600062</p>
             <p>Customer Support: <a href="tel:+919444743465" className="text-secondary font-bold">+91 94447 43465</a> (9 AM – 9 PM IST) | Email: <a href="mailto:support.maxywalk@gmail.com" className="text-secondary font-bold">support.maxywalk@gmail.com</a></p>
           </section>

@@ -364,7 +364,7 @@ export function renderPaymentFailedEmail({ order, amount, retryUrl, siteUrl = 'h
     </div>
 
     <p style="font-size: 14px; line-height: 1.6; color: #44403C; margin-bottom: 24px;">
-      Don't worry — your selected items have not been lost. You can securely retry payment using any card, UPI, Net Banking, or choose Cash on Delivery.
+      Don't worry — your selected items have not been lost. You can securely retry payment using any UPI, card, or Net Banking via Razorpay.
     </p>
 
     <div style="text-align: center; margin-bottom: 28px;">

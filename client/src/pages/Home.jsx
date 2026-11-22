@@ -24,22 +24,22 @@ function useFadeIn() {
 const CATEGORIES = [
   {
     id: 'slippers', label: 'Slippers', num: '01',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCMFcuIlEmOinqex53O1uTOd9tVyWYPSQLQrm79f8hx2_SDW3A9bJ26yPiHsSbdTlHXxgyce-_FVrtMjwFy5EP0GnvX5ip_JuZLB7h3fwc0bwVP4-4G_zwEs9gN4FJyDaQDWlVuNQ4ioWAeEmEvTIOf4X_ok5v7INXpniWrrqTweVWSss_5QYV35113F4ocyduEN5BWZdivdoyC71DQJ2OJHJ1m9sq8BKO346Sp7xK8dfFta2DXtV--',
+    image: '/products/slipper.png',
     desc: 'Handcrafted leather comfort',
   },
   {
-    id: 'belts', label: 'Belts', num: '02',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCkZZLptrzF3_pLJdGwE1D0fzBf9J6BskKwY_creH1fEwQGjpA8E1ZqUMQcf5oG0DPqTdDQOe0jiSWO8xDYWLfLedhMNKW5or3L6QIdT4kNWSpCsGqeM06tYRvuYRe-Y1giC2c_OBy7TTJgqxv_s8CrqRLxmNSIM6YZu8lhceL1wjSjQPg39qPyrz461bIcjc5-OvPVhEnA2eJ7fhvH0yagBHcjNNgrqediDKAK4ax5ilJPk55aRuEG',
-    desc: 'Full-grain leather belts',
+    id: 'shoes', label: 'Shoes', num: '02',
+    image: '/products/shoe.png',
+    desc: 'Handcrafted leather shoes',
   },
   {
-    id: 'wallets', label: 'Wallets', num: '03',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAy9uIBLtM48fYq1AlBrQamS2Dj7jXFNVNX2n814Z51DiV4LuTj-EnP57VbeZkSNwLHeXpomeiGTawYezijQB25UOFsQ4z4E5llsZz_4RLODXSoe-0bpC4GZ8UN0PUA8d29RmafijMqyq25C6Pdca8Od9nyx5o1-57k8n61Bpm2crxPPHHuicw4XKOKeHmOGtyGTPtds5oHpUnohJj3GRBHBU5dHs6JD-782XyvJ6AkrqjGzheuQ10x',
-    desc: 'Slim minimalist wallets',
+    id: 'mules', label: 'Mules', num: '03',
+    image: '/products/mule.png',
+    desc: 'Sophisticated leather mules',
   },
   {
     id: 'sandals', label: 'Sandals', num: '04',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB6nu1sVJmuhxAQ780WR1vB5n2GcenI6W1NEgIRGAtZ764Uk7UFV_qgPyRj4dUUa3_i3cEJzM0FMnQHO1bDZtTNzseokXLTXkHKNUbZ3FHh6-9y5IFlhZ1G32aWG7VkQo8lLYxbgyXU_-lfRXcycfUG1YLiotTERB6_SdATPIZXQwkb5gsWCb01lyDb3FXWWRORbBqQjQUgcWMHX-z_st_7AE1V523NomA9G1imL9bX3nDArBQnGVg',
+    image: '/products/sandal.png',
     desc: 'Structured outdoor sandals',
   },
 ];
@@ -48,7 +48,7 @@ const REVIEWS = [
   { name: 'Hemavathi Abisekar', rating: 5, text: 'Leathers with premium quality at lowest price — must visit footwear slipper!' },
   { name: 'Sukarman Gupta', rating: 5, text: 'It was a fantastic experience right from ordering the products. Quality is top notch.' },
   { name: 'Rajkumar S.', rating: 5, text: 'Custom slippers exactly as I wanted. Fit is perfect and the leather quality is amazing.' },
-  { name: 'Priya M.', rating: 4, text: 'Ordered belts as gifts — everyone loved them. Great craftsmanship and fast delivery.' },
+  { name: 'Priya M.', rating: 4, text: 'Ordered footwear as gifts — everyone loved them. Great craftsmanship and fast delivery.' },
 ];
 
 export default function Home() {
@@ -149,13 +149,13 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right Column (Belts, Wallets, Sandals) */}
+            {/* Right Column (Shoes, Mules, Sandals) */}
             <div className="md:col-span-5 flex flex-col gap-4 md:gap-gutter">
-              {/* 02. Belts */}
+              {/* 02. Shoes */}
               <div ref={cat3} className="relative group overflow-hidden bg-surface-container-lowest shadow-lux fade-in-up h-[240px] sm:h-[280px] rounded-3xl">
                 <img
                   src={CATEGORIES[1].image}
-                  alt="Leather belts"
+                  alt="Handcrafted shoes"
                   className="absolute inset-0 w-full h-full object-contain drop-shadow-sm transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -165,13 +165,13 @@ export default function Home() {
                     <h3 className="font-display text-xl sm:text-2xl text-white font-bold">{CATEGORIES[1].label}</h3>
                     <p className="text-white/80 text-xs">{CATEGORIES[1].desc}</p>
                   </div>
-                  <Link to="/shop?category=belts" className="bg-white text-primary w-10 h-10 rounded-full flex items-center justify-center hover:bg-secondary hover:text-white transition-colors flex-shrink-0 shadow-md">
+                  <Link to="/shop?category=shoes" className="bg-white text-primary w-10 h-10 rounded-full flex items-center justify-center hover:bg-secondary hover:text-white transition-colors flex-shrink-0 shadow-md">
                     <span className="material-symbols-outlined text-base">north_east</span>
                   </Link>
                 </div>
               </div>
 
-              {/* 03. Wallets & 04. Sandals Grid */}
+              {/* 03. Mules & 04. Sandals Grid */}
               <div ref={cat4} className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-gutter fade-in-up">
                 {CATEGORIES.slice(2).map((cat) => (
                   <Link
@@ -256,7 +256,7 @@ export default function Home() {
                 Founded in Avadi, Tamil Nadu, <strong>MaxyWalk</strong> has been a leather custom slipper specialist for over 15 years. We craft every pair with precision, using genuine full-grain leather.
               </p>
               <p className="text-on-surface-variant text-xs sm:text-sm leading-relaxed mb-6">
-                Under our registered brand <strong>MAXYWALK</strong>, we supply premium custom footwear, formal belts, and minimalist wallets across India with direct delivery.
+                Under our registered brand <strong>MAXYWALK</strong>, we supply premium custom footwear, handcrafted shoes, and stylish mules across India with direct delivery.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                 {[
@@ -276,7 +276,7 @@ export default function Home() {
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
-                  href="https://wa.me/919444743465?text=Hi%20Prabhu%20Traders!%20I%20want%20to%20order%20custom%20leather%20footwear."
+                  href="https://wa.me/919444743465?text=Hi%20MAXYWALK!%20I%20want%20to%20order%20custom%20leather%20footwear."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-primary w-full sm:w-auto text-xs justify-center h-12"
@@ -355,7 +355,7 @@ export default function Home() {
 
           <div className="text-center mt-8">
             <a
-              href="https://maps.google.com/?q=Prabhu+Traders+Avadi"
+              href="https://maps.google.com/?q=MAXYWALK+Avadi"
               target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors text-xs"
             >
@@ -377,7 +377,7 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-xs sm:max-w-none mx-auto">
             <a
-              href="https://wa.me/919444743465?text=Hi%20Prabhu%20Traders!%20I%20want%20to%20order%20custom%20leather%20slippers."
+              href="https://wa.me/919444743465?text=Hi%20MAXYWALK!%20I%20want%20to%20order%20custom%20leather%20slippers."
               target="_blank" rel="noopener noreferrer"
               className="bg-white text-secondary font-sans text-xs uppercase tracking-widest px-6 h-12 inline-flex items-center justify-center gap-2 hover:bg-white/90 transition-colors font-bold shadow-md"
             >

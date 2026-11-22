@@ -133,8 +133,17 @@ router.get('/', async (req, res) => {
     const params = [];
 
     if (category && category !== 'all') {
-      params.push(category);
-      conditions.push(`category = $${params.length}`);
+      const catLower = String(category).toLowerCase();
+      if (catLower === 'slippers') {
+        conditions.push(`(LOWER(category) = 'slippers' OR LOWER(category) = 'mules')`);
+      } else if (catLower === 'mens') {
+        conditions.push(`(LOWER(category) IN ('mens', 'men', 'slippers', 'shoes', 'sandals', 'mules') OR LOWER(name) LIKE '%men%' OR LOWER(description) LIKE '%men%')`);
+      } else if (catLower === 'womens') {
+        conditions.push(`(LOWER(category) IN ('womens', 'women') OR LOWER(name) LIKE '%women%' OR LOWER(description) LIKE '%women%')`);
+      } else {
+        params.push(category);
+        conditions.push(`category = $${params.length}`);
+      }
     }
     if (featured === 'true' || featured === true) {
       params.push(true);

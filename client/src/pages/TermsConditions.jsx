@@ -21,7 +21,7 @@ export default function TermsConditions() {
             Terms & Conditions
           </h1>
           <p className="text-xs sm:text-sm text-on-surface-variant">
-            Last Updated: November 2026 · Governing PRABHU TRADERS (Brand: MAXYWALK)
+            Last Updated: November 2026 · Governing MAXYWALK
           </p>
         </div>
 
@@ -30,14 +30,14 @@ export default function TermsConditions() {
           <section>
             <h2 className="font-display text-lg sm:text-xl font-bold text-primary mb-3">1. Introduction & Acceptance</h2>
             <p>
-              Welcome to <strong>MAXYWALK</strong> (website operated by <strong>PRABHU TRADERS</strong>, having its principal place of business at 6 A, V Main Road, Kovilpathagai, Avadi, Chennai, Tamil Nadu 600062). By visiting our website, browsing our product catalog, or purchasing any handcrafted leather footwear or accessories, you agree to be bound by these Terms and Conditions and all related policies.
+              Welcome to <strong>MAXYWALK</strong> (having its principal workshop and place of business at 6 A, V Main Road, Kovilpathagai, Avadi, Chennai, Tamil Nadu 600062). By visiting our website, browsing our product catalog, or purchasing any handcrafted leather footwear, you agree to be bound by these Terms and Conditions and all related policies.
             </p>
           </section>
 
           <section>
             <h2 className="font-display text-lg sm:text-xl font-bold text-primary mb-3">2. Products & Handcrafted Variations</h2>
             <p>
-              MAXYWALK specializes in genuine, handcrafted leather slippers, sandals, belts, and accessories. Because leather is a natural material, slight natural variations in grain, texture, and natural color tone are authentic characteristics of genuine leather and are not defects. We make every effort to display the colors and specifications of our products accurately on our website.
+              MAXYWALK specializes in genuine, handcrafted leather slippers, shoes, mules, and sandals. Because leather is a natural material, slight natural variations in grain, texture, and natural color tone are authentic characteristics of genuine leather and are not defects. We make every effort to display the colors and specifications of our products accurately on our website.
             </p>
           </section>
 
@@ -47,7 +47,7 @@ export default function TermsConditions() {
               All prices listed on MAXYWALK are quoted in <strong>Indian Rupees (INR)</strong> and are inclusive of applicable taxes.
             </p>
             <ul className="list-disc list-inside space-y-1 pl-2">
-              <li>We accept payments through secure online payment methods powered by <strong>Razorpay</strong> (UPI, Credit Cards, Debit Cards, Net Banking, Wallets) as well as <strong>Cash on Delivery (COD)</strong> for select pincodes.</li>
+              <li>We accept 100% secure online payment methods powered by <strong>Razorpay</strong> (UPI, Credit Cards, Debit Cards, Net Banking, Wallets).</li>
               <li>When paying via Razorpay, your payment details are encrypted using industry-standard 256-bit SSL encryption. We do not store your full card numbers, CVVs, or UPI PINs on our servers.</li>
               <li>We reserve the right to revise product prices at any time prior to the acceptance of an order.</li>
             </ul>
@@ -77,20 +77,20 @@ export default function TermsConditions() {
           <section>
             <h2 className="font-display text-lg sm:text-xl font-bold text-primary mb-3">7. Intellectual Property</h2>
             <p>
-              All trademarks, product designs, imagery, logos, website layout, and content under the name <strong>MAXYWALK</strong> and <strong>PRABHU TRADERS</strong> are the proprietary property of PRABHU TRADERS and are protected under Indian copyright and trademark laws.
+              All trademarks, product designs, imagery, logos, website layout, and content under the name <strong>MAXYWALK</strong> are the proprietary property of MAXYWALK and are protected under Indian copyright and trademark laws.
             </p>
           </section>
 
           <section>
             <h2 className="font-display text-lg sm:text-xl font-bold text-primary mb-3">8. Limitation of Liability & Governing Law</h2>
             <p>
-              In no event shall PRABHU TRADERS or its founders be liable for any indirect, incidental, or consequential damages resulting from the use or inability to use the products. These terms shall be governed by and construed in accordance with the laws of India. Any disputes arising shall be subject to the exclusive jurisdiction of the courts in <strong>Chennai / Thiruvallur District, Tamil Nadu</strong>.
+              In no event shall MAXYWALK or its founders be liable for any indirect, incidental, or consequential damages resulting from the use or inability to use the products. These terms shall be governed by and construed in accordance with the laws of India. Any disputes arising shall be subject to the exclusive jurisdiction of the courts in <strong>Chennai / Thiruvallur District, Tamil Nadu</strong>.
             </p>
           </section>
 
           <section className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/30">
             <h3 className="font-bold text-primary mb-1">Grievance & Legal Officer Contact</h3>
-            <p>PRABHU TRADERS · MAXYWALK Footwear</p>
+            <p>MAXYWALK Footwear</p>
             <p>6 A, V Main Road, Kovilpathagai, Avadi, Chennai, Tamil Nadu 600062</p>
             <p>Email: <a href="mailto:support.maxywalk@gmail.com" className="text-secondary font-bold">support.maxywalk@gmail.com</a> | Phone: <a href="tel:+919444743465" className="text-secondary font-bold">+91 94447 43465</a></p>
           </section>
