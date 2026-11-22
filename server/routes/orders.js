@@ -548,7 +548,7 @@ router.post('/razorpay/verify', async (req, res) => {
 
     const finalOrder = updated[0] || order;
 
-    // Queue PAYMENT_SUCCESS and ORDER_PLACED notification
+    // Queue PAYMENT_SUCCESS notification with comprehensive order receipt
     if (finalOrder.user_email) {
       const addr = typeof finalOrder.shipping_address === 'string' ? JSON.parse(finalOrder.shipping_address || '{}') : (finalOrder.shipping_address || {});
       const customerFullName = addr.fullName || `${addr.firstName || ''} ${addr.lastName || ''}`.trim() || 'Valued Customer';
@@ -557,9 +557,10 @@ router.post('/razorpay/verify', async (req, res) => {
         orderId: finalOrder.order_id || finalOrder.id,
         recipientEmail: finalOrder.user_email,
         eventType: 'PAYMENT_SUCCESS',
-        subject: `Payment Successful — MAXYWALK Order #${finalOrder.order_id || finalOrder.id}`,
+        subject: `Payment Successful & Order Receipt — MAXYWALK Order #${finalOrder.order_id || finalOrder.id}`,
         templateData: {
           order: finalOrder,
+          customerName: customerFullName,
           amount: finalOrder.total,
           paymentMethod: 'Online / Razorpay',
           paymentRef: razorpay_payment_id,
@@ -567,15 +568,6 @@ router.post('/razorpay/verify', async (req, res) => {
         },
         idempotencyKey: `pay-success-${razorpay_payment_id}`
       }).catch((e) => console.warn('[Orders] Payment success email notice:', e.message));
-
-      await queueEmail({
-        orderId: finalOrder.order_id || finalOrder.id,
-        recipientEmail: finalOrder.user_email,
-        eventType: 'ORDER_PLACED',
-        subject: `Your MAXYWALK Order Has Been Confirmed! — #${finalOrder.order_id || finalOrder.id}`,
-        templateData: { order: finalOrder, customerName: customerFullName },
-        idempotencyKey: `order-placed-${finalOrder.id}`
-      }).catch((e) => console.warn('[Orders] Order placed confirmation notice:', e.message));
     }
 
     res.json({

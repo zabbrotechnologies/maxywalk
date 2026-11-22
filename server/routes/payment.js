@@ -171,7 +171,7 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
 
         finalOrder = updatedOrders[0] || order;
 
-        // Queue PAYMENT_SUCCESS notification
+        // Queue PAYMENT_SUCCESS notification with comprehensive order receipt
         if (finalOrder.user_email) {
           const addr = typeof finalOrder.shipping_address === 'string' ? JSON.parse(finalOrder.shipping_address || '{}') : (finalOrder.shipping_address || {});
           const customerFullName = addr.fullName || `${addr.firstName || ''} ${addr.lastName || ''}`.trim() || 'Valued Customer';
@@ -180,9 +180,10 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
             orderId: finalOrder.order_id || finalOrder.id,
             recipientEmail: finalOrder.user_email,
             eventType: 'PAYMENT_SUCCESS',
-            subject: `Payment Successful — MAXYWALK Order #${finalOrder.order_id || finalOrder.id}`,
+            subject: `Payment Successful & Order Receipt — MAXYWALK Order #${finalOrder.order_id || finalOrder.id}`,
             templateData: {
               order: finalOrder,
+              customerName: customerFullName,
               amount: finalOrder.total,
               paymentMethod: 'Online / Razorpay',
               paymentRef: paymentId,
@@ -190,16 +191,6 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
             },
             idempotencyKey: `pay-success-${paymentId}`
           }).catch(e => console.warn('[Payment] Success email notice:', e.message));
-
-          // Also ensure ORDER_PLACED is confirmed for the customer
-          await queueEmail({
-            orderId: finalOrder.order_id || finalOrder.id,
-            recipientEmail: finalOrder.user_email,
-            eventType: 'ORDER_PLACED',
-            subject: `Your MAXYWALK Order Has Been Confirmed! — #${finalOrder.order_id || finalOrder.id}`,
-            templateData: { order: finalOrder, customerName: customerFullName },
-            idempotencyKey: `order-placed-${finalOrder.id}`
-          }).catch(e => console.warn('[Payment] Order placed confirmation notice:', e.message));
         }
       } else if (orderRows.length > 0) {
         finalOrder = orderRows[0];

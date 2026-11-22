@@ -169,29 +169,45 @@ export function renderWelcomeEmail({ name = 'Customer', email, siteUrl = 'https:
 export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteUrl = 'https://maxywalk.com' }) {
   const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
   const subject = `Your MAXYWALK Order Has Been Confirmed! — #${orderId}`;
-  const firstName = escapeHtml(customerName.split(' ')[0] || 'Customer');
-  const items = Array.isArray(order.items) ? order.items : [];
+  
+  let items = [];
+  if (Array.isArray(order.items)) {
+    items = order.items;
+  } else if (typeof order.items === 'string') {
+    try { items = JSON.parse(order.items); } catch {}
+  }
+
+  let shippingAddr = {};
+  const rawAddr = order.shipping_address || order.shippingAddress;
+  if (typeof rawAddr === 'object' && rawAddr !== null) {
+    shippingAddr = rawAddr;
+  } else if (typeof rawAddr === 'string') {
+    try { shippingAddr = JSON.parse(rawAddr); } catch {}
+  }
+
+  const resolvedName = customerName || shippingAddr.fullName || `${shippingAddr.firstName || ''} ${shippingAddr.lastName || ''}`.trim() || 'Customer';
+  const firstName = escapeHtml(resolvedName.split(' ')[0] || 'Customer');
   const total = formatInr(order.total);
   const subtotal = formatInr(order.subtotal || order.total);
   const shippingCost = order.shippingCost ? formatInr(order.shippingCost) : 'FREE';
-  const shippingAddr = order.shipping_address || order.shippingAddress || {};
   const viewOrderUrl = `${siteUrl}/account?tab=orders`;
 
   const itemsHtml = items.map((item) => {
     const imgUrl = getFullImageUrl(item.image, siteUrl);
     const size = item.size || item.selectedSize || 'Standard';
     const color = item.color || item.selectedColor || '';
-    const qty = item.qty || 1;
-    const price = formatInr(item.price);
-    const itemTotal = formatInr((item.price || 0) * qty);
+    const qty = Number(item.qty) || 1;
+    const priceNum = Number(item.price) || 0;
+    const price = formatInr(priceNum);
+    const itemTotal = formatInr(priceNum * qty);
 
     return `
       <tr>
         <td style="padding: 12px 0; border-bottom: 1px solid #E8E2D8; width: 70px; vertical-align: top;">
-          <img src="${imgUrl}" alt="${escapeHtml(item.name)}" width="64" height="74" style="display: block; border-radius: 8px; border: 1px solid #E8E2D8; object-fit: contain; background: #FAF7F2;">
+          <img src="${imgUrl}" alt="${escapeHtml(item.name || 'Product')}" width="64" height="74" style="display: block; border-radius: 8px; border: 1px solid #E8E2D8; object-fit: contain; background: #FAF7F2;">
         </td>
         <td style="padding: 12px 14px; border-bottom: 1px solid #E8E2D8; vertical-align: top;">
-          <div style="font-weight: bold; font-size: 14px; color: #1F1E1D;">${escapeHtml(item.name)}</div>
+          <div style="font-weight: bold; font-size: 14px; color: #1F1E1D;">${escapeHtml(item.name || 'Footwear')}</div>
           <div style="font-size: 12px; color: #78716C; margin-top: 3px;">
             ${color ? escapeHtml(color) + ' &bull; ' : ''}Size ${escapeHtml(size)} &bull; Qty ${qty}
           </div>
@@ -252,7 +268,7 @@ export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteU
         Delivery Destination
       </h3>
       <p style="font-size: 13px; line-height: 1.6; color: #44403C; margin: 0;">
-        <strong>${escapeHtml(shippingAddr.fullName || customerName)}</strong><br>
+        <strong>${escapeHtml(resolvedName)}</strong><br>
         ${escapeHtml(shippingAddr.address || '')}<br>
         ${escapeHtml(shippingAddr.city || '')}, ${escapeHtml(shippingAddr.state || '')} - ${escapeHtml(shippingAddr.pincode || '')}<br>
         ${shippingAddr.phone ? 'Phone: ' + escapeHtml(shippingAddr.phone) : ''}
@@ -278,68 +294,214 @@ export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteU
 }
 
 // 3. PAYMENT_SUCCESS
-export function renderPaymentSuccessEmail({ order, amount, paymentMethod = 'Online / Razorpay', paymentRef, date = new Date(), siteUrl = 'https://maxywalk.com' }) {
+export function renderPaymentSuccessEmail({
+  order = {},
+  amount,
+  paymentMethod = 'Online / Razorpay',
+  paymentRef,
+  customerName = '',
+  date = new Date(),
+  siteUrl = 'https://maxywalk.com'
+}) {
   const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
-  const subject = `Payment Successful — MAXYWALK Order #${orderId}`;
-  const formattedAmount = formatInr(amount || order.total);
-  const formattedDate = new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const subject = `Payment Successful & Order Receipt — MAXYWALK Order #${orderId}`;
+
+  // Parse items safely
+  let items = [];
+  if (Array.isArray(order.items)) {
+    items = order.items;
+  } else if (typeof order.items === 'string') {
+    try { items = JSON.parse(order.items); } catch {}
+  }
+
+  // Parse shipping address safely
+  let shippingAddr = {};
+  const rawAddr = order.shipping_address || order.shippingAddress;
+  if (typeof rawAddr === 'object' && rawAddr !== null) {
+    shippingAddr = rawAddr;
+  } else if (typeof rawAddr === 'string') {
+    try { shippingAddr = JSON.parse(rawAddr); } catch {}
+  }
+
+  const resolvedCustomerName = customerName || shippingAddr.fullName || `${shippingAddr.firstName || ''} ${shippingAddr.lastName || ''}`.trim() || 'Valued Customer';
+  const firstName = escapeHtml(resolvedCustomerName.split(' ')[0] || 'Customer');
+  const formattedAmount = formatInr(amount || order.total || 0);
+  const subtotal = formatInr(order.subtotal || order.total || amount || 0);
+  const shippingCost = order.shippingCost ? formatInr(order.shippingCost) : 'FREE';
+  const formattedDate = new Date(date).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
   const viewOrderUrl = `${siteUrl}/account?tab=orders`;
 
+  const itemsHtml = items.map((item) => {
+    const imgUrl = getFullImageUrl(item.image, siteUrl);
+    const size = item.size || item.selectedSize || 'Standard';
+    const color = item.color || item.selectedColor || '';
+    const qty = Number(item.qty) || 1;
+    const priceNum = Number(item.price) || 0;
+    const price = formatInr(priceNum);
+    const itemTotal = formatInr(priceNum * qty);
+
+    return `
+      <tr>
+        <td style="padding: 12px 0; border-bottom: 1px solid #E8E2D8; width: 68px; vertical-align: top;">
+          <img src="${imgUrl}" alt="${escapeHtml(item.name || 'Product')}" width="60" height="70" style="display: block; border-radius: 8px; border: 1px solid #E8E2D8; object-fit: contain; background: #FAF7F2;">
+        </td>
+        <td style="padding: 12px 14px; border-bottom: 1px solid #E8E2D8; vertical-align: top;">
+          <div style="font-weight: bold; font-size: 14px; color: #1F1E1D;">${escapeHtml(item.name || 'Footwear')}</div>
+          <div style="font-size: 12px; color: #78716C; margin-top: 3px;">
+            ${color ? escapeHtml(color) + ' &bull; ' : ''}Size: ${escapeHtml(size)} &bull; Qty: ${qty}
+          </div>
+          <div style="font-size: 12px; color: #57534E; margin-top: 3px;">${price} each</div>
+        </td>
+        <td align="right" style="padding: 12px 0; border-bottom: 1px solid #E8E2D8; font-weight: bold; font-size: 14px; color: #1F1E1D; vertical-align: top;">
+          ${itemTotal}
+        </td>
+      </tr>
+    `;
+  }).join('');
+
   const contentHtml = `
+    <!-- Status Badge & Header -->
     <div style="text-align: center; margin-bottom: 24px;">
-      <div style="display: inline-block; width: 56px; height: 56px; line-height: 56px; border-radius: 50%; background-color: #ECFDF5; border: 2px solid #10B981; font-size: 28px; color: #10B981; text-align: center;">
+      <div style="display: inline-block; width: 52px; height: 52px; line-height: 52px; border-radius: 50%; background-color: #ECFDF5; border: 2px solid #10B981; font-size: 26px; color: #10B981; text-align: center; margin-bottom: 12px;">
         &#10003;
       </div>
-      <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 16px 0 6px 0; font-weight: bold;">
-        Payment Received
+      <div>
+        <span style="display: inline-block; background-color: #ECFDF5; color: #065F46; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; border: 1px solid #A7F3D0;">
+          Payment Successful &bull; Order Confirmed
+        </span>
+      </div>
+      <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 14px 0 6px 0; font-weight: bold;">
+        Payment Receipt &amp; Tax Invoice
       </h2>
-      <p style="font-size: 14px; color: #57534E; margin: 0;">
-        We have verified and confirmed your payment for Order <strong>#${orderId}</strong>.
+      <p style="font-size: 14px; line-height: 1.6; color: #57534E; margin: 0;">
+        Thank you for your order, <strong>${firstName}</strong>! Your payment has been verified and confirmed.
       </p>
     </div>
 
-    <!-- Receipt Details Box -->
-    <div style="background-color: #FAF7F2; border: 1px solid #E8E2D8; border-radius: 12px; padding: 20px; margin-bottom: 28px;">
+    <!-- Official Payment Receipt Box -->
+    <div style="background-color: #FAF7F2; border: 1px solid #E8E2D8; border-radius: 12px; padding: 18px 20px; margin-bottom: 24px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 13px; line-height: 2;">
         <tr>
-          <td style="color: #78716C;">Order Reference</td>
-          <td align="right" style="font-weight: bold; color: #1F1E1D;">#${orderId}</td>
+          <td style="color: #78716C; font-weight: 500;">Order Reference</td>
+          <td align="right" style="font-weight: bold; color: #1F1E1D; font-size: 14px;">#${orderId}</td>
         </tr>
         <tr>
-          <td style="color: #78716C;">Payment Amount</td>
-          <td align="right" style="font-weight: bold; color: #D35B22; font-size: 15px;">${formattedAmount}</td>
+          <td style="color: #78716C; font-weight: 500;">Payment Status</td>
+          <td align="right" style="font-weight: bold; color: #059669;">
+            <span style="font-size: 9px; vertical-align: middle;">&#9679;</span> PAID (Verified via Razorpay)
+          </td>
         </tr>
         <tr>
-          <td style="color: #78716C;">Payment Method</td>
+          <td style="color: #78716C; font-weight: 500;">Payment Method</td>
           <td align="right" style="font-weight: bold; color: #1F1E1D;">${escapeHtml(paymentMethod)}</td>
         </tr>
         ${paymentRef ? `
         <tr>
-          <td style="color: #78716C;">Transaction Ref</td>
-          <td align="right" style="font-family: monospace; font-size: 12px; color: #1F1E1D;">${escapeHtml(paymentRef)}</td>
+          <td style="color: #78716C; font-weight: 500;">Razorpay Payment ID</td>
+          <td align="right" style="font-family: monospace; font-size: 12px; color: #1F1E1D; font-weight: 600;">${escapeHtml(paymentRef)}</td>
         </tr>
         ` : ''}
         <tr>
-          <td style="color: #78716C;">Date of Payment</td>
+          <td style="color: #78716C; font-weight: 500;">Payment Date &amp; Time</td>
           <td align="right" style="font-weight: bold; color: #1F1E1D;">${formattedDate}</td>
         </tr>
       </table>
     </div>
 
+    <!-- Order Items Summary Table -->
+    ${items.length > 0 ? `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
+      <thead>
+        <tr>
+          <th align="left" colspan="2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #78716C; padding-bottom: 8px; border-bottom: 2px solid #1F1E1D;">Item Summary</th>
+          <th align="right" style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #78716C; padding-bottom: 8px; border-bottom: 2px solid #1F1E1D;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsHtml}
+      </tbody>
+    </table>
+    ` : ''}
+
+    <!-- Pricing Summary Box -->
+    <div style="background-color: #FAF7F2; padding: 18px 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #E8E2D8;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 13px; line-height: 1.9;">
+        <tr>
+          <td style="color: #78716C;">Subtotal</td>
+          <td align="right" style="font-weight: bold; color: #1F1E1D;">${subtotal}</td>
+        </tr>
+        <tr>
+          <td style="color: #78716C;">Shipping Charges</td>
+          <td align="right" style="font-weight: bold; color: #059669;">${shippingCost}</td>
+        </tr>
+        <tr>
+          <td style="color: #78716C;">Taxes</td>
+          <td align="right" style="color: #78716C; font-size: 12px;">Inclusive of all taxes</td>
+        </tr>
+        <tr>
+          <td style="padding-top: 10px; border-top: 1px solid #E8E2D8; font-size: 15px; font-weight: bold; color: #1F1E1D;">Total Amount Paid</td>
+          <td align="right" style="padding-top: 10px; border-top: 1px solid #E8E2D8; font-size: 18px; font-weight: bold; color: #D35B22;">${formattedAmount}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Shipping Destination Box -->
+    <div style="background-color: #FFFFFF; border: 1px solid #E8E2D8; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px;">
+      <h3 style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: #1F1E1D; margin: 0 0 8px 0; font-weight: bold;">
+        Delivery Destination
+      </h3>
+      <p style="font-size: 13px; line-height: 1.6; color: #44403C; margin: 0;">
+        <strong>${escapeHtml(resolvedCustomerName)}</strong><br>
+        ${escapeHtml(shippingAddr.address || '')}${shippingAddr.street ? '<br>' + escapeHtml(shippingAddr.street) : ''}<br>
+        ${escapeHtml(shippingAddr.city || '')}${shippingAddr.city && shippingAddr.state ? ', ' : ''}${escapeHtml(shippingAddr.state || '')} - ${escapeHtml(shippingAddr.pincode || '')}<br>
+        ${shippingAddr.phone ? 'Phone: ' + escapeHtml(shippingAddr.phone) : ''}
+      </p>
+    </div>
+
+    <!-- Handcrafted Guarantee -->
+    <div style="background-color: #FBF9F5; border-left: 3px solid #D35B22; padding: 12px 16px; border-radius: 6px; margin-bottom: 24px;">
+      <p style="font-size: 12px; line-height: 1.6; color: #57534E; margin: 0;">
+        <strong>Crafted in Avadi, Chennai:</strong> Our master leather artisans have received your order. Every pair undergoes a 24-point quality inspection before leaving our workshop.
+      </p>
+    </div>
+
+    <!-- View Order CTA -->
     <div style="text-align: center; margin-bottom: 24px;">
       <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
-        View Order Status &rarr;
+        Track &amp; View Order &rarr;
       </a>
     </div>
+
+    <!-- Support Assistance -->
+    <p style="font-size: 12px; line-height: 1.6; color: #78716C; text-align: center; margin: 0;">
+      Questions about your order or receipt? Reply directly to this email (<a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22; font-weight: bold; text-decoration: none;">sales.maxywalk@gmail.com</a>) or contact our team at <strong>+91 94447 43465</strong>.
+    </p>
   `;
 
   const html = masterLayout({
-    preheader: `Payment of ${formattedAmount} verified for MAXYWALK Order #${orderId}.`,
+    preheader: `Payment receipt of ${formattedAmount} verified for MAXYWALK Order #${orderId}. Thank you for your purchase!`,
     contentHtml,
     siteUrl
   });
 
-  const text = `Payment of ${formattedAmount} successful for MAXYWALK Order #${orderId}. View order at ${viewOrderUrl}`;
+  const text = `MAXYWALK Official Payment Receipt & Order Confirmation
+Order #${orderId}
+Payment Status: PAID (Verified via Razorpay)
+Total Amount Paid: ${formattedAmount}
+Payment Method: ${paymentMethod}
+${paymentRef ? `Razorpay Ref: ${paymentRef}\n` : ''}Date: ${formattedDate}
+
+Customer: ${resolvedCustomerName}
+${shippingAddr.address ? `Shipping: ${shippingAddr.address}, ${shippingAddr.city} - ${shippingAddr.pincode}\n` : ''}
+Track your order at: ${viewOrderUrl}
+For questions or support, contact sales.maxywalk@gmail.com or +91 94447 43465.`;
+
   return { subject, html, text };
 }
 

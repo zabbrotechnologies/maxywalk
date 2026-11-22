@@ -81,13 +81,14 @@ class EmailProvider {
       }
     }
 
-    const defaultFrom = process.env.EMAIL_FROM || process.env.SMTP_USER || 'sales.maxywalk@gmail.com';
+    const defaultFrom = process.env.EMAIL_FROM || 'sales.maxywalk@gmail.com';
     const defaultFromName = process.env.EMAIL_FROM_NAME || 'MAXYWALK';
     const sender = `"${fromName || defaultFromName}" <${from || defaultFrom}>`;
 
     const mailOptions = {
       from: sender,
       to: to.trim().toLowerCase(),
+      replyTo: process.env.EMAIL_FROM || 'sales.maxywalk@gmail.com',
       subject: subject.trim(),
       html,
       text: text || html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
