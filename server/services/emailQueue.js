@@ -87,10 +87,10 @@ export async function queueEmail({
       ]
     );
 
-    // For transactional customer emails in serverless, process immediately within the function lifecycle
-    if (immediate && notificationCategory === 'transactional') {
+    // For transactional customer emails in serverless, process the exact job immediately within the function lifecycle
+    if (immediate && notificationCategory === 'transactional' && rows[0]) {
       try {
-        await processEmailQueue({ batchSize: 1 });
+        await executeDeliveryForJob(rows[0], process.env.CLIENT_URL || 'https://maxywalk.com');
       } catch (e) {
         console.warn('[EmailQueue] Immediate delivery notice:', e.message);
       }
@@ -220,6 +220,135 @@ export async function queueNewProductAnnouncement(product) {
 }
 
 /**
+ * Deliver a single notification job immediately and update queue/logs in DB
+ */
+export async function executeDeliveryForJob(job, siteUrl = 'https://maxywalk.com') {
+  if (!job || !job.id) return null;
+
+  // Mark as processing
+  await query("UPDATE public.email_notification_queue SET status = 'processing', updated_at = NOW() WHERE id = $1;", [job.id]);
+
+  let rendered = null;
+  const data = typeof job.template_data === 'string' ? JSON.parse(job.template_data || '{}') : (job.template_data || {});
+  data.siteUrl = data.siteUrl || siteUrl;
+
+  try {
+    switch (job.event_type) {
+      case 'CUSTOMER_REGISTERED':
+        rendered = templates.renderWelcomeEmail(data);
+        break;
+      case 'ORDER_PLACED':
+        rendered = templates.renderOrderPlacedEmail(data);
+        break;
+      case 'PAYMENT_SUCCESS':
+        rendered = templates.renderPaymentSuccessEmail(data);
+        break;
+      case 'PAYMENT_FAILED':
+        rendered = templates.renderPaymentFailedEmail(data);
+        break;
+      case 'ORDER_PROCESSING':
+        rendered = templates.renderOrderProcessingEmail(data);
+        break;
+      case 'ORDER_PACKED':
+        rendered = templates.renderOrderPackedEmail(data);
+        break;
+      case 'ORDER_SHIPPED':
+        rendered = templates.renderOrderShippedEmail(data);
+        break;
+      case 'OUT_FOR_DELIVERY':
+        rendered = templates.renderOutForDeliveryEmail(data);
+        break;
+      case 'ORDER_DELIVERED':
+        rendered = templates.renderOrderDeliveredEmail(data);
+        break;
+      case 'ORDER_CANCELLED':
+        rendered = templates.renderOrderCancelledEmail(data);
+        break;
+      case 'NEW_PRODUCT_PUBLISHED':
+        rendered = templates.renderNewProductAnnouncementEmail(data);
+        break;
+      default:
+        throw new Error(`Unknown event type: ${job.event_type}`);
+    }
+
+    // Deliver email via provider
+    const sendResult = await emailProvider.sendMail({
+      to: job.recipient_email,
+      subject: job.subject || rendered.subject,
+      html: rendered.html,
+      text: rendered.text
+    });
+
+    // 1. Success transition
+    await query(
+      `UPDATE public.email_notification_queue 
+       SET status = 'sent', sent_at = NOW(), attempts = attempts + 1, last_error = NULL 
+       WHERE id = $1;`,
+      [job.id]
+    );
+
+    // 2. Log success
+    const logId = `log-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    await query(
+      `INSERT INTO public.email_notification_logs (
+        id, notification_id, event_type, recipient_email, delivery_status,
+        provider_message_id, created_at
+      ) VALUES ($1, $2, $3, $4, 'success', $5, NOW());`,
+      [logId, job.id, job.event_type, job.recipient_email, sendResult.messageId || 'sent']
+    );
+
+    // 3. Update campaign counter if applicable
+    if (job.campaign_id) {
+      await query(
+        'UPDATE public.product_announcement_campaigns SET sent_count = sent_count + 1 WHERE id = $1;',
+        [job.campaign_id]
+      );
+    }
+
+    return { success: true, messageId: sendResult.messageId };
+  } catch (err) {
+    console.error(`[EmailQueue] Delivery failure for job ${job.id} (${job.event_type} to ${job.recipient_email}):`, err.message);
+
+    const nextAttempts = (job.attempts || 0) + 1;
+    const maxAttempts = job.max_attempts || 4;
+    const isPermanent = nextAttempts >= maxAttempts || err.message?.includes('Invalid recipient') || err.code === 'EENVELOPE';
+
+    const newStatus = isPermanent ? 'failed' : 'retrying';
+    const backoffMinutes = Math.min(Math.pow(2, nextAttempts), 30);
+
+    await query(
+      `UPDATE public.email_notification_queue 
+       SET status = $2, 
+           attempts = $3, 
+           last_error = $4, 
+           next_retry_at = NOW() + INTERVAL '1 minute' * $5
+       WHERE id = $1;`,
+      [job.id, newStatus, nextAttempts, err.message, backoffMinutes]
+    );
+
+    // Log failure
+    const logId = `log-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    await query(
+      `INSERT INTO public.email_notification_logs (
+        id, notification_id, event_type, recipient_email, delivery_status,
+        error_message, created_at
+      ) VALUES ($1, $2, $3, $4, 'failed', $5, NOW());`,
+      [logId, job.id, job.event_type, job.recipient_email, err.message]
+    ).catch(() => {});
+
+    // If campaign job permanently failed, update campaign counter
+    if (job.campaign_id && isPermanent) {
+      await query(
+        'UPDATE public.product_announcement_campaigns SET failed_count = failed_count + 1 WHERE id = $1;',
+        [job.campaign_id]
+      ).catch(() => {});
+    }
+
+    throw err;
+  }
+}
+
+/**
  * Process a batch of pending/retrying emails atomically using FOR UPDATE SKIP LOCKED
  */
 export async function processEmailQueue({ batchSize = 10 } = {}) {
@@ -240,12 +369,14 @@ export async function processEmailQueue({ batchSize = 10 } = {}) {
         AND updated_at < NOW() - INTERVAL '3 minutes';
     `);
 
-    // Atomically claim up to batchSize jobs
+    // Atomically claim up to batchSize jobs (prioritizing transactional order receipts and newest items)
     const jobs = await query(
       `SELECT * FROM public.email_notification_queue
        WHERE status IN ('pending', 'retrying') 
          AND next_retry_at <= NOW()
-       ORDER BY created_at ASC
+       ORDER BY 
+         CASE WHEN notification_category = 'transactional' THEN 0 ELSE 1 END,
+         created_at DESC
        LIMIT $1
        FOR UPDATE SKIP LOCKED;`,
       [batchSize]
@@ -256,125 +387,11 @@ export async function processEmailQueue({ batchSize = 10 } = {}) {
     }
 
     for (const job of jobs) {
-      // Mark as processing
-      await query("UPDATE public.email_notification_queue SET status = 'processing', updated_at = NOW() WHERE id = $1;", [job.id]);
-
-      let rendered = null;
-      const data = typeof job.template_data === 'string' ? JSON.parse(job.template_data || '{}') : (job.template_data || {});
-      data.siteUrl = data.siteUrl || siteUrl;
-
       try {
-        switch (job.event_type) {
-          case 'CUSTOMER_REGISTERED':
-            rendered = templates.renderWelcomeEmail(data);
-            break;
-          case 'ORDER_PLACED':
-            rendered = templates.renderOrderPlacedEmail(data);
-            break;
-          case 'PAYMENT_SUCCESS':
-            rendered = templates.renderPaymentSuccessEmail(data);
-            break;
-          case 'PAYMENT_FAILED':
-            rendered = templates.renderPaymentFailedEmail(data);
-            break;
-          case 'ORDER_PROCESSING':
-            rendered = templates.renderOrderProcessingEmail(data);
-            break;
-          case 'ORDER_PACKED':
-            rendered = templates.renderOrderPackedEmail(data);
-            break;
-          case 'ORDER_SHIPPED':
-            rendered = templates.renderOrderShippedEmail(data);
-            break;
-          case 'OUT_FOR_DELIVERY':
-            rendered = templates.renderOutForDeliveryEmail(data);
-            break;
-          case 'ORDER_DELIVERED':
-            rendered = templates.renderOrderDeliveredEmail(data);
-            break;
-          case 'ORDER_CANCELLED':
-            rendered = templates.renderOrderCancelledEmail(data);
-            break;
-          case 'NEW_PRODUCT_PUBLISHED':
-            rendered = templates.renderNewProductAnnouncementEmail(data);
-            break;
-          default:
-            throw new Error(`Unknown event type: ${job.event_type}`);
-        }
-
-        // Deliver email via provider
-        const sendResult = await emailProvider.sendMail({
-          to: job.recipient_email,
-          subject: job.subject || rendered.subject,
-          html: rendered.html,
-          text: rendered.text
-        });
-
-        // 1. Success transition
-        await query(
-          `UPDATE public.email_notification_queue 
-           SET status = 'sent', sent_at = NOW(), attempts = attempts + 1, last_error = NULL 
-           WHERE id = $1;`,
-          [job.id]
-        );
-
-        // 2. Log success
-        const logId = `log-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
-        await query(
-          `INSERT INTO public.email_notification_logs (
-            id, notification_id, event_type, recipient_email, delivery_status,
-            provider_message_id, created_at
-          ) VALUES ($1, $2, $3, $4, 'success', $5, NOW());`,
-          [logId, job.id, job.event_type, job.recipient_email, sendResult.messageId || 'sent']
-        );
-
-        // 3. Update campaign counter if applicable
-        if (job.campaign_id) {
-          await query(
-            'UPDATE public.product_announcement_campaigns SET sent_count = sent_count + 1 WHERE id = $1;',
-            [job.campaign_id]
-          );
-        }
-
+        await executeDeliveryForJob(job, siteUrl);
         processedCount++;
-      } catch (err) {
-        console.error(`[EmailQueue] Delivery failure for job ${job.id} (${job.event_type} to ${job.recipient_email}):`, err.message);
-
-        const nextAttempts = (job.attempts || 0) + 1;
-        const maxAttempts = job.max_attempts || 4;
-        const isPermanent = nextAttempts >= maxAttempts || err.message?.includes('Invalid recipient') || err.code === 'EENVELOPE';
-
-        const newStatus = isPermanent ? 'failed' : 'retrying';
-        // Exponential backoff: 2min, 4min, 8min...
-        const backoffMinutes = Math.min(Math.pow(2, nextAttempts), 30);
-
-        await query(
-          `UPDATE public.email_notification_queue 
-           SET status = $2, 
-               attempts = $3, 
-               last_error = $4, 
-               next_retry_at = NOW() + INTERVAL '1 minute' * $5
-           WHERE id = $1;`,
-          [job.id, newStatus, nextAttempts, err.message, backoffMinutes]
-        );
-
-        // Log failure
-        const logId = `log-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
-        await query(
-          `INSERT INTO public.email_notification_logs (
-            id, notification_id, event_type, recipient_email, delivery_status,
-            error_message, created_at
-          ) VALUES ($1, $2, $3, $4, 'failed', $5, NOW());`,
-          [logId, job.id, job.event_type, job.recipient_email, err.message]
-        );
-
-        // If campaign job permanently failed, update campaign counter
-        if (job.campaign_id && isPermanent) {
-          await query(
-            'UPDATE public.product_announcement_campaigns SET failed_count = failed_count + 1 WHERE id = $1;',
-            [job.campaign_id]
-          );
-        }
+      } catch (jobErr) {
+        // Individual job failure is already recorded; continue batch
       }
     }
 

@@ -17,27 +17,35 @@ class EmailProvider {
     const host = process.env.SMTP_HOST || 'smtp.gmail.com';
     const port = Number(process.env.SMTP_PORT) || 465;
     const secure = process.env.SMTP_SECURE !== 'false';
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
+    const user = (process.env.SMTP_USER || '').trim();
+    // Google App Passwords are 16 characters often copied with spaces like "abcd efgh ijkl mnop"
+    const pass = (process.env.SMTP_PASS || '').trim().replace(/\s+/g, '');
 
     if (!user || !pass) {
       console.warn('[EmailProvider] Warning: SMTP_USER or SMTP_PASS is missing in environment. Email sending may be disabled.');
       return;
     }
 
-    this.transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure,
-      auth: { user, pass },
-      pool: true,
-      maxConnections: 3,
-      maxMessages: 100,
-      rateLimit: 5, // 5 emails per second max to respect Gmail SMTP limits
-      tls: {
-        rejectUnauthorized: true,
-      },
-    });
+    const transportConfig = host.includes('gmail.com')
+      ? {
+          service: 'gmail',
+          auth: { user, pass }
+        }
+      : {
+          host,
+          port,
+          secure,
+          auth: { user, pass },
+          pool: true,
+          maxConnections: 3,
+          maxMessages: 100,
+          rateLimit: 5,
+          tls: {
+            rejectUnauthorized: true,
+          },
+        };
+
+    this.transporter = nodemailer.createTransport(transportConfig);
   }
 
   async verifyConnection() {
