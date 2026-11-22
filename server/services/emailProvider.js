@@ -1,79 +1,83 @@
+import { Resend } from 'resend';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 dotenv.config();
 
 /**
  * Provider-independent Email Service Abstraction
- * Currently powered by Gmail SMTP via Nodemailer.
- * Can be swapped for AWS SES, SendGrid, or Resend by changing this provider layer.
+ * Primary Provider: Resend (Official SDK)
+ * Fallback Provider: Gmail SMTP via Nodemailer
  */
 class EmailProvider {
   constructor() {
-    this.transporter = null;
-    this.initTransporter();
+    this.resend = null;
+    this.smtpTransporter = null;
+    this.initProviders();
   }
 
-  initTransporter() {
+  initProviders() {
+    const resendKey = (process.env.RESEND_API_KEY || '').trim();
+    if (resendKey) {
+      try {
+        this.resend = new Resend(resendKey);
+      } catch (err) {
+        console.warn('[EmailProvider] Warning: Failed to initialize Resend client:', err.message);
+      }
+    }
+
     const host = process.env.SMTP_HOST || 'smtp.gmail.com';
     const port = Number(process.env.SMTP_PORT) || 465;
     const secure = process.env.SMTP_SECURE !== 'false';
     const user = (process.env.SMTP_USER || '').trim();
-    // Google App Passwords are 16 characters often copied with spaces like "abcd efgh ijkl mnop"
+    // Google App Passwords are 16 characters often copied with spaces like "nqmo qwyn lmhb yplb"
     const pass = (process.env.SMTP_PASS || '').trim().replace(/\s+/g, '');
 
-    if (!user || !pass) {
-      console.warn('[EmailProvider] Warning: SMTP_USER or SMTP_PASS is missing in environment. Email sending may be disabled.');
-      return;
-    }
+    if (user && pass) {
+      try {
+        const transportConfig = host.includes('gmail.com')
+          ? {
+              service: 'gmail',
+              auth: { user, pass }
+            }
+          : {
+              host,
+              port,
+              secure,
+              auth: { user, pass },
+              pool: true,
+              maxConnections: 3,
+              maxMessages: 100,
+              rateLimit: 5,
+              tls: {
+                rejectUnauthorized: true,
+              },
+            };
 
-    const transportConfig = host.includes('gmail.com')
-      ? {
-          service: 'gmail',
-          auth: { user, pass }
-        }
-      : {
-          host,
-          port,
-          secure,
-          auth: { user, pass },
-          pool: true,
-          maxConnections: 3,
-          maxMessages: 100,
-          rateLimit: 5,
-          tls: {
-            rejectUnauthorized: true,
-          },
-        };
-
-    this.transporter = nodemailer.createTransport(transportConfig);
-  }
-
-  async verifyConnection() {
-    if (!this.transporter) {
-      this.initTransporter();
-      if (!this.transporter) {
-        throw new Error('SMTP transporter is not initialized. Please verify SMTP_USER and SMTP_PASS.');
+        this.smtpTransporter = nodemailer.createTransport(transportConfig);
+      } catch (err) {
+        console.warn('[EmailProvider] Warning: Failed to initialize SMTP transporter:', err.message);
       }
     }
-    return new Promise((resolve, reject) => {
-      this.transporter.verify((err, success) => {
-        if (err) {
-          console.error('[EmailProvider] SMTP Connection verification failed:', err.message);
-          return reject(err);
-        }
-        resolve(success);
-      });
-    });
+  }
+
+  getActiveProvider() {
+    if ((process.env.RESEND_API_KEY || '').trim()) {
+      return 'resend';
+    }
+    if ((process.env.SMTP_USER || '').trim() && (process.env.SMTP_PASS || '').trim()) {
+      return 'smtp';
+    }
+    return 'none';
   }
 
   isValidEmail(email) {
     if (!email || typeof email !== 'string') return false;
     const clean = email.trim();
-    // Standard RFC 5322 regex for basic validation
+    // Standard RFC 5322 regex
     return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/.test(clean);
   }
 
-  async sendMail({ to, subject, html, text, from = null, fromName = null }) {
+  async sendMail({ to, subject, html, text, from = null, replyTo = null, fromName = null }) {
     if (!to || !this.isValidEmail(to)) {
       throw new Error(`Invalid recipient email address: "${to}"`);
     }
@@ -82,48 +86,89 @@ class EmailProvider {
       throw new Error('Email subject is required');
     }
 
-    if (!this.transporter) {
-      this.initTransporter();
-      if (!this.transporter) {
-        throw new Error('SMTP transporter is not configured. Email cannot be delivered.');
+    const cleanTo = to.trim().toLowerCase();
+    const cleanSubject = subject.trim();
+    const defaultFromName = process.env.EMAIL_FROM_NAME || 'MAXYWALK';
+    const defaultFromEmail = process.env.EMAIL_FROM || 'sales.maxywalk@gmail.com';
+    const sender = from || (defaultFromEmail.includes('<') ? defaultFromEmail : `"${fromName || defaultFromName}" <${defaultFromEmail}>`);
+    const resolvedReplyTo = replyTo || process.env.EMAIL_REPLY_TO || defaultFromEmail;
+
+    // 1. PRIMARY: Resend
+    const resendKey = (process.env.RESEND_API_KEY || '').trim();
+    if (resendKey) {
+      if (!this.resend) {
+        this.resend = new Resend(resendKey);
+      }
+
+      try {
+        const payload = {
+          from: sender,
+          to: [cleanTo],
+          subject: cleanSubject,
+          html,
+          text: text || html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+          headers: {
+            'X-Entity-Ref-ID': `maxywalk-${Date.now()}`
+          }
+        };
+
+        if (resolvedReplyTo) {
+          payload.reply_to = resolvedReplyTo;
+        }
+
+        const { data, error } = await this.resend.emails.send(payload);
+
+        if (error) {
+          throw new Error(`Resend error: ${error.message || JSON.stringify(error)}`);
+        }
+
+        return {
+          success: true,
+          provider: 'resend',
+          messageId: data?.id || `resend-${Date.now()}`
+        };
+      } catch (resendErr) {
+        console.error(`[EmailProvider] Resend delivery error to ${cleanTo}:`, resendErr.message);
+        // If Resend failed and SMTP is configured, attempt SMTP fallback
+        if (this.smtpTransporter) {
+          console.warn('[EmailProvider] Attempting fallback to SMTP transporter...');
+          return this.sendViaSmtp({ to: cleanTo, subject: cleanSubject, html, text, sender, replyTo: resolvedReplyTo });
+        }
+        throw resendErr;
       }
     }
 
-    const defaultFrom = process.env.EMAIL_FROM || 'sales.maxywalk@gmail.com';
-    const defaultFromName = process.env.EMAIL_FROM_NAME || 'MAXYWALK';
-    const sender = `"${fromName || defaultFromName}" <${from || defaultFrom}>`;
+    // 2. FALLBACK: SMTP Transporter
+    if (this.smtpTransporter) {
+      return this.sendViaSmtp({ to: cleanTo, subject: cleanSubject, html, text, sender, replyTo: resolvedReplyTo });
+    }
 
+    throw new Error('No email provider configured. Please set RESEND_API_KEY or SMTP credentials in your environment variables.');
+  }
+
+  async sendViaSmtp({ to, subject, html, text, sender, replyTo }) {
     const mailOptions = {
       from: sender,
-      to: to.trim().toLowerCase(),
-      replyTo: process.env.EMAIL_FROM || 'sales.maxywalk@gmail.com',
-      subject: subject.trim(),
+      to,
+      subject,
       html,
       text: text || html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+      replyTo: replyTo || undefined,
       headers: {
         'X-Entity-Ref-ID': `maxywalk-${Date.now()}`,
         'X-Mailer': 'MAXYWALK Notification Engine'
       }
     };
 
-    try {
-      const info = await this.transporter.sendMail(mailOptions);
-      return {
-        success: true,
-        messageId: info.messageId,
-        response: info.response,
-        accepted: info.accepted,
-        rejected: info.rejected,
-      };
-    } catch (err) {
-      console.error(`[EmailProvider] Delivery failed to ${to}:`, err.message);
-      // Re-throw with clean message that never prints SMTP passwords
-      const safeErr = new Error(`Email delivery failed: ${err.message}`);
-      safeErr.code = err.code;
-      safeErr.command = err.command;
-      safeErr.response = err.response;
-      throw safeErr;
-    }
+    const info = await this.smtpTransporter.sendMail(mailOptions);
+    return {
+      success: true,
+      provider: 'smtp',
+      messageId: info.messageId,
+      response: info.response,
+      accepted: info.accepted,
+      rejected: info.rejected,
+    };
   }
 }
 

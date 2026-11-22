@@ -249,6 +249,19 @@ export default function Checkout() {
         payment_method: 'razorpay'
       });
 
+      const razorpayKey = rzpOrderData.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID;
+      if (!razorpayKey) {
+        toast.error('Razorpay Key ID not configured. Please add RAZORPAY_KEY_ID in Vercel environment variables.');
+        setLoading(false);
+        return;
+      }
+
+      if (!rzpOrderData.razorpayOrderId) {
+        toast.error('Failed to initialize payment session. Please try again.');
+        setLoading(false);
+        return;
+      }
+
       // 2. Open Razorpay Checkout modal
       const options = {
         key: rzpOrderData.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
@@ -306,7 +319,8 @@ export default function Checkout() {
       rzp.open();
     } catch (err) {
       console.error('Order placement error:', err);
-      toast.error(err.response?.data?.error || err.message || 'Failed to place order. Please check all fields.');
+      const serverMsg = err.response?.data?.error || err.response?.data?.message || (typeof err.response?.data === 'string' && err.response.data.length < 200 ? err.response.data : null);
+      toast.error(serverMsg || err.message || 'Failed to place order. Please check all fields.');
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@ import express from 'express';
 import crypto from 'crypto';
 import { query } from '../db.js';
 import { queueEmail } from '../services/emailQueue.js';
+import { sendOrderNotification } from '../services/notificationService.js';
 
 const router = express.Router();
 
@@ -119,19 +120,16 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
       crypto.timingSafeEqual(expectedBuffer, signatureBuffer);
 
     if (!isMatch) {
-      // Queue PAYMENT_FAILED email if order exists
+      // Event-Driven: Trigger PAYMENT_FAILED notification if order exists
       try {
         const failedOrders = await query('SELECT * FROM public.orders WHERE razorpay_order_id = $1 LIMIT 1;', [orderId]);
-        if (failedOrders.length > 0 && failedOrders[0].user_email) {
+        if (failedOrders.length > 0) {
           const fo = failedOrders[0];
-          await queueEmail({
-            orderId: fo.order_id || fo.id,
-            recipientEmail: fo.user_email,
+          sendOrderNotification({
+            order: fo,
             eventType: 'PAYMENT_FAILED',
-            subject: `Payment Unsuccessful — MAXYWALK Order #${fo.order_id || fo.id}`,
-            templateData: { order: fo, amount: fo.total },
-            idempotencyKey: `pay-failed-${orderId}`
-          }).catch(e => console.warn('[Payment] Failed email notice:', e.message));
+            metadata: { amount: fo.total }
+          }).catch(e => console.warn('[Payment] Failed email notification error:', e.message));
         }
       } catch {}
 
@@ -171,26 +169,24 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
 
         finalOrder = updatedOrders[0] || order;
 
-        // Queue PAYMENT_SUCCESS notification with comprehensive order receipt
+        // Event-Driven: Trigger PAYMENT_SUCCESS and ORDER_PLACED notifications
         if (finalOrder.user_email) {
-          const addr = typeof finalOrder.shipping_address === 'string' ? JSON.parse(finalOrder.shipping_address || '{}') : (finalOrder.shipping_address || {});
-          const customerFullName = addr.fullName || `${addr.firstName || ''} ${addr.lastName || ''}`.trim() || 'Valued Customer';
-
-          await queueEmail({
-            orderId: finalOrder.order_id || finalOrder.id,
-            recipientEmail: finalOrder.user_email,
+          sendOrderNotification({
+            order: finalOrder,
             eventType: 'PAYMENT_SUCCESS',
-            subject: `Payment Successful & Order Receipt — MAXYWALK Order #${finalOrder.order_id || finalOrder.id}`,
-            templateData: {
-              order: finalOrder,
-              customerName: customerFullName,
-              amount: finalOrder.total,
-              paymentMethod: 'Online / Razorpay',
+            metadata: {
+              paymentId,
               paymentRef: paymentId,
-              date: new Date()
-            },
-            idempotencyKey: `pay-success-${paymentId}`
-          }).catch(e => console.warn('[Payment] Success email notice:', e.message));
+              amount: finalOrder.total,
+              paymentMethod: 'Online / Razorpay'
+            }
+          }).catch(e => console.warn('[Payment] Success email notification notice:', e.message));
+
+          sendOrderNotification({
+            order: finalOrder,
+            eventType: 'ORDER_PLACED'
+          }).catch(e => console.warn('[Payment] Order placed confirmation notice:', e.message));
+        }
         }
       } else if (orderRows.length > 0) {
         finalOrder = orderRows[0];

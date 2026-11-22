@@ -51,6 +51,8 @@ export const getStatusColor = (status) => {
     shipped: 'bg-purple-50 text-purple-700',
     delivered: 'bg-green-50 text-green-700',
     cancelled: 'bg-red-50 text-red-700',
+    refund_initiated: 'bg-amber-50 text-amber-700',
+    refunded: 'bg-emerald-50 text-emerald-700',
   };
   return map[status] || 'bg-surface-container text-on-surface';
 };

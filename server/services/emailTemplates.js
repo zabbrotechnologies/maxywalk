@@ -881,3 +881,135 @@ export function renderNewProductAnnouncementEmail({ product, customerName = 'Val
   const text = `New Arrival at MAXYWALK: Discover ${prodName}! Price: ${price}. View details at: ${productUrl} (To unsubscribe from announcements, visit ${unsubscribeUrl})`;
   return { subject, html, text };
 }
+
+// 12. REFUND_INITIATED
+export function renderRefundInitiatedEmail({ order, customerName = 'Customer', amount, refundRef = '', date = new Date(), reason = '', siteUrl = 'https://maxywalk.com' }) {
+  const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
+  const subject = `Refund Initiated — MAXYWALK Order #${orderId}`;
+  const firstName = escapeHtml(customerName.split(' ')[0] || 'Customer');
+  const refundAmount = formatInr(amount || order.total || 0);
+  const formattedDate = new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  const contentHtml = `
+    <div style="display: inline-block; background-color: #EFF6FF; color: #1D4ED8; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">
+      Refund Initiated
+    </div>
+    <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 0 0 16px 0; font-weight: bold;">
+      Refund In Progress, ${firstName}
+    </h2>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 16px 0;">
+      A refund of <strong>${refundAmount}</strong> for your order <strong>#${orderId}</strong> was initiated on <strong>${formattedDate}</strong>.
+    </p>
+
+    <div style="background-color: #FAF7F2; border-radius: 12px; border: 1px solid #E8E2D8; padding: 18px 24px; margin-bottom: 24px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 13px;">
+        <tr>
+          <td style="color: #78716C; padding: 6px 0;">Order Reference:</td>
+          <td align="right" style="font-weight: bold; color: #1F1E1D; padding: 6px 0;">#${orderId}</td>
+        </tr>
+        <tr>
+          <td style="color: #78716C; padding: 6px 0;">Refund Amount:</td>
+          <td align="right" style="font-weight: bold; color: #D35B22; font-size: 15px; padding: 6px 0;">${refundAmount}</td>
+        </tr>
+        ${refundRef ? `
+        <tr>
+          <td style="color: #78716C; padding: 6px 0;">Refund Reference / ARN:</td>
+          <td align="right" style="font-family: monospace; color: #1F1E1D; padding: 6px 0;">${escapeHtml(refundRef)}</td>
+        </tr>
+        ` : ''}
+        ${reason ? `
+        <tr>
+          <td style="color: #78716C; padding: 6px 0;">Reason:</td>
+          <td align="right" style="color: #1F1E1D; padding: 6px 0;">${escapeHtml(reason)}</td>
+        </tr>
+        ` : ''}
+      </table>
+    </div>
+
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 24px 0;">
+      The refund will be credited back to your original payment method (Bank Account / UPI / Card) within <strong>5–7 business days</strong> as per banking norms.
+    </p>
+
+    <div style="text-align: center; margin-bottom: 24px;">
+      <a href="${siteUrl}/account?tab=orders" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
+        View Order Status &rarr;
+      </a>
+    </div>
+
+    <p style="font-size: 13px; line-height: 1.6; color: #78716C; margin: 0;">
+      Need further assistance? Our support desk is available at <a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22;">sales.maxywalk@gmail.com</a>.
+    </p>
+  `;
+
+  const html = masterLayout({
+    preheader: `Refund of ${refundAmount} initiated for MAXYWALK Order #${orderId}.`,
+    contentHtml,
+    siteUrl
+  });
+
+  const text = `Refund of ${refundAmount} initiated for Order #${orderId}. It will reflect in 5-7 business days. Support: sales.maxywalk@gmail.com`;
+  return { subject, html, text };
+}
+
+// 13. REFUND_COMPLETED
+export function renderRefundCompletedEmail({ order, customerName = 'Customer', amount, refundRef = '', date = new Date(), siteUrl = 'https://maxywalk.com' }) {
+  const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
+  const subject = `Refund Completed — MAXYWALK Order #${orderId}`;
+  const firstName = escapeHtml(customerName.split(' ')[0] || 'Customer');
+  const refundAmount = formatInr(amount || order.total || 0);
+  const formattedDate = new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  const contentHtml = `
+    <div style="display: inline-block; background-color: #ECFDF5; color: #047857; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">
+      Refund Completed
+    </div>
+    <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 0 0 16px 0; font-weight: bold;">
+      Refund Processed Successfully
+    </h2>
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 16px 0;">
+      Hello ${firstName}, the refund of <strong>${refundAmount}</strong> for your order <strong>#${orderId}</strong> has been successfully settled on <strong>${formattedDate}</strong>.
+    </p>
+
+    <div style="background-color: #FAF7F2; border-radius: 12px; border: 1px solid #E8E2D8; padding: 18px 24px; margin-bottom: 24px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 13px;">
+        <tr>
+          <td style="color: #78716C; padding: 6px 0;">Order ID:</td>
+          <td align="right" style="font-weight: bold; color: #1F1E1D; padding: 6px 0;">#${orderId}</td>
+        </tr>
+        <tr>
+          <td style="color: #78716C; padding: 6px 0;">Refund Amount Settled:</td>
+          <td align="right" style="font-weight: bold; color: #047857; font-size: 15px; padding: 6px 0;">${refundAmount}</td>
+        </tr>
+        ${refundRef ? `
+        <tr>
+          <td style="color: #78716C; padding: 6px 0;">Bank Reference / ARN:</td>
+          <td align="right" style="font-family: monospace; color: #1F1E1D; padding: 6px 0;">${escapeHtml(refundRef)}</td>
+        </tr>
+        ` : ''}
+        <tr>
+          <td style="color: #78716C; padding: 6px 0;">Settlement Date:</td>
+          <td align="right" style="color: #1F1E1D; padding: 6px 0;">${formattedDate}</td>
+        </tr>
+      </table>
+    </div>
+
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 24px 0;">
+      Please check your bank statement or card summary. If you have not seen the funds reflected, please quote reference <strong>${escapeHtml(refundRef || orderId)}</strong> to your bank.
+    </p>
+
+    <div style="text-align: center; margin-bottom: 24px;">
+      <a href="${siteUrl}/shop" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
+        Return to Shop &rarr;
+      </a>
+    </div>
+  `;
+
+  const html = masterLayout({
+    preheader: `Refund of ${refundAmount} settled successfully for MAXYWALK Order #${orderId}.`,
+    contentHtml,
+    siteUrl
+  });
+
+  const text = `Refund of ${refundAmount} for Order #${orderId} has been successfully settled on ${formattedDate}. Support: sales.maxywalk@gmail.com`;
+  return { subject, html, text };
+}

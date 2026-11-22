@@ -4,6 +4,7 @@ import { query } from '../db.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { orderRateLimiter } from '../middleware/rateLimit.js';
 import { queueEmail } from '../services/emailQueue.js';
+import { sendOrderNotification } from '../services/notificationService.js';
 
 const router = express.Router();
 
@@ -249,20 +250,18 @@ router.post('/', orderRateLimiter, async (req, res) => {
       return res.status(200).json(rows[0]);
     }
 
-    // Queue ORDER_PLACED confirmation email
+    // Event-Driven: Trigger ORDER_PLACED notification automatically
     const createdOrder = rows[0];
     const customerFullName = resolvedShippingAddr.fullName || 
       `${resolvedShippingAddr.firstName || ''} ${resolvedShippingAddr.lastName || ''}`.trim() || 
       'Valued Customer';
 
-    await queueEmail({
-      orderId: createdOrder.order_id || createdOrder.id,
-      recipientEmail: resolvedEmail,
+    sendOrderNotification({
+      order: createdOrder,
       eventType: 'ORDER_PLACED',
-      subject: `Your MAXYWALK Order Has Been Confirmed! — #${createdOrder.order_id || createdOrder.id}`,
-      templateData: { order: createdOrder, customerName: customerFullName },
-      idempotencyKey: `order-placed-${createdOrder.id}`
-    }).catch((e) => console.warn('[Orders] Order placed email queue notice:', e.message));
+      recipientEmail: resolvedEmail,
+      customerName: customerFullName
+    }).catch((e) => console.warn('[Orders] Order placed email notification error:', e.message));
 
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -306,48 +305,43 @@ router.put('/:id', async (req, res) => {
 
     // Map order status to notification event
     let eventType = null;
-    let eventSubject = null;
     const orderIdLabel = updatedOrder.order_id || updatedOrder.id;
 
     if (cleanStatus === 'confirmed' || cleanStatus === 'processing') {
       eventType = 'ORDER_PROCESSING';
-      eventSubject = `Your MAXYWALK Order Is Being Prepared! — #${orderIdLabel}`;
     } else if (cleanStatus === 'crafting' || cleanStatus === 'packed') {
       eventType = 'ORDER_PACKED';
-      eventSubject = `Your MAXYWALK Order Is Packed! — #${orderIdLabel}`;
     } else if (cleanStatus === 'dispatched' || cleanStatus === 'shipped') {
       eventType = 'ORDER_SHIPPED';
-      eventSubject = `Your MAXYWALK Order Has Been Shipped! — #${orderIdLabel}`;
     } else if (cleanStatus === 'out_for_delivery') {
       eventType = 'OUT_FOR_DELIVERY';
-      eventSubject = `Your MAXYWALK Order Is Out for Delivery! — #${orderIdLabel}`;
     } else if (cleanStatus === 'delivered') {
       eventType = 'ORDER_DELIVERED';
-      eventSubject = `Your MAXYWALK Order Has Been Delivered! — #${orderIdLabel}`;
     } else if (cleanStatus === 'cancelled') {
       eventType = 'ORDER_CANCELLED';
-      eventSubject = `Your MAXYWALK Order Has Been Cancelled — #${orderIdLabel}`;
+    } else if (cleanStatus === 'refund_initiated' || cleanStatus === 'refund-initiated') {
+      eventType = 'REFUND_INITIATED';
+    } else if (cleanStatus === 'refunded' || cleanStatus === 'refund_completed' || cleanStatus === 'refund-completed') {
+      eventType = 'REFUND_COMPLETED';
     }
 
-    if (eventType && targetEmail) {
-      await queueEmail({
-        orderId: orderIdLabel,
-        recipientEmail: targetEmail,
+    if (eventType) {
+      sendOrderNotification({
+        order: updatedOrder,
         eventType,
-        subject: eventSubject,
-        templateData: {
-          order: updatedOrder,
-          customerName: recipientName,
-          trackingInfo: {
-            courier: addr.courier || 'Blue Dart / Delhivery',
-            trackingNumber: updatedOrder.tracking_number || addr.tracking_number || 'Available in tracking link',
-            trackingUrl: addr.tracking_url || 'https://maxywalk.com/account?tab=orders'
-          },
-          cancellationDate: new Date(),
-          reason: req.body.reason || 'Requested by customer or administrative update'
+        recipientEmail: targetEmail,
+        customerName: recipientName,
+        trackingInfo: {
+          courier: req.body.courier || addr.courier || 'Blue Dart / Delhivery',
+          trackingNumber: req.body.trackingNumber || req.body.tracking_number || updatedOrder.tracking_number || addr.tracking_number,
+          trackingUrl: req.body.trackingUrl || req.body.tracking_url || addr.tracking_url || 'https://maxywalk.com/account?tab=orders'
         },
-        idempotencyKey: `order-status-${updatedOrder.id}-${cleanStatus}`
-      }).catch((e) => console.warn(`[Orders] Status email ${eventType} queue notice:`, e.message));
+        reason: req.body.reason || 'Status updated by store administrator',
+        metadata: {
+          amount: req.body.amount || updatedOrder.total,
+          refundRef: req.body.refundRef || req.body.refund_reference || updatedOrder.razorpay_payment_id || ''
+        }
+      }).catch((e) => console.warn(`[Orders] Status email ${eventType} notification error:`, e.message));
     }
 
     res.json(rows[0]);
@@ -548,26 +542,23 @@ router.post('/razorpay/verify', async (req, res) => {
 
     const finalOrder = updated[0] || order;
 
-    // Queue PAYMENT_SUCCESS notification with comprehensive order receipt
+    // Event-Driven: Trigger PAYMENT_SUCCESS and ORDER_PLACED notifications
     if (finalOrder.user_email) {
-      const addr = typeof finalOrder.shipping_address === 'string' ? JSON.parse(finalOrder.shipping_address || '{}') : (finalOrder.shipping_address || {});
-      const customerFullName = addr.fullName || `${addr.firstName || ''} ${addr.lastName || ''}`.trim() || 'Valued Customer';
-
-      await queueEmail({
-        orderId: finalOrder.order_id || finalOrder.id,
-        recipientEmail: finalOrder.user_email,
+      sendOrderNotification({
+        order: finalOrder,
         eventType: 'PAYMENT_SUCCESS',
-        subject: `Payment Successful & Order Receipt — MAXYWALK Order #${finalOrder.order_id || finalOrder.id}`,
-        templateData: {
-          order: finalOrder,
-          customerName: customerFullName,
-          amount: finalOrder.total,
-          paymentMethod: 'Online / Razorpay',
+        metadata: {
+          paymentId: razorpay_payment_id,
           paymentRef: razorpay_payment_id,
-          date: new Date()
-        },
-        idempotencyKey: `pay-success-${razorpay_payment_id}`
-      }).catch((e) => console.warn('[Orders] Payment success email notice:', e.message));
+          amount: finalOrder.total,
+          paymentMethod: 'Online / Razorpay'
+        }
+      }).catch((e) => console.warn('[Orders] Payment success notification notice:', e.message));
+
+      sendOrderNotification({
+        order: finalOrder,
+        eventType: 'ORDER_PLACED'
+      }).catch((e) => console.warn('[Orders] Order placed confirmation notice:', e.message));
     }
 
     res.json({
@@ -616,22 +607,82 @@ router.post('/razorpay/webhook', async (req, res) => {
 
       if (rzpOrderId) {
         const orderRows = await query('SELECT * FROM public.orders WHERE razorpay_order_id = $1 LIMIT 1;', [rzpOrderId]);
-        if (orderRows.length > 0 && orderRows[0].payment_status !== 'paid') {
+        if (orderRows.length > 0) {
           const order = orderRows[0];
-          const items = Array.isArray(order.items) ? order.items : [];
-          for (const item of items) {
-            const pId = item.productId || item.id;
-            const qty = Math.max(Number(item.qty) || 1, 1);
-            if (pId) {
-              await query('UPDATE public.products SET stock = GREATEST(stock - $2, 0) WHERE id = $1;', [pId, qty]);
+          if (order.payment_status !== 'paid') {
+            const items = Array.isArray(order.items) ? order.items : [];
+            for (const item of items) {
+              const pId = item.productId || item.id;
+              const qty = Math.max(Number(item.qty) || 1, 1);
+              if (pId) {
+                await query('UPDATE public.products SET stock = GREATEST(stock - $2, 0) WHERE id = $1;', [pId, qty]);
+              }
             }
+            const updated = await query(
+              `UPDATE public.orders 
+               SET status = 'confirmed', payment_status = 'paid', razorpay_payment_id = $2 
+               WHERE id = $1
+               RETURNING *;`,
+              [order.id, paymentId || order.razorpay_payment_id]
+            );
+
+            const finalOrder = updated[0] || order;
+            sendOrderNotification({
+              order: finalOrder,
+              eventType: 'PAYMENT_SUCCESS',
+              metadata: { paymentId, amount: finalOrder.total }
+            }).catch(() => {});
+
+            sendOrderNotification({
+              order: finalOrder,
+              eventType: 'ORDER_PLACED'
+            }).catch(() => {});
           }
-          await query(
-            `UPDATE public.orders 
-             SET status = 'confirmed', payment_status = 'paid', razorpay_payment_id = $2 
-             WHERE id = $1;`,
-            [order.id, paymentId || order.razorpay_payment_id]
-          );
+        }
+      }
+    } else if (event === 'payment.failed') {
+      const paymentEntity = payload?.payment?.entity;
+      const rzpOrderId = paymentEntity?.order_id;
+      if (rzpOrderId) {
+        const orderRows = await query('SELECT * FROM public.orders WHERE razorpay_order_id = $1 LIMIT 1;', [rzpOrderId]);
+        if (orderRows.length > 0) {
+          sendOrderNotification({
+            order: orderRows[0],
+            eventType: 'PAYMENT_FAILED',
+            metadata: { amount: orderRows[0].total }
+          }).catch(() => {});
+        }
+      }
+    } else if (event === 'refund.created' || event === 'refund.speed_changed') {
+      const refundEntity = payload?.refund?.entity;
+      const paymentId = refundEntity?.payment_id;
+      if (paymentId) {
+        const orderRows = await query('SELECT * FROM public.orders WHERE razorpay_payment_id = $1 LIMIT 1;', [paymentId]);
+        if (orderRows.length > 0) {
+          sendOrderNotification({
+            order: orderRows[0],
+            eventType: 'REFUND_INITIATED',
+            metadata: {
+              amount: (refundEntity.amount || 0) / 100,
+              refundRef: refundEntity.id
+            }
+          }).catch(() => {});
+        }
+      }
+    } else if (event === 'refund.processed') {
+      const refundEntity = payload?.refund?.entity;
+      const paymentId = refundEntity?.payment_id;
+      if (paymentId) {
+        const orderRows = await query('SELECT * FROM public.orders WHERE razorpay_payment_id = $1 LIMIT 1;', [paymentId]);
+        if (orderRows.length > 0) {
+          sendOrderNotification({
+            order: orderRows[0],
+            eventType: 'REFUND_COMPLETED',
+            metadata: {
+              amount: (refundEntity.amount || 0) / 100,
+              refundRef: refundEntity.id
+            }
+          }).catch(() => {});
         }
       }
     }

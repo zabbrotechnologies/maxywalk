@@ -5,6 +5,7 @@ import { hashPassword, verifyPassword } from '../utils.js';
 import { requireAuth, invalidateSession } from '../middleware/auth.js';
 import { authRateLimiter } from '../middleware/rateLimit.js';
 import { queueEmail } from '../services/emailQueue.js';
+import { sendOrderNotification } from '../services/notificationService.js';
 
 const router = express.Router();
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -56,15 +57,13 @@ router.post('/register', authRateLimiter, async (req, res) => {
       maxAge: SESSION_TTL_MS
     });
 
-    // Queue Welcome Email for newly registered customer
-    await queueEmail({
-      customerId: userId,
-      recipientEmail: cleanEmail,
+    // Event-Driven: Welcome Email for newly registered customer
+    sendOrderNotification({
+      order: { id: userId, user_email: cleanEmail },
       eventType: 'CUSTOMER_REGISTERED',
-      subject: 'Welcome to MAXYWALK — Your Journey Starts Here!',
-      templateData: { name: name || cleanEmail.split('@')[0], email: cleanEmail },
-      idempotencyKey: `welcome-${cleanEmail}`
-    }).catch((e) => console.warn('[Auth] Welcome email queue notice:', e.message));
+      recipientEmail: cleanEmail,
+      customerName: name || cleanEmail.split('@')[0]
+    }).catch((e) => console.warn('[Auth] Welcome email notification notice:', e.message));
 
     res.json({
       user: { id: userId, email: cleanEmail, name: name || cleanEmail.split('@')[0], phone, role },
@@ -161,15 +160,13 @@ router.post('/google', async (req, res) => {
 
       user = { id: userId, email: cleanEmail, name, phone: '', role };
 
-      // Queue Welcome Email for first-time Google sign-up
-      await queueEmail({
-        customerId: userId,
-        recipientEmail: cleanEmail,
+      // Event-Driven: Welcome Email for first-time Google sign-up
+      sendOrderNotification({
+        order: { id: userId, user_email: cleanEmail },
         eventType: 'CUSTOMER_REGISTERED',
-        subject: 'Welcome to MAXYWALK — Your Journey Starts Here!',
-        templateData: { name, email: cleanEmail },
-        idempotencyKey: `welcome-${cleanEmail}`
-      }).catch((e) => console.warn('[Auth] Welcome email queue notice:', e.message));
+        recipientEmail: cleanEmail,
+        customerName: name || cleanEmail.split('@')[0]
+      }).catch((e) => console.warn('[Auth] Welcome email notification notice:', e.message));
     } else {
       user = users[0];
     }

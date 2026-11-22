@@ -4,7 +4,7 @@ import { getAllOrders, updateOrderStatus } from '../../lib/api.js';
 import { formatPrice, formatDate, getStatusColor } from '../../lib/utils.js';
 import toast from 'react-hot-toast';
 
-const STATUS_OPTIONS = ['placed', 'confirmed', 'crafting', 'dispatched', 'delivered', 'cancelled'];
+const STATUS_OPTIONS = ['placed', 'confirmed', 'crafting', 'dispatched', 'delivered', 'cancelled', 'refund_initiated', 'refunded'];
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);

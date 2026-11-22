@@ -2,6 +2,7 @@ import express from 'express';
 import { query } from '../db.js';
 import { requireAdmin, requireAuth } from '../middleware/auth.js';
 import { processEmailQueue, retryNotification, getOrCreateUnsubscribeToken } from '../services/emailQueue.js';
+import { retryNotificationById } from '../services/notificationService.js';
 
 const router = express.Router();
 
@@ -37,21 +38,19 @@ router.get('/admin/overview', requireAdminOrCron, async (req, res) => {
       SELECT
         COUNT(*)::int AS total_records,
         COUNT(*) FILTER (WHERE status = 'pending')::int AS pending_count,
-        COUNT(*) FILTER (WHERE status = 'retrying')::int AS retrying_count,
-        COUNT(*) FILTER (WHERE status = 'processing')::int AS processing_count,
         COUNT(*) FILTER (WHERE status = 'sent')::int AS sent_count,
         COUNT(*) FILTER (WHERE status = 'failed')::int AS failed_count,
         MAX(sent_at) AS last_successful_send
-      FROM public.email_notification_queue;
+      FROM public.email_notifications;
     `);
 
     const row = stats[0] || {};
     res.json({
-      totalQueued: (row.pending_count || 0) + (row.retrying_count || 0) + (row.processing_count || 0),
+      totalQueued: (row.pending_count || 0),
       totalSent: row.sent_count || 0,
       pending: row.pending_count || 0,
-      retrying: row.retrying_count || 0,
-      processing: row.processing_count || 0,
+      retrying: 0,
+      processing: 0,
       failed: row.failed_count || 0,
       totalRecords: row.total_records || 0,
       lastSuccessfulSend: row.last_successful_send || null
@@ -85,7 +84,7 @@ router.get('/admin/campaigns', requireAdminOrCron, async (req, res) => {
 
 /**
  * GET /api/admin/emails/history
- * Paginated list of queued notifications & logs
+ * Paginated list of notifications & logs
  */
 router.get('/admin/history', requireAdminOrCron, async (req, res) => {
   try {
@@ -94,7 +93,7 @@ router.get('/admin/history', requireAdminOrCron, async (req, res) => {
     const pageSize = Math.min(Math.max(Number(limit) || 25, 1), 100);
     const offset = (pageNum - 1) * pageSize;
 
-    let baseSql = 'FROM public.email_notification_queue';
+    let baseSql = 'FROM public.email_notifications';
     const conditions = [];
     const params = [];
 
@@ -122,10 +121,10 @@ router.get('/admin/history', requireAdminOrCron, async (req, res) => {
 
     params.push(pageSize, offset);
     const sql = `
-      SELECT id, customer_id, order_id, product_id, campaign_id,
-             recipient_email, event_type, subject, notification_category,
-             status, attempts, max_attempts, next_retry_at, last_error,
-             created_at, sent_at
+      SELECT id, customer_id, order_id,
+             recipient_email, event_type, subject,
+             status, attempt_count AS attempts, provider, provider_message_id,
+             last_error, created_at, sent_at
       ${baseSql}
       ORDER BY created_at DESC
       LIMIT $${params.length - 1} OFFSET $${params.length};
@@ -151,7 +150,13 @@ router.get('/admin/history', requireAdminOrCron, async (req, res) => {
 router.post('/admin/retry/:id', requireAdminOrCron, async (req, res) => {
   try {
     const { id } = req.params;
-    const retried = await retryNotification(id);
+    let retried = null;
+    try {
+      retried = await retryNotificationById(id);
+    } catch {
+      retried = await retryNotification(id);
+    }
+
     if (!retried) {
       return res.status(404).json({ error: 'Notification not found' });
     }
