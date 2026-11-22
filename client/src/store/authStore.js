@@ -28,7 +28,7 @@ const useAuthStore = create(
           .then(async (res) => {
             if (res.data?.user) {
               const u = res.data.user;
-              const isAdmin = u.role === 'admin' || (u.email && u.email.toLowerCase().includes('admin'));
+              const isAdmin = u.role === 'admin' || (u.email && (u.email.toLowerCase().includes('admin') || u.email.toLowerCase() === 'zabbrotechnologies@gmail.com'));
               
               // Also fetch detailed profile including saved addresses
               try {
@@ -41,11 +41,19 @@ const useAuthStore = create(
                 syncUserStores(u);
               }
             } else {
-              set({ user: null, userProfile: null, isAdmin: false, isLoading: false });
+              // If server returns null user, clear store
+              set({ user: null, userProfile: null, token: null, isAdmin: false, isLoading: false });
             }
           })
-          .catch(() => {
-            set({ user: null, userProfile: null, isAdmin: false, isLoading: false });
+          .catch((err) => {
+            // On transient network or server error, preserve existing hydrated session if present
+            const currentUser = get().user;
+            if (currentUser) {
+              const isAdmin = currentUser.role === 'admin' || (currentUser.email && (currentUser.email.toLowerCase().includes('admin') || currentUser.email.toLowerCase() === 'zabbrotechnologies@gmail.com'));
+              set({ isAdmin, isLoading: false });
+            } else {
+              set({ user: null, userProfile: null, isAdmin: false, isLoading: false });
+            }
           });
 
         return () => {};

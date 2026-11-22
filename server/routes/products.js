@@ -41,6 +41,12 @@ function customLookup(hostname, options, callback) {
   });
 }
 
+function safeNum(val, fallback = null) {
+  if (val === null || val === undefined || val === '') return fallback;
+  const n = Number(String(val).replace(/[^0-9.]/g, ''));
+  return isNaN(n) ? fallback : n;
+}
+
 const httpsAgent = new https.Agent({ lookup: customLookup, keepAlive: false });
 
 let s3 = null;
@@ -303,18 +309,18 @@ router.post('/', requireAdmin, async (req, res) => {
       data.name,
       data.description || '',
       data.category || 'slippers',
-      Number(data.price) || 0,
-      data.originalPrice || data.original_price ? Number(data.originalPrice || data.original_price) : null,
+      safeNum(data.price, 0),
+      safeNum(data.originalPrice ?? data.original_price, null),
       JSON.stringify(sortedSizes),
       JSON.stringify(data.colors || []),
       JSON.stringify(processedImages),
-      Number(data.stock) ?? 10,
+      safeNum(data.stock, 10),
       Boolean(data.featured),
       Boolean(data.is_exclusive),
       data.material || 'Full-Grain Leather',
       data.badge || null,
-      Number(data.rating) || 5.0,
-      Number(data.review_count) || 0
+      safeNum(data.rating, 5.0),
+      safeNum(data.review_count, 0)
     ];
 
     const rows = await query(sql, params);
@@ -323,7 +329,7 @@ router.post('/', requireAdmin, async (req, res) => {
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error('Error creating product:', err);
-    res.status(500).json({ error: 'Failed to create product' });
+    res.status(500).json({ error: err.message || 'Failed to create product' });
   }
 });
 
@@ -362,12 +368,12 @@ router.put('/:id', requireAdmin, async (req, res) => {
       data.name,
       data.description,
       data.category,
-      data.price !== undefined ? Number(data.price) : null,
-      data.originalPrice !== undefined || data.original_price !== undefined ? Number(data.originalPrice || data.original_price) : null,
+      data.price !== undefined ? safeNum(data.price, null) : null,
+      data.originalPrice !== undefined || data.original_price !== undefined ? safeNum(data.originalPrice ?? data.original_price, null) : null,
       data.sizes ? JSON.stringify(sortedSizes) : null,
       data.colors ? JSON.stringify(data.colors) : null,
       processedImages ? JSON.stringify(processedImages) : null,
-      data.stock !== undefined ? Number(data.stock) : null,
+      data.stock !== undefined ? safeNum(data.stock, null) : null,
       data.featured !== undefined ? Boolean(data.featured) : null,
       data.is_exclusive !== undefined ? Boolean(data.is_exclusive) : null,
       data.material,
@@ -382,7 +388,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
     res.json(rows[0]);
   } catch (err) {
     console.error('Error updating product:', err);
-    res.status(500).json({ error: 'Failed to update product' });
+    res.status(500).json({ error: err.message || 'Failed to update product' });
   }
 });
 

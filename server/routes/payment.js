@@ -187,7 +187,6 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
             eventType: 'ORDER_PLACED'
           }).catch(e => console.warn('[Payment] Order placed confirmation notice:', e.message));
         }
-        }
       } else if (orderRows.length > 0) {
         finalOrder = orderRows[0];
       }
