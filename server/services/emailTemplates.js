@@ -191,6 +191,9 @@ export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteU
   const subtotal = formatInr(order.subtotal || order.total);
   const shippingCost = order.shippingCost ? formatInr(order.shippingCost) : 'FREE';
   const viewOrderUrl = `${siteUrl}/account?tab=orders`;
+  const paymentMethodLabel = (order.payment_method === 'cod' || order.paymentMethod === 'cod')
+    ? 'Cash on Delivery (COD)'
+    : (order.payment_status === 'paid' ? 'Paid Online via Razorpay' : 'Online Payment (Razorpay)');
 
   const itemsHtml = items.map((item) => {
     const imgUrl = getFullImageUrl(item.image, siteUrl);
@@ -248,6 +251,10 @@ export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteU
     <div style="background-color: #FAF7F2; padding: 18px 20px; border-radius: 12px; margin-bottom: 24px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 13px; line-height: 1.8;">
         <tr>
+          <td style="color: #78716C;">Payment Method</td>
+          <td align="right" style="font-weight: bold; color: #1F1E1D;">${escapeHtml(paymentMethodLabel)}</td>
+        </tr>
+        <tr>
           <td style="color: #78716C;">Subtotal</td>
           <td align="right" style="font-weight: bold; color: #1F1E1D;">${subtotal}</td>
         </tr>
@@ -275,10 +282,10 @@ export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteU
       </p>
     </div>
 
-    <!-- View Order CTA -->
+    <!-- View & Track Order CTA -->
     <div style="text-align: center; margin-bottom: 24px;">
-      <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
-        Track &amp; View Order &rarr;
+      <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 16px 40px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        TRACK YOUR ORDER &rarr;
       </a>
     </div>
   `;
@@ -471,10 +478,10 @@ export function renderPaymentSuccessEmail({
       </p>
     </div>
 
-    <!-- View Order CTA -->
+    <!-- View & Track Order CTA -->
     <div style="text-align: center; margin-bottom: 24px;">
-      <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
-        Track &amp; View Order &rarr;
+      <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 16px 40px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        TRACK YOUR ORDER &rarr;
       </a>
     </div>
 

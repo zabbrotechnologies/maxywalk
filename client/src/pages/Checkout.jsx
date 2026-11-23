@@ -235,6 +235,21 @@ export default function Checkout() {
         }
       };
 
+      // Cash on Delivery (COD) path
+      if (paymentMethod === 'cod') {
+        const orderData = await placeOrder({
+          ...baseOrderPayload,
+          paymentMethod: 'cod',
+          payment_method: 'cod'
+        });
+        clearCart();
+        handleAutoSaveAddress();
+        setOrderPlaced(orderData);
+        toast.success('Order placed successfully via Cash on Delivery!');
+        return;
+      }
+
+      // Online Payment (Razorpay) path
       const loaded = await loadRazorpayScript();
       if (!loaded) {
         toast.error('Razorpay SDK failed to load. Please check your internet connection.');
@@ -604,7 +619,7 @@ export default function Checkout() {
                     ) : (
                       <>
                         <span className="material-symbols-outlined text-sm">lock</span>
-                        Pay with Razorpay · {formatPrice(total)}
+                        {paymentMethod === 'cod' ? `Place Order (Cash on Delivery) · ${formatPrice(total)}` : `Pay with Razorpay · ${formatPrice(total)}`}
                       </>
                     )}
                   </button>

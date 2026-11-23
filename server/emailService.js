@@ -14,7 +14,7 @@ class EmailService {
   }
 
   initTransporter() {
-    const user = (process.env.SMTP_USER || 'sales.maxywalk@gmail.com').trim();
+    const user = (process.env.SMTP_USER || 'shop.maxywalk@gmail.com').trim();
     // 16-character Google App Passwords may have spaces like "nqmo qwyn lmhb yplb"
     const pass = (process.env.SMTP_PASS || '').trim().replace(/\s+/g, '');
     const host = process.env.SMTP_HOST || 'smtp.gmail.com';
@@ -85,7 +85,7 @@ class EmailService {
     const cleanTo = to.trim().toLowerCase();
     const cleanSubject = subject.trim();
     const defaultFromName = process.env.EMAIL_FROM_NAME || 'MAXYWALK';
-    const defaultFromEmail = process.env.EMAIL_FROM || process.env.SMTP_USER || 'sales.maxywalk@gmail.com';
+    const defaultFromEmail = process.env.EMAIL_FROM || process.env.SMTP_USER || 'shop.maxywalk@gmail.com';
     const sender = from || (defaultFromEmail.includes('<') ? defaultFromEmail : `"${fromName || defaultFromName}" <${defaultFromEmail}>`);
     const resolvedReplyTo = replyTo || process.env.EMAIL_REPLY_TO || defaultFromEmail;
 

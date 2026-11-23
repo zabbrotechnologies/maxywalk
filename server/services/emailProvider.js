@@ -89,7 +89,7 @@ class EmailProvider {
     const cleanTo = to.trim().toLowerCase();
     const cleanSubject = subject.trim();
     const defaultFromName = process.env.EMAIL_FROM_NAME || 'MAXYWALK';
-    const defaultFromEmail = process.env.EMAIL_FROM || 'sales.maxywalk@gmail.com';
+    const defaultFromEmail = process.env.EMAIL_FROM || 'shop.maxywalk@gmail.com';
     const sender = from || (defaultFromEmail.includes('<') ? defaultFromEmail : `"${fromName || defaultFromName}" <${defaultFromEmail}>`);
     const resolvedReplyTo = replyTo || process.env.EMAIL_REPLY_TO || defaultFromEmail;
 

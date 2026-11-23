@@ -542,22 +542,17 @@ router.post('/razorpay/verify', async (req, res) => {
 
     const finalOrder = updated[0] || order;
 
-    // Event-Driven: Trigger PAYMENT_SUCCESS and ORDER_PLACED notifications
+    // Event-Driven: Trigger single Order Placed & Confirmation notification with Tracking Link
     if (finalOrder.user_email) {
       sendOrderNotification({
         order: finalOrder,
-        eventType: 'PAYMENT_SUCCESS',
+        eventType: 'ORDER_PLACED',
         metadata: {
           paymentId: razorpay_payment_id,
           paymentRef: razorpay_payment_id,
           amount: finalOrder.total,
           paymentMethod: 'Online / Razorpay'
         }
-      }).catch((e) => console.warn('[Orders] Payment success notification notice:', e.message));
-
-      sendOrderNotification({
-        order: finalOrder,
-        eventType: 'ORDER_PLACED'
       }).catch((e) => console.warn('[Orders] Order placed confirmation notice:', e.message));
     }
 
@@ -629,13 +624,8 @@ router.post('/razorpay/webhook', async (req, res) => {
             const finalOrder = updated[0] || order;
             sendOrderNotification({
               order: finalOrder,
-              eventType: 'PAYMENT_SUCCESS',
-              metadata: { paymentId, amount: finalOrder.total }
-            }).catch(() => {});
-
-            sendOrderNotification({
-              order: finalOrder,
-              eventType: 'ORDER_PLACED'
+              eventType: 'ORDER_PLACED',
+              metadata: { paymentId, amount: finalOrder.total, paymentMethod: 'Online / Razorpay' }
             }).catch(() => {});
           }
         }
