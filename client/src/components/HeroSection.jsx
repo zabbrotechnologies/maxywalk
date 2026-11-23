@@ -34,7 +34,7 @@ const SLIDES = [
   },
 ];
 
-const INTERVAL = 4000; // ms per slide
+const INTERVAL = 2800; // ms per slide
 
 /* ─── Decorative SVG background ─────────────────────────────── */
 function HeroBgGraphic() {

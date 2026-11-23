@@ -60,12 +60,12 @@ export default function ExclusiveProductSection() {
   const selectedVariantId = selectedVariant?.id || (selectedVariant?.name ? selectedVariant.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);
   const isWishlisted = checkWishlisted(product.id, selectedVariantId, user);
 
-  // Auto-advance product image variant every 4.5 seconds when not hovered/dragged
+  // Auto-advance product image variant every 0.7 seconds when not hovered/dragged
   useEffect(() => {
     if (isHovered || isDragging.current || variants.length <= 1) return;
     const interval = setInterval(() => {
       setSelectedIndex((prev) => (prev + 1) % variants.length);
-    }, 4500);
+    }, 700);
     return () => clearInterval(interval);
   }, [isHovered, variants.length]);
 
@@ -390,7 +390,7 @@ export default function ExclusiveProductSection() {
                   return (
                     <div
                       key={v.id || v.name}
-                      className={`absolute inset-0 flex items-center justify-center p-2 sm:p-4 transition-all duration-150 ease-out pointer-events-none ${
+                      className={`absolute inset-0 flex items-center justify-center p-2 sm:p-4 transition-all duration-300 ease-out pointer-events-none ${
                         isCurrent
                           ? 'opacity-100 scale-100 z-10'
                           : 'opacity-0 scale-95 z-0'
