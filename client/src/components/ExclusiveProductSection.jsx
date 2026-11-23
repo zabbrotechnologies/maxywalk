@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 
 const COLOR_HEX_MAP = {
   black: '#1F1E1D',
+  burgundy: '#5A2328',
   maroon: '#5A2328',
   sandal: '#C28B53',
   sandalwood: '#C28B53',
@@ -203,7 +204,7 @@ export default function ExclusiveProductSection() {
                   <button
                     key={v.id || v.name}
                     onClick={() => setSelectedIndex(idx)}
-                    className={`relative flex items-center gap-3 p-2 sm:p-2.5 rounded-2xl transition-all duration-300 text-left group flex-shrink-0 min-w-[150px] lg:min-w-0 lg:w-full cursor-pointer bg-white border ${
+                    className={`relative flex items-center gap-3 p-2 sm:p-2.5 rounded-2xl transition-all duration-150 text-left group flex-shrink-0 min-w-[150px] lg:min-w-0 lg:w-full cursor-pointer bg-white border ${
                       isSelected
                         ? 'border-[#D35B22] shadow-[0_4px_20px_rgba(211,91,34,0.18)] scale-[1.03]'
                         : 'border-[#E8E2D8] hover:border-[#D35B22]/50 hover:shadow-sm opacity-85 hover:opacity-100'
@@ -389,7 +390,7 @@ export default function ExclusiveProductSection() {
                   return (
                     <div
                       key={v.id || v.name}
-                      className={`absolute inset-0 flex items-center justify-center p-2 sm:p-4 transition-all duration-500 ease-out pointer-events-none ${
+                      className={`absolute inset-0 flex items-center justify-center p-2 sm:p-4 transition-all duration-150 ease-out pointer-events-none ${
                         isCurrent
                           ? 'opacity-100 scale-100 z-10'
                           : 'opacity-0 scale-95 z-0'

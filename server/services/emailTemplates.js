@@ -83,7 +83,7 @@ function masterLayout({ preheader = '', contentHtml, siteUrl = 'https://maxywalk
               <p style="margin: 0 0 16px 0;">
                 <a href="${siteUrl}/shop" style="color: #D35B22; text-decoration: none; font-weight: bold; margin: 0 8px;">Footwear Collection</a> &bull;
                 <a href="${siteUrl}/account?tab=orders" style="color: #D35B22; text-decoration: none; font-weight: bold; margin: 0 8px;">My Orders</a> &bull;
-                <a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22; text-decoration: none; font-weight: bold; margin: 0 8px;">Customer Support</a>
+                <a href="mailto:shop.maxywalk@gmail.com" style="color: #D35B22; text-decoration: none; font-weight: bold; margin: 0 8px;">Customer Support</a>
               </p>
 
               ${isPromotional && unsubscribeUrl ? `
@@ -151,7 +151,7 @@ export function renderWelcomeEmail({ name = 'Customer', email, siteUrl = 'https:
 
     <p style="font-size: 13px; line-height: 1.6; color: #78716C; margin: 0;">
       Need any assistance with sizing or styling? Reach out directly to our artisan concierge at
-      <a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22; font-weight: bold; text-decoration: none;">sales.maxywalk@gmail.com</a>.
+      <a href="mailto:shop.maxywalk@gmail.com" style="color: #D35B22; font-weight: bold; text-decoration: none;">shop.maxywalk@gmail.com</a>.
     </p>
   `;
 
@@ -521,7 +521,7 @@ export function renderPaymentSuccessEmail({
 
     <!-- Support Assistance -->
     <p style="font-size: 12px; line-height: 1.6; color: #78716C; text-align: center; margin: 0;">
-      Questions about your order or receipt? Reply directly to this email (<a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22; font-weight: bold; text-decoration: none;">sales.maxywalk@gmail.com</a>) or contact our team at <strong>+91 94447 43465</strong>.
+      Questions about your order or receipt? Reply directly to this email (<a href="mailto:shop.maxywalk@gmail.com" style="color: #D35B22; font-weight: bold; text-decoration: none;">shop.maxywalk@gmail.com</a>) or contact our team at <strong>+91 94447 43465</strong>.
     </p>
   `;
 
@@ -541,7 +541,7 @@ ${paymentRef ? `Razorpay Ref: ${paymentRef}\n` : ''}Date: ${formattedDate}
 Customer: ${resolvedCustomerName}
 ${shippingAddr.address ? `Shipping: ${shippingAddr.address}, ${shippingAddr.city} - ${shippingAddr.pincode}\n` : ''}
 Track your order at: ${viewOrderUrl}
-For questions or support, contact sales.maxywalk@gmail.com or +91 94447 43465.`;
+For questions or support, contact shop.maxywalk@gmail.com or +91 94447 43465.`;
 
   return { subject, html, text };
 }
@@ -577,7 +577,7 @@ export function renderPaymentFailedEmail({ order, amount, retryUrl, siteUrl = 'h
     </div>
 
     <p style="font-size: 12px; color: #78716C; text-align: center; margin: 0;">
-      If your account was debited, the amount will be automatically refunded by your bank within 3–5 business days. For assistance, email <a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22;">sales.maxywalk@gmail.com</a>.
+      If your account was debited, the amount will be automatically refunded by your bank within 3–5 business days. For assistance, email <a href="mailto:shop.maxywalk@gmail.com" style="color: #D35B22;">shop.maxywalk@gmail.com</a>.
     </p>
   `;
 
@@ -785,7 +785,7 @@ export function renderOrderDeliveredEmail({ order, customerName = 'Customer', de
     </div>
 
     <p style="font-size: 13px; line-height: 1.6; color: #78716C; margin: 0;">
-      Questions or sizing support? We are always here at <a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22;">sales.maxywalk@gmail.com</a>.
+      Questions or sizing support? We are always here at <a href="mailto:shop.maxywalk@gmail.com" style="color: #D35B22;">shop.maxywalk@gmail.com</a>.
     </p>
   `;
 
@@ -818,7 +818,7 @@ export function renderOrderCancelledEmail({ order, customerName = 'Customer', ca
     </p>
     <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 24px 0;">
       If you did not request this cancellation or have any inquiries, please contact our customer care team immediately at
-      <a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22; font-weight: bold; text-decoration: none;">sales.maxywalk@gmail.com</a>.
+      <a href="mailto:shop.maxywalk@gmail.com" style="color: #D35B22; font-weight: bold; text-decoration: none;">shop.maxywalk@gmail.com</a>.
     </p>
 
     <div style="text-align: center; margin-bottom: 24px;">
@@ -834,7 +834,7 @@ export function renderOrderCancelledEmail({ order, customerName = 'Customer', ca
     siteUrl
   });
 
-  const text = `Order #${orderId} was cancelled on ${formattedDate}. For support, email sales.maxywalk@gmail.com.`;
+  const text = `Order #${orderId} was cancelled on ${formattedDate}. For support, email shop.maxywalk@gmail.com.`;
   return { subject, html, text };
 }
 
@@ -978,7 +978,7 @@ export function renderRefundInitiatedEmail({ order, customerName = 'Customer', a
     </div>
 
     <p style="font-size: 13px; line-height: 1.6; color: #78716C; margin: 0;">
-      Need further assistance? Our support desk is available at <a href="mailto:sales.maxywalk@gmail.com" style="color: #D35B22;">sales.maxywalk@gmail.com</a>.
+      Need further assistance? Our support desk is available at <a href="mailto:shop.maxywalk@gmail.com" style="color: #D35B22;">shop.maxywalk@gmail.com</a>.
     </p>
   `;
 
@@ -988,7 +988,7 @@ export function renderRefundInitiatedEmail({ order, customerName = 'Customer', a
     siteUrl
   });
 
-  const text = `Refund of ${refundAmount} initiated for Order #${orderId}. It will reflect in 5-7 business days. Support: sales.maxywalk@gmail.com`;
+  const text = `Refund of ${refundAmount} initiated for Order #${orderId}. It will reflect in 5-7 business days. Support: shop.maxywalk@gmail.com`;
   return { subject, html, text };
 }
 
@@ -1051,6 +1051,6 @@ export function renderRefundCompletedEmail({ order, customerName = 'Customer', a
     siteUrl
   });
 
-  const text = `Refund of ${refundAmount} for Order #${orderId} has been successfully settled on ${formattedDate}. Support: sales.maxywalk@gmail.com`;
+  const text = `Refund of ${refundAmount} for Order #${orderId} has been successfully settled on ${formattedDate}. Support: shop.maxywalk@gmail.com`;
   return { subject, html, text };
 }

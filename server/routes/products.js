@@ -169,6 +169,21 @@ router.get('/', async (req, res) => {
     // Normalize sizes and ensure numeric sorting
     let list = rows.map((p) => {
       let rawImgs = Array.isArray(p.images) ? p.images : (p.images ? JSON.parse(p.images) : []);
+      if (p.id === 'urbanedge-pro' || (p.name && p.name.toLowerCase().includes('urban edge pro'))) {
+        const EXCLUSIVE_DEFAULTS = [
+          '/products/exclusive/black.png',
+          '/products/exclusive/maroon.png',
+          '/products/exclusive/sandal_wood.png',
+          '/products/exclusive/lightblue.png',
+          '/products/exclusive/gray.png',
+          '/products/exclusive/olivegreen.png',
+          '/products/exclusive/rose.png',
+          '/products/exclusive/lightpink.png'
+        ];
+        if (rawImgs.length === 0 || rawImgs.some((img) => typeof img === 'string' && img.includes('/api/assets/products/urbanedge-pro/'))) {
+          rawImgs = EXCLUSIVE_DEFAULTS;
+        }
+      }
       // Convert any internal Base64 images to clean asset endpoint URLs if already saved in assets
       let finalImgs = rawImgs.map((img, idx) => {
         if (typeof img === 'string' && img.startsWith('data:image/')) {
@@ -244,6 +259,21 @@ router.get('/:id', async (req, res) => {
 
     const p = rows[0];
     let rawImgs = Array.isArray(p.images) ? p.images : (p.images ? JSON.parse(p.images) : []);
+    if (p.id === 'urbanedge-pro' || (p.name && p.name.toLowerCase().includes('urban edge pro'))) {
+      const EXCLUSIVE_DEFAULTS = [
+        '/products/exclusive/black.png',
+        '/products/exclusive/maroon.png',
+        '/products/exclusive/sandal_wood.png',
+        '/products/exclusive/lightblue.png',
+        '/products/exclusive/gray.png',
+        '/products/exclusive/olivegreen.png',
+        '/products/exclusive/rose.png',
+        '/products/exclusive/lightpink.png'
+      ];
+      if (rawImgs.length === 0 || rawImgs.some((img) => typeof img === 'string' && img.includes('/api/assets/products/urbanedge-pro/'))) {
+        rawImgs = EXCLUSIVE_DEFAULTS;
+      }
+    }
     let finalImgs = rawImgs.map((img, idx) => {
       if (typeof img === 'string' && img.startsWith('data:image/')) {
         return `/api/assets/products/${p.id}/image-${String(idx + 1).padStart(2, '0')}.jpg`;
@@ -262,6 +292,7 @@ router.get('/:id', async (req, res) => {
 
     const COLOR_HEX_MAP = {
       black: '#1F1E1D',
+      burgundy: '#5A2328',
       maroon: '#5A2328',
       sandal: '#C28B53',
       sandalwood: '#C28B53',

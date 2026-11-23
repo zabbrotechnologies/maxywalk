@@ -258,7 +258,7 @@ router.all(['/admin/test-smtp', '/test-smtp'], requireAdminOrCron, async (req, r
   const pass = (process.env.SMTP_PASS || '').trim();
   const resendKey = (process.env.RESEND_API_KEY || '').trim();
 
-  const recipient = req.query.to || req.body?.to || user || 'sales.maxywalk@gmail.com';
+  const recipient = req.query.to || req.body?.to || user || 'shop.maxywalk@gmail.com';
 
   const diagnostics = {
     smtpConfigured: Boolean(user && pass),
@@ -298,7 +298,7 @@ router.all(['/admin/test-smtp', '/test-smtp'], requireAdminOrCron, async (req, r
     if (isBadCredentials) {
       resolution = 'Google rejected the App Password. Please generate a new 16-letter App Password at https://myaccount.google.com/apppasswords and update SMTP_PASS in Vercel.';
     } else if (isWebLoginRequired) {
-      resolution = 'Google blocked automated data-center access. Please open https://accounts.google.com/DisplayUnlockCaptcha while logged into sales.maxywalk@gmail.com, click Continue, and re-test.';
+      resolution = 'Google blocked automated data-center access. Please open https://accounts.google.com/DisplayUnlockCaptcha while logged into shop.maxywalk@gmail.com, click Continue, and re-test.';
     }
 
     return res.status(500).json({

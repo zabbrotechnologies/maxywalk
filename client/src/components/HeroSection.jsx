@@ -34,7 +34,7 @@ const SLIDES = [
   },
 ];
 
-const INTERVAL = 6000; // ms per slide
+const INTERVAL = 4000; // ms per slide
 
 /* ─── Decorative SVG background ─────────────────────────────── */
 function HeroBgGraphic() {
@@ -118,8 +118,8 @@ export default function HeroSection() {
       setPrevActive(active);
       setActive(next);
       setAnimState("enter");
-      setTimeout(() => setAnimState("visible"), 700);
-    }, 400);
+      setTimeout(() => setAnimState("visible"), 220);
+    }, 160);
   }, [active]);
 
   /* ── auto-slider ────────────────────────────────────────────── */
@@ -159,7 +159,7 @@ export default function HeroSection() {
       : animState === "enter"
         ? "translateX(-30px) scale(0.97)"
         : "translateX(0) scale(1)",
-    transition: "opacity 600ms cubic-bezier(0.22,1,0.36,1), transform 700ms cubic-bezier(0.22,1,0.36,1)",
+    transition: "opacity 240ms cubic-bezier(0.22,1,0.36,1), transform 280ms cubic-bezier(0.22,1,0.36,1)",
     willChange: "transform, opacity",
   };
 
@@ -170,7 +170,7 @@ export default function HeroSection() {
       : animState === "enter"
         ? "translateY(8px)"
         : "translateY(0)",
-    transition: "opacity 500ms cubic-bezier(0.22,1,0.36,1), transform 600ms cubic-bezier(0.22,1,0.36,1)",
+    transition: "opacity 200ms cubic-bezier(0.22,1,0.36,1), transform 240ms cubic-bezier(0.22,1,0.36,1)",
   };
 
   return (
@@ -457,7 +457,7 @@ export default function HeroSection() {
                   fontFamily: "var(--font-sans)", fontSize: "0.65rem",
                   color: "rgba(255,255,255,0.55)", letterSpacing: "0.22em",
                   textTransform: "uppercase", fontWeight: 700,
-                }}>Est. 2010 · Avadi, TN · MAXYWALK</span>
+                }}>Est. 2021 · Avadi, TN · MAXYWALK</span>
               </div>
 
               {/* headline */}

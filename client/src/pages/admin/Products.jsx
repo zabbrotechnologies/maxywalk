@@ -52,7 +52,18 @@ export default function AdminProducts() {
       originalPrice: p.original_price || p.originalPrice || '',
       sizes: sortSizes(p.sizes || []).filter((s) => ['6','7','8','9','10','11','12','13'].includes(String(s).trim())),
       colors: p.colors ? p.colors.join(', ') : '',
-      images: p.images?.length ? p.images : [''],
+      images: (p.id === 'urbanedge-pro' || p.name?.toLowerCase().includes('urban edge pro')) && p.images?.some((img) => typeof img === 'string' && img.includes('/api/assets/products/urbanedge-pro/'))
+        ? [
+            '/products/exclusive/black.png',
+            '/products/exclusive/maroon.png',
+            '/products/exclusive/sandal_wood.png',
+            '/products/exclusive/lightblue.png',
+            '/products/exclusive/gray.png',
+            '/products/exclusive/olivegreen.png',
+            '/products/exclusive/rose.png',
+            '/products/exclusive/lightpink.png'
+          ]
+        : (p.images?.length ? p.images : ['']),
       stock: p.stock ?? 10,
       featured: p.featured || false,
       material: p.material || 'Full-Grain Leather',

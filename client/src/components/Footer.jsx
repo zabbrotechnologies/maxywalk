@@ -58,7 +58,7 @@ export default function Footer() {
               MAXYWALK
             </Link>
             <p className="text-xs text-on-surface-variant leading-relaxed">
-              Handcrafting premium custom leather slippers, shoes, mules, and sandals in Avadi since 2010 under the registered brand <strong>MAXYWALK</strong>.
+              Handcrafting premium custom leather slippers, shoes, mules, and sandals in Avadi since 2021 under the registered brand <strong>MAXYWALK</strong>.
             </p>
 
             {/* Complete Physical Business Contact Details */}

@@ -229,7 +229,7 @@ export default function AdminEmails() {
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100" />
           </div>
           <span className="text-[11px] text-on-surface-variant mt-1 block truncate">
-            sales.maxywalk@gmail.com
+            shop.maxywalk@gmail.com
           </span>
         </div>
       </div>

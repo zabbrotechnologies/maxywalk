@@ -73,10 +73,16 @@ export const DEFAULT_EXCLUSIVE_PRODUCT = {
   review_count: 48,
   created_at: '2026-01-01T00:00:00Z',
   sizes: ['6', '7', '8', '9', '10', '11', '12', '13'],
-  colors: ['Black', 'Maroon', 'Sandal / Wood', 'Light Blue', 'Grey', 'Olive Green', 'Rose', 'Light Pink'],
+  colors: ['Black', 'Burgundy', 'Sandal / Wood', 'Light Blue', 'Grey', 'Olive Green', 'Rose', 'Light Pink'],
   images: [
     '/products/exclusive/black.png',
-    '/products/exclusive/maroon.png'
+    '/products/exclusive/maroon.png',
+    '/products/exclusive/sandal_wood.png',
+    '/products/exclusive/lightblue.png',
+    '/products/exclusive/gray.png',
+    '/products/exclusive/olivegreen.png',
+    '/products/exclusive/rose.png',
+    '/products/exclusive/lightpink.png'
   ],
   variants: [
     {
@@ -88,9 +94,9 @@ export const DEFAULT_EXCLUSIVE_PRODUCT = {
       hex: '#1F1E1D',
     },
     {
-      id: 'maroon',
-      name: 'Maroon',
-      label: 'Maroon',
+      id: 'burgundy',
+      name: 'Burgundy',
+      label: 'Burgundy',
       image: '/products/exclusive/maroon.png',
       colorHex: '#5A2328',
       hex: '#5A2328',
