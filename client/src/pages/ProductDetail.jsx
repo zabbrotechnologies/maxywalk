@@ -5,7 +5,7 @@ import useCartStore from '../store/cartStore.js';
 import useAuthStore from '../store/authStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
 import ProductCard from '../components/ProductCard.jsx';
-import { formatPrice, sortSizes } from '../lib/utils.js';
+import { formatPrice, sortSizes, getSizeSurcharge, getProductPriceForSize } from '../lib/utils.js';
 import toast from 'react-hot-toast';
 
 export default function ProductDetail() {
@@ -110,8 +110,7 @@ export default function ProductDetail() {
 
   const origPrice = product.originalPrice || product.original_price;
 
-  const parsedSize = parseInt(selectedSize);
-  const sizeSurcharge = (!isNaN(parsedSize) && parsedSize > 10) ? (parsedSize - 10) * 150 : 0;
+  const sizeSurcharge = getSizeSurcharge(selectedSize);
   const displayPrice = product.price + sizeSurcharge;
 
   const discount = (origPrice && origPrice > product.price)
@@ -155,10 +154,12 @@ export default function ProductDetail() {
     const sortedSizes = sortSizes(product.sizes);
     const effectiveSize = selectedSize || (sortedSizes.length > 0 ? sortedSizes[0] : 'Standard');
     const effectiveColor = selectedColor || (product.colors?.length ? product.colors[0] : 'Default');
+    const effectivePrice = getProductPriceForSize(product.price, effectiveSize);
     
     const productWithVariantImage = {
       ...product,
-      price: displayPrice,
+      basePrice: product.price,
+      price: effectivePrice,
       image: currentVariantImage || product.images?.[0] || product.image || ''
     };
 
@@ -305,21 +306,33 @@ export default function ProductDetail() {
               <div>
                 <p className="font-sans text-xs uppercase tracking-wider text-primary font-bold mb-2">
                   Select Size: <span className="text-secondary font-semibold">{selectedSize || 'Choose size'}</span>
+                  {sizeSurcharge > 0 && (
+                    <span className="ml-2 text-xs font-bold text-secondary">(+₹{sizeSurcharge})</span>
+                  )}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {(sortSizes(product.sizes)).map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedSize(String(size).trim())}
-                      className={`min-w-[44px] h-11 px-3 font-sans text-xs border transition-all flex items-center justify-center ${
-                        String(selectedSize).trim() === String(size).trim()
-                          ? 'border-primary bg-primary text-white font-bold'
-                          : 'border-outline-variant text-on-surface bg-white hover:border-primary'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+                  {(sortSizes(product.sizes)).map((size) => {
+                    const extra = getSizeSurcharge(size);
+                    const isSelected = String(selectedSize).trim() === String(size).trim();
+                    return (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(String(size).trim())}
+                        className={`min-w-[46px] h-12 px-3 font-sans text-xs border transition-all flex flex-col items-center justify-center ${
+                          isSelected
+                            ? 'border-primary bg-primary text-white font-bold'
+                            : 'border-outline-variant text-on-surface bg-white hover:border-primary'
+                        }`}
+                      >
+                        <span className="leading-tight text-xs font-bold">{size}</span>
+                        {extra > 0 && (
+                          <span className={`text-[9px] leading-none mt-0.5 ${isSelected ? 'text-white/80' : 'text-secondary font-bold'}`}>
+                            +₹{extra}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

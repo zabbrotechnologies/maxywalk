@@ -14,7 +14,7 @@ const getAdminAssetUrl = (url, cacheBuster = '') => {
 };
 
 
-const EMPTY_FORM = { name: '', description: '', category: 'slippers', price: '', originalPrice: '', sizes: [], colors: [], images: [''], stock: 10, featured: false, material: 'Full-Grain Leather', badge: '' };
+const EMPTY_FORM = { name: '', description: '', category: 'slippers', price: '', originalPrice: '', sizes: ['6', '7', '8', '9', '10', '11', '12', '13'], colors: [], images: [''], stock: 10, featured: false, material: 'Full-Grain Leather', badge: '' };
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -50,7 +50,7 @@ export default function AdminProducts() {
       category: p.category || 'slippers',
       price: p.price || '',
       originalPrice: p.original_price || p.originalPrice || '',
-      sizes: sortSizes(p.sizes || []),
+      sizes: sortSizes(p.sizes || []).filter((s) => ['6','7','8','9','10','11','12','13'].includes(String(s).trim())),
       colors: p.colors ? p.colors.join(', ') : '',
       images: p.images?.length ? p.images : [''],
       stock: p.stock ?? 10,
@@ -339,10 +339,13 @@ export default function AdminProducts() {
 
               {/* Sizes */}
               <div>
-                <label className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">Sizes</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant block">Sizes</label>
+                  <span className="text-[10px] text-on-surface-variant">Sizes 11 (+₹150), 12 (+₹300), 13 (+₹450) automatically added</span>
+                </div>
                 <div className="flex flex-wrap gap-2">
-                  {['6','7','8','9','10','11','12','S','M','L','XL','One Size'].map((s) => (
-                    <button key={s} type="button" onClick={() => setForm((f) => ({ ...f, sizes: f.sizes.includes(s) ? f.sizes.filter((x) => x !== s) : [...f.sizes, s] }))} className={`px-3 py-1.5 border text-xs transition-colors ${form.sizes.includes(s) ? 'border-primary bg-primary text-white' : 'border-outline-variant hover:border-primary'}`}>{s}</button>
+                  {['6','7','8','9','10','11','12','13'].map((s) => (
+                    <button key={s} type="button" onClick={() => setForm((f) => ({ ...f, sizes: f.sizes.includes(s) ? f.sizes.filter((x) => x !== s) : [...f.sizes, s] }))} className={`px-3 py-1.5 border text-xs transition-colors ${form.sizes.includes(s) ? 'border-primary bg-primary text-white font-bold' : 'border-outline-variant hover:border-primary'}`}>{s}</button>
                   ))}
                 </div>
               </div>

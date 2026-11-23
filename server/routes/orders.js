@@ -415,6 +415,14 @@ router.post('/razorpay/create-order', orderRateLimiter, async (req, res) => {
           price = Number(pRows[0].price) || price;
         }
       }
+
+      // Add size surcharge: sizes 1-10 (+₹0), size 11 (+₹150), size 12 (+₹300), size 13 (+₹450), etc.
+      const sizeStr = String(item.selectedSize || item.size || '').replace(/[^0-9]/g, '');
+      const sizeNum = parseInt(sizeStr, 10);
+      if (!isNaN(sizeNum) && sizeNum > 10) {
+        price += (sizeNum - 10) * 150;
+      }
+      item.price = price;
       subtotal += price * qty;
     }
 

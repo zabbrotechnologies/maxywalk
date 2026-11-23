@@ -72,7 +72,7 @@ export const DEFAULT_EXCLUSIVE_PRODUCT = {
   rating: 5.0,
   review_count: 48,
   created_at: '2026-01-01T00:00:00Z',
-  sizes: ['6', '7', '8', '9', '10', '11'],
+  sizes: ['6', '7', '8', '9', '10', '11', '12', '13'],
   colors: ['Black', 'Maroon', 'Sandal / Wood', 'Light Blue', 'Grey', 'Olive Green', 'Rose', 'Light Pink'],
   images: [
     '/products/exclusive/black.png',

@@ -101,7 +101,32 @@ export const CATEGORIES = [
 /**
  * Shoe sizes (Indian)
  */
-export const SHOE_SIZES = ['6', '7', '8', '9', '10', '11', '12'];
+export const SHOE_SIZES = ['6', '7', '8', '9', '10', '11', '12', '13'];
+
+/**
+ * Calculates size surcharge:
+ * Sizes 1 to 10: +₹0
+ * Size 11: +₹150
+ * Size 12: +₹300 (150 + 150)
+ * Size 13: +₹450 (150 + 150 + 150)
+ * Each additional size above 10 adds ₹150.
+ */
+export function getSizeSurcharge(size) {
+  if (!size) return 0;
+  const parsed = parseInt(String(size).replace(/[^0-9]/g, ''), 10);
+  if (!isNaN(parsed) && parsed > 10) {
+    return (parsed - 10) * 150;
+  }
+  return 0;
+}
+
+/**
+ * Returns the final product price adjusted for the selected size.
+ */
+export function getProductPriceForSize(basePrice, size) {
+  const base = Number(basePrice) || 0;
+  return base + getSizeSurcharge(size);
+}
 
 // Standard apparel size hierarchy for non-numeric sizing
 const APPAREL_SIZE_MAP = {

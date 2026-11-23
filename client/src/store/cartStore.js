@@ -66,6 +66,12 @@ const useCartStore = create(
         const addQty = Math.max(1, Math.min(10, parseInt(qty) || 1));
         const maxStock = typeof product.stock === 'number' && product.stock > 0 ? product.stock : 10;
 
+        // Size pricing: sizes 1-10 (+₹0), size 11 (+₹150), size 12 (+₹300), size 13 (+₹450)
+        const basePrice = Number(product.basePrice != null ? product.basePrice : product.price) || 0;
+        const sizeNum = parseInt(size.replace(/[^0-9]/g, ''), 10);
+        const sizeSurcharge = (!isNaN(sizeNum) && sizeNum > 10) ? (sizeNum - 10) * 150 : 0;
+        const finalPrice = product.basePrice != null ? (basePrice + sizeSurcharge) : (Number(product.price) || (basePrice + sizeSurcharge));
+
         let updatedCart;
         if (existing) {
           updatedCart = currentCart.map((i) =>
@@ -78,7 +84,8 @@ const useCartStore = create(
               cartKey,
               id: product.id,
               name: product.name,
-              price: Number(product.price) || 0,
+              price: finalPrice,
+              basePrice,
               image: product.image || product.images?.[0] || '',
               selectedSize: size,
               selectedColor: color,
