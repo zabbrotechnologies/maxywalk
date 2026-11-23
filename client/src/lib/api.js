@@ -456,4 +456,11 @@ export const processEmailQueueNow = async (batchSize = 25) => {
   return res.data;
 };
 
+export const testEmailConnection = async (toEmail = null) => {
+  const res = await api.post('/admin/emails/test-smtp', { to: toEmail }, {
+    headers: { 'x-admin-request': 'true' }
+  });
+  return res.data;
+};
+
 export default api;

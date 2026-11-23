@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from './Layout.jsx';
-import { getEmailOverview, getEmailCampaigns, getEmailHistory, retryFailedEmail, processEmailQueueNow } from '../../lib/api.js';
+import { getEmailOverview, getEmailCampaigns, getEmailHistory, retryFailedEmail, processEmailQueueNow, testEmailConnection } from '../../lib/api.js';
 import { formatDate } from '../../lib/utils.js';
 import toast from 'react-hot-toast';
 
@@ -12,6 +12,7 @@ export default function AdminEmails() {
   const [totalNotifications, setTotalNotifications] = useState(0);
   const [loading, setLoading] = useState(true);
   const [processingQueue, setProcessingQueue] = useState(false);
+  const [testingSmtp, setTestingSmtp] = useState(false);
   const [retryingId, setRetryingId] = useState(null);
 
   // Filters
@@ -82,6 +83,22 @@ export default function AdminEmails() {
     }
   };
 
+  const handleTestSmtp = async () => {
+    setTestingSmtp(true);
+    const toastId = toast.loading('Connecting and testing email server...');
+    try {
+      const res = await testEmailConnection();
+      toast.success(res?.message || 'Email connection test passed!', { id: toastId, duration: 5000 });
+      fetchOverview();
+      if (activeTab === 'queue') fetchHistory();
+    } catch (err) {
+      const msg = err.response?.data?.error || err.response?.data?.resolution || err.message || 'SMTP Test failed';
+      toast.error(msg, { id: toastId, duration: 8000 });
+    } finally {
+      setTestingSmtp(false);
+    }
+  };
+
   const handleRetry = async (id) => {
     setRetryingId(id);
     try {
@@ -127,6 +144,15 @@ export default function AdminEmails() {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleTestSmtp}
+            disabled={testingSmtp}
+            className="btn-secondary text-xs h-10 px-3.5 flex items-center gap-1.5 font-medium"
+            title="Verify email credentials and send a test email"
+          >
+            <span className="material-symbols-outlined text-base">mark_email_read</span>
+            <span>{testingSmtp ? 'Testing...' : 'Test Connection'}</span>
+          </button>
           <button
             onClick={() => { fetchOverview(); if (activeTab === 'queue') fetchHistory(); else fetchCampaigns(); }}
             className="btn-secondary text-xs h-10 px-4 flex items-center gap-1.5"

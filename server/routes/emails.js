@@ -3,6 +3,7 @@ import { query } from '../db.js';
 import { requireAdmin, requireAuth } from '../middleware/auth.js';
 import { processEmailQueue, retryNotification, getOrCreateUnsubscribeToken } from '../services/emailQueue.js';
 import { retryNotificationById } from '../services/notificationService.js';
+import emailProvider from '../services/emailProvider.js';
 
 const router = express.Router();
 
@@ -245,6 +246,67 @@ router.get('/unsubscribe', async (req, res) => {
   } catch (err) {
     console.error('Error handling unsubscribe:', err);
     res.status(500).send('Unable to update email preferences at this time.');
+  }
+});
+
+/**
+ * POST / GET /api/admin/emails/test-smtp
+ * Test current Gmail SMTP / Resend credentials and verify connection
+ */
+router.all(['/admin/test-smtp', '/test-smtp'], requireAdminOrCron, async (req, res) => {
+  const user = (process.env.SMTP_USER || '').trim();
+  const pass = (process.env.SMTP_PASS || '').trim();
+  const resendKey = (process.env.RESEND_API_KEY || '').trim();
+
+  const recipient = req.query.to || req.body?.to || user || 'sales.maxywalk@gmail.com';
+
+  const diagnostics = {
+    smtpConfigured: Boolean(user && pass),
+    smtpUser: user || 'Not set',
+    smtpPassLength: pass.replace(/\s+/g, '').length,
+    resendConfigured: Boolean(resendKey),
+    activeProvider: emailProvider.getActiveProvider(),
+    recipient
+  };
+
+  try {
+    const sendResult = await emailProvider.sendMail({
+      to: recipient,
+      subject: `MAXYWALK SMTP Test (${new Date().toLocaleTimeString()})`,
+      html: `
+        <div style="font-family: sans-serif; padding: 24px; color: #1F1E1D;">
+          <h2>MAXYWALK Email Test Successful!</h2>
+          <p>Your automated transactional email pipeline is active and working properly.</p>
+          <p><strong>Provider:</strong> ${diagnostics.activeProvider.toUpperCase()}</p>
+          <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
+        </div>
+      `,
+      text: `MAXYWALK Email Test Successful!\nProvider: ${diagnostics.activeProvider.toUpperCase()}\nTimestamp: ${new Date().toISOString()}`
+    });
+
+    return res.json({
+      success: true,
+      message: `Test email sent successfully to ${recipient} via ${sendResult.provider}!`,
+      diagnostics,
+      sendResult
+    });
+  } catch (err) {
+    const isBadCredentials = err.message.includes('535') || err.message.includes('BadCredentials');
+    const isWebLoginRequired = err.message.includes('534') || err.message.includes('WebLoginRequired');
+
+    let resolution = 'Please check your email credentials.';
+    if (isBadCredentials) {
+      resolution = 'Google rejected the App Password. Please generate a new 16-letter App Password at https://myaccount.google.com/apppasswords and update SMTP_PASS in Vercel.';
+    } else if (isWebLoginRequired) {
+      resolution = 'Google blocked automated data-center access. Please open https://accounts.google.com/DisplayUnlockCaptcha while logged into sales.maxywalk@gmail.com, click Continue, and re-test.';
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+      diagnostics,
+      resolution
+    });
   }
 });
 
