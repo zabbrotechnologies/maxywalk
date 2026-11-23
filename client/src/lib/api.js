@@ -58,7 +58,7 @@ export function clearApiCache() {
 
 export const DEFAULT_EXCLUSIVE_PRODUCT = {
   id: 'urbanedge-pro',
-  name: 'UrbanEdge Pro',
+  name: 'Urban Edge Pro',
   tagline: 'STEP INTO EXCLUSIVITY',
   description: 'A refined blend of style, comfort and durability — made for those who choose more.',
   price: 1499,

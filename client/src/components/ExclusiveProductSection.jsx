@@ -44,51 +44,16 @@ export default function ExclusiveProductSection() {
   const isDragging = useRef(false);
 
   useEffect(() => {
-    // Fetch live product data from database/catalog
-    const loadExclusiveProduct = async () => {
-      try {
-        const res = await getProducts({ exclusive: true, limit: 1 });
-        const exItem = res?.products?.find((p) => p.is_exclusive || p.isExclusive) || res?.products?.[0];
-        const targetId = exItem?.id || 'urbanedge-pro';
-        const data = await getProduct(targetId);
+    // Fetch live product details and pricing from database
+    getProduct('urbanedge-pro')
+      .then((data) => {
         if (data) setProduct(data);
-      } catch {
-        getProduct('urbanedge-pro')
-          .then((d) => d && setProduct(d))
-          .catch(() => setProduct(DEFAULT_EXCLUSIVE_PRODUCT));
-      }
-    };
-    loadExclusiveProduct();
+      })
+      .catch(() => setProduct(DEFAULT_EXCLUSIVE_PRODUCT));
   }, []);
 
-  const variants = (() => {
-    if (Array.isArray(product.variants) && product.variants.length > 0) {
-      return product.variants;
-    }
-    const imgs = Array.isArray(product.images) && product.images.length > 0
-      ? product.images
-      : (product.image ? [product.image] : []);
-    const colors = Array.isArray(product.colors) && product.colors.length > 0
-      ? product.colors
-      : ['Black'];
-
-    if (imgs.length > 0) {
-      return imgs.map((img, idx) => {
-        const colorName = colors[idx] || (imgs.length === 1 ? (colors[0] || 'Black') : `Style ${idx + 1}`);
-        const cleanKey = String(colorName).toLowerCase().replace(/[^a-z0-9]/g, '');
-        const hex = COLOR_HEX_MAP[cleanKey] || '#1F1E1D';
-        return {
-          id: `var-${idx}-${cleanKey || 'style'}`,
-          name: colorName,
-          label: colorName,
-          image: img,
-          hex,
-          colorHex: hex
-        };
-      });
-    }
-    return DEFAULT_EXCLUSIVE_PRODUCT.variants;
-  })();
+  // The showcase images are strictly standard turntable 3D renders from /products/exclusive/
+  const variants = DEFAULT_EXCLUSIVE_PRODUCT.variants;
 
   const selectedVariant = variants[selectedIndex] || variants[0];
   const selectedVariantId = selectedVariant?.id || (selectedVariant?.name ? selectedVariant.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);
@@ -154,21 +119,21 @@ export default function ExclusiveProductSection() {
       return;
     }
     const itemToAdd = {
-      id: product.id,
+      id: product.id || 'urbanedge-pro',
       variantId: selectedVariantId,
-      name: product.name,
-      price: product.price,
-      original_price: product.original_price,
-      image: selectedVariant.image || product.images?.[0],
+      name: 'Urban Edge Pro',
+      price: Number(product.price) || 1499,
+      original_price: product.original_price ? Number(product.original_price) : null,
+      image: selectedVariant.image || '/products/exclusive/black.png',
       sizes: product.sizes || ['6', '7', '8', '9', '10', '11'],
       colors: [selectedVariant.name],
-      category: product.category || 'sandals',
-      stock: product.stock ?? 8,
+      category: product.category || 'slippers',
+      stock: product.stock ?? 10,
     };
 
     addItem(itemToAdd, '8', selectedVariant.name, 1, user);
     openCart();
-    toast.success(`${product.name} (${selectedVariant.name}) added to your bag!`);
+    toast.success(`Urban Edge Pro (${selectedVariant.name}) added to your bag!`);
   };
 
   const handleSaveForLater = () => {
@@ -477,7 +442,7 @@ export default function ExclusiveProductSection() {
             </span>
 
             <h3 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#171412] tracking-tight mb-1">
-              {product.name}
+              Urban Edge Pro
             </h3>
 
             <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-[#D35B22] font-bold mb-3">
@@ -491,11 +456,11 @@ export default function ExclusiveProductSection() {
             {/* Price Display */}
             <div className="mb-6 flex items-baseline gap-2.5">
               <span className="font-sans text-3xl sm:text-4xl font-extrabold text-[#171412]">
-                ₹ {product.price?.toLocaleString()}
+                ₹ {Number(product.price || 1499).toLocaleString('en-IN')}
               </span>
               {product.original_price && (
                 <span className="font-sans text-sm text-[#A8A29E] line-through">
-                  ₹ {product.original_price?.toLocaleString()}
+                  ₹ {Number(product.original_price).toLocaleString('en-IN')}
                 </span>
               )}
             </div>

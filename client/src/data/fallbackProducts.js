@@ -1,12 +1,12 @@
 export const FALLBACK_PRODUCTS = [
   {
     "id": "urbanedge-pro",
-    "name": "UrbanEdge Pro",
+    "name": "Urban Edge Pro",
     "tagline": "STEP INTO EXCLUSIVITY",
     "description": "A refined blend of style, comfort and durability \u2014 made for those who choose more.",
     "category": "slippers",
-    "price": 4999,
-    "original_price": 6499,
+    "price": 1499,
+    "original_price": 2199,
     "sizes": [
       "6",
       "7",

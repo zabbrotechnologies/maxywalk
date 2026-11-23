@@ -5,7 +5,7 @@ import { formatPrice, sortSizes } from '../../lib/utils.js';
 import toast from 'react-hot-toast';
 
 const CATEGORIES = ['slippers', 'shoes', 'sandals', 'mens', 'womens'];
-const EMPTY_FORM = { name: '', description: '', category: 'slippers', price: '', originalPrice: '', sizes: [], colors: [], images: [''], stock: 10, featured: false, is_exclusive: false, material: 'Full-Grain Leather', badge: '' };
+const EMPTY_FORM = { name: '', description: '', category: 'slippers', price: '', originalPrice: '', sizes: [], colors: [], images: [''], stock: 10, featured: false, material: 'Full-Grain Leather', badge: '' };
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -46,7 +46,6 @@ export default function AdminProducts() {
       images: p.images?.length ? p.images : [''],
       stock: p.stock ?? 10,
       featured: p.featured || false,
-      is_exclusive: p.is_exclusive || p.isExclusive || p.id === 'urbanedge-pro',
       material: p.material || 'Full-Grain Leather',
       badge: p.badge || '',
     });
@@ -171,8 +170,6 @@ export default function AdminProducts() {
         material: form.material || 'Full-Grain Leather',
         badge: form.badge || null,
         featured: !!form.featured,
-        is_exclusive: !!form.is_exclusive,
-        isExclusive: !!form.is_exclusive,
       };
 
       if (editProduct) {
@@ -251,11 +248,6 @@ export default function AdminProducts() {
                 />
                 {p.badge && <span className="absolute top-2 left-2 bg-white text-primary text-[10px] font-sans uppercase tracking-wider px-2 py-0.5">{p.badge}</span>}
                 <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
-                  {(p.is_exclusive || p.isExclusive || p.id === 'urbanedge-pro') && (
-                    <span className="bg-[#D35B22] text-white text-[10px] font-sans uppercase tracking-wider px-2 py-0.5 font-bold rounded shadow-sm">
-                      Exclusive Showcase
-                    </span>
-                  )}
                   {p.featured && (
                     <span className="bg-secondary text-white text-[10px] font-sans uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">
                       Featured
@@ -434,8 +426,8 @@ export default function AdminProducts() {
                 </div>
               </div>
 
-              {/* Badge + Featured + Exclusive */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Badge + Featured */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant block mb-2">Badge (optional)</label>
                   <input type="text" value={form.badge} onChange={(e) => setForm({ ...form, badge: e.target.value })} placeholder="Best Seller, New Arrival..." className="w-full border border-outline-variant px-3 py-2 text-sm focus:outline-none focus:border-primary" />
@@ -443,10 +435,6 @@ export default function AdminProducts() {
                 <div className="flex items-center gap-2 pt-6">
                   <input type="checkbox" id="featured" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} className="w-4 h-4 accent-secondary cursor-pointer" />
                   <label htmlFor="featured" className="font-sans text-xs text-primary cursor-pointer font-bold">Featured Collection</label>
-                </div>
-                <div className="flex items-center gap-2 pt-6">
-                  <input type="checkbox" id="exclusive" checked={form.is_exclusive} onChange={(e) => setForm({ ...form, is_exclusive: e.target.checked })} className="w-4 h-4 accent-[#D35B22] cursor-pointer" />
-                  <label htmlFor="exclusive" className="font-sans text-xs text-[#D35B22] cursor-pointer font-bold">Exclusive Showcase Item</label>
                 </div>
               </div>
 
