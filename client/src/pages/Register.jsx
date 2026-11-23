@@ -117,7 +117,7 @@ export default function Register() {
       {/* Left — Image & Quote */}
       <div className="hidden lg:block w-1/2 relative overflow-hidden">
         <img
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4NN1xHuCO2Wd6DAU6xFpF2dv2RZT6i-4jieJR7xshEqFl2VhuT2a6sVOA-kVqNgazus0SY0qDgNrZ9nb17av6_MtTOopMD_n42es-P5CK4uAjiP3poKuTethU2-NACNEcuLCpXFCNi98ys935PN9Sx7VDkSkiJJJlnpwOqoSXnnbyFJALJewGtNzFqN6IWGWgRSwQUq4jHlgjwHVEtyQlImQZi44prr4ayCXnieA1Il_tbYXaZMvn"
+          src="/images/auth-bg.png"
           alt="MAXYWALK"
           className="w-full h-full object-cover"
         />

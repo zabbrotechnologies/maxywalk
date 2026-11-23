@@ -28,9 +28,9 @@ class EmailProvider {
     const host = process.env.SMTP_HOST || 'smtp.gmail.com';
     const port = Number(process.env.SMTP_PORT) || 465;
     const secure = process.env.SMTP_SECURE !== 'false';
-    const user = (process.env.SMTP_USER || '').trim();
+    const user = (process.env.SMTP_USER || process.env.GMAIL_USER || process.env.EMAIL_USER || '').trim();
     // Google App Passwords are 16 characters often copied with spaces like "nqmo qwyn lmhb yplb"
-    const pass = (process.env.SMTP_PASS || '').trim().replace(/\s+/g, '');
+    const pass = (process.env.SMTP_PASS || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASS || process.env.EMAIL_PASS || '').trim().replace(/\s+/g, '');
 
     if (user && pass) {
       try {
@@ -61,11 +61,15 @@ class EmailProvider {
   }
 
   getActiveProvider() {
-    if ((process.env.RESEND_API_KEY || '').trim()) {
-      return 'resend';
-    }
-    if ((process.env.SMTP_USER || '').trim() && (process.env.SMTP_PASS || '').trim()) {
+    const smtpUser = (process.env.SMTP_USER || process.env.GMAIL_USER || process.env.EMAIL_USER || '').trim();
+    const smtpPass = (process.env.SMTP_PASS || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASS || process.env.EMAIL_PASS || '').trim();
+    const resendKey = (process.env.RESEND_API_KEY || '').trim();
+
+    if (smtpUser && smtpPass) {
       return 'smtp';
+    }
+    if (resendKey) {
+      return 'resend';
     }
     return 'none';
   }
@@ -93,54 +97,52 @@ class EmailProvider {
     const sender = from || (defaultFromEmail.includes('<') ? defaultFromEmail : `"${fromName || defaultFromName}" <${defaultFromEmail}>`);
     const resolvedReplyTo = replyTo || process.env.EMAIL_REPLY_TO || defaultFromEmail;
 
-    // 1. PRIMARY: Resend
+    // 1. PRIMARY: SMTP Transporter (Authenticated Gmail SMTP with Google App Password)
+    if (this.smtpTransporter) {
+      try {
+        return await this.sendViaSmtp({ to: cleanTo, subject: cleanSubject, html, text, sender, replyTo: resolvedReplyTo });
+      } catch (smtpErr) {
+        console.error(`[EmailProvider] SMTP delivery error to ${cleanTo}:`, smtpErr.message);
+        if (!this.resend && (process.env.RESEND_API_KEY || '').trim()) {
+          this.resend = new Resend(process.env.RESEND_API_KEY.trim());
+        }
+        if (!this.resend) throw smtpErr;
+      }
+    }
+
+    // 2. FALLBACK or PRIMARY if no SMTP: Resend
     const resendKey = (process.env.RESEND_API_KEY || '').trim();
     if (resendKey) {
       if (!this.resend) {
         this.resend = new Resend(resendKey);
       }
 
-      try {
-        const payload = {
-          from: sender,
-          to: [cleanTo],
-          subject: cleanSubject,
-          html,
-          text: text || html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
-          headers: {
-            'X-Entity-Ref-ID': `maxywalk-${Date.now()}`
-          }
-        };
-
-        if (resolvedReplyTo) {
-          payload.reply_to = resolvedReplyTo;
+      const payload = {
+        from: sender,
+        to: [cleanTo],
+        subject: cleanSubject,
+        html,
+        text: text || html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+        headers: {
+          'X-Entity-Ref-ID': `maxywalk-${Date.now()}`
         }
+      };
 
-        const { data, error } = await this.resend.emails.send(payload);
-
-        if (error) {
-          throw new Error(`Resend error: ${error.message || JSON.stringify(error)}`);
-        }
-
-        return {
-          success: true,
-          provider: 'resend',
-          messageId: data?.id || `resend-${Date.now()}`
-        };
-      } catch (resendErr) {
-        console.error(`[EmailProvider] Resend delivery error to ${cleanTo}:`, resendErr.message);
-        // If Resend failed and SMTP is configured, attempt SMTP fallback
-        if (this.smtpTransporter) {
-          console.warn('[EmailProvider] Attempting fallback to SMTP transporter...');
-          return this.sendViaSmtp({ to: cleanTo, subject: cleanSubject, html, text, sender, replyTo: resolvedReplyTo });
-        }
-        throw resendErr;
+      if (resolvedReplyTo) {
+        payload.reply_to = resolvedReplyTo;
       }
-    }
 
-    // 2. FALLBACK: SMTP Transporter
-    if (this.smtpTransporter) {
-      return this.sendViaSmtp({ to: cleanTo, subject: cleanSubject, html, text, sender, replyTo: resolvedReplyTo });
+      const { data, error } = await this.resend.emails.send(payload);
+
+      if (error) {
+        throw new Error(`Resend error: ${error.message || JSON.stringify(error)}`);
+      }
+
+      return {
+        success: true,
+        provider: 'resend',
+        messageId: data?.id || `resend-${Date.now()}`
+      };
     }
 
     throw new Error('No email provider configured. Please set RESEND_API_KEY or SMTP credentials in your environment variables.');

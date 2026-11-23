@@ -171,16 +171,20 @@ router.post(['/verify-payment', '/payment/verify-payment'], async (req, res) => 
 
         // Event-Driven: Trigger single Order Placed & Confirmation notification with Tracking Link
         if (finalOrder.user_email) {
-          sendOrderNotification({
-            order: finalOrder,
-            eventType: 'ORDER_PLACED',
-            metadata: {
-              paymentId,
-              paymentRef: paymentId,
-              amount: finalOrder.total,
-              paymentMethod: 'Online / Razorpay'
-            }
-          }).catch(e => console.warn('[Payment] Order placed confirmation notice:', e.message));
+          try {
+            await sendOrderNotification({
+              order: finalOrder,
+              eventType: 'ORDER_PLACED',
+              metadata: {
+                paymentId,
+                paymentRef: paymentId,
+                amount: finalOrder.total,
+                paymentMethod: 'Online / Razorpay'
+              }
+            });
+          } catch (e) {
+            console.warn('[Payment] Order placed confirmation notice error:', e.message);
+          }
         }
       } else if (orderRows.length > 0) {
         finalOrder = orderRows[0];

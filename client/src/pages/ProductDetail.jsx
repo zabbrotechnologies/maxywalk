@@ -106,6 +106,7 @@ export default function ProductDetail() {
     : null;
   const currentVariantId = currentVariant?.id || (selectedColor ? selectedColor.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);
   const displayedImage = images[activeImage] || currentVariant?.image || images[0];
+  const currentVariantImage = currentVariant?.image || displayedImage;
 
   const origPrice = product.originalPrice || product.original_price;
 
@@ -309,9 +310,9 @@ export default function ProductDetail() {
                   {(sortSizes(product.sizes)).map((size) => (
                     <button
                       key={size}
-                      onClick={() => setSelectedSize(size)}
+                      onClick={() => setSelectedSize(String(size).trim())}
                       className={`min-w-[44px] h-11 px-3 font-sans text-xs border transition-all flex items-center justify-center ${
-                        selectedSize === size
+                        String(selectedSize).trim() === String(size).trim()
                           ? 'border-primary bg-primary text-white font-bold'
                           : 'border-outline-variant text-on-surface bg-white hover:border-primary'
                       }`}

@@ -238,6 +238,7 @@ export default function App() {
         <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
         <Route path="/shop" element={<PublicLayout><Shop /></PublicLayout>} />
         <Route path="/product/:id" element={<PublicLayout><ProductDetail /></PublicLayout>} />
+          <Route path="/products/:id" element={<PublicLayout><ProductDetail /></PublicLayout>} />
         <Route path="/terms" element={<PublicLayout><TermsConditions /></PublicLayout>} />
         <Route path="/privacy" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
         <Route path="/shipping" element={<PublicLayout><ShippingPolicy /></PublicLayout>} />

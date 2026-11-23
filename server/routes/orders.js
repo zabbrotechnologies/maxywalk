@@ -256,12 +256,16 @@ router.post('/', orderRateLimiter, async (req, res) => {
       `${resolvedShippingAddr.firstName || ''} ${resolvedShippingAddr.lastName || ''}`.trim() || 
       'Valued Customer';
 
-    sendOrderNotification({
-      order: createdOrder,
-      eventType: 'ORDER_PLACED',
-      recipientEmail: resolvedEmail,
-      customerName: customerFullName
-    }).catch((e) => console.warn('[Orders] Order placed email notification error:', e.message));
+    try {
+      await sendOrderNotification({
+        order: createdOrder,
+        eventType: 'ORDER_PLACED',
+        recipientEmail: resolvedEmail,
+        customerName: customerFullName
+      });
+    } catch (e) {
+      console.warn('[Orders] Order placed email notification error:', e.message);
+    }
 
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -544,16 +548,20 @@ router.post('/razorpay/verify', async (req, res) => {
 
     // Event-Driven: Trigger single Order Placed & Confirmation notification with Tracking Link
     if (finalOrder.user_email) {
-      sendOrderNotification({
-        order: finalOrder,
-        eventType: 'ORDER_PLACED',
-        metadata: {
-          paymentId: razorpay_payment_id,
-          paymentRef: razorpay_payment_id,
-          amount: finalOrder.total,
-          paymentMethod: 'Online / Razorpay'
-        }
-      }).catch((e) => console.warn('[Orders] Order placed confirmation notice:', e.message));
+      try {
+        await sendOrderNotification({
+          order: finalOrder,
+          eventType: 'ORDER_PLACED',
+          metadata: {
+            paymentId: razorpay_payment_id,
+            paymentRef: razorpay_payment_id,
+            amount: finalOrder.total,
+            paymentMethod: 'Online / Razorpay'
+          }
+        });
+      } catch (e) {
+        console.warn('[Orders] Order placed confirmation notice error:', e.message);
+      }
     }
 
     res.json({

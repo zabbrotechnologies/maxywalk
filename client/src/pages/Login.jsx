@@ -134,7 +134,7 @@ export default function Login() {
       {/* Left — Image (matching Image 5) */}
       <div className="hidden lg:block w-1/2 relative overflow-hidden">
         <img
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMFcuIlEmOinqex53O1uTOd9tVyWYPSQLQrm79f8hx2_SDW3A9bJ26yPiHsSbdTlHXxgyce-_FVrtMjwFy5EP0GnvX5ip_JuZLB7h3fwc0bwVP4-4G_zwEs9gN4FJyDaQDWlVuNQ4ioWAeEmEvTIOf4X_ok5v7INXpniWrrqTweVWSss_5QYV35113F4ocyduEN5BWZdivdoyC71DQJ2OJHJ1m9sq8BKO346Sp7xK8dfFta2DXtV--"
+          src="/images/auth-bg.png"
           alt="MAXYWALK leather slippers"
           className="w-full h-full object-cover"
         />

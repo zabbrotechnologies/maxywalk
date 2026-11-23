@@ -56,8 +56,8 @@ const useCartStore = create(
       // Add item to cart
       addItem: (product, selectedSize, selectedColor, qty = 1, user = null) => {
         const key = user ? getUserAccountKey(user) : (get().activeUserKey || 'guest');
-        const size = selectedSize || (product.sizes?.[0] || 'Standard');
-        const color = selectedColor || (product.colors?.[0] || 'Default');
+        const size = String(selectedSize || (product.sizes?.[0] || 'Standard')).trim();
+        const color = String(selectedColor || (product.colors?.[0] || 'Default')).trim();
         const cartKey = `${product.id}-${size}-${color}`;
         
         const currentCarts = get().userCarts || {};

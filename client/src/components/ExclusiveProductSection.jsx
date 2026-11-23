@@ -465,17 +465,12 @@ export default function ExclusiveProductSection() {
               )}
             </div>
 
-            {/* Add to Cart Button */}
+            {/* View Product Details Button */}
             <button
-              onClick={handleAddToCart}
+              onClick={() => navigate('/product/urbanedge-pro')}
               className="w-full sm:w-auto min-w-[240px] h-13 px-8 rounded-full bg-[#E55315] hover:bg-[#CC470E] text-white font-sans text-xs uppercase tracking-wider font-bold shadow-lg shadow-[#E55315]/30 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 mb-3.5 cursor-pointer"
             >
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <circle cx="9" cy="21" r="1"/>
-                <circle cx="20" cy="21" r="1"/>
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-              </svg>
-              <span>Add to Cart</span>
+              <span>Explore &amp; Buy Now</span>
               <span className="text-base">&#8594;</span>
             </button>
 
