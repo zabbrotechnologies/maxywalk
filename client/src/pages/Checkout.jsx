@@ -144,8 +144,8 @@ export default function Checkout() {
     });
   };
 
-  const shippingOption = SHIPPING_OPTIONS.find((o) => o.id === shipping);
-  const shippingCost = shippingOption?.price || 0;
+  const isTamilNadu = (address.state || '').trim().toLowerCase().replace(/\s+/g, '') === 'tamilnadu';
+  const shippingCost = isTamilNadu ? 100 : 250;
   const total = subtotal + shippingCost;
 
   const isEmailValid = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e?.trim() || '');
@@ -538,27 +538,57 @@ export default function Checkout() {
               </div>
             )}
 
-            {/* Step 1: Delivery */}
+            {/* Step 1: Delivery Timeline & Shipping */}
             {step === 1 && (
               <div className="space-y-6">
                 <section className="bg-white p-5 sm:p-6 rounded-3xl border border-outline-variant/40 shadow-lux">
-                  <h2 className="font-display text-xl sm:text-2xl text-primary font-bold mb-4">Choose Shipping Method</h2>
-                  <div className="space-y-3">
-                    {SHIPPING_OPTIONS.map((opt) => {
-                      const price = opt.price;
-                      return (
-                        <label key={opt.id} className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-colors ${shipping === opt.id ? 'border-primary bg-surface-container-low' : 'border-outline-variant bg-white'}`}>
-                          <input type="radio" name="shipping" value={opt.id} checked={shipping === opt.id} onChange={(e) => setShipping(e.target.value)} className="accent-primary w-4 h-4" />
-                          <div className="flex-1">
-                            <p className="font-bold text-xs sm:text-sm text-primary">{opt.label}</p>
-                            <p className="text-[11px] text-on-surface-variant">{opt.desc}</p>
-                          </div>
-                          <span className="font-bold text-xs sm:text-sm text-primary">
-                            {price === 0 ? 'FREE' : formatPrice(price)}
-                          </span>
-                        </label>
-                      );
-                    })}
+                  <h2 className="font-display text-xl sm:text-2xl text-primary font-bold mb-1">Delivery &amp; Crafting Timeline</h2>
+                  <p className="text-xs text-on-surface-variant mb-5">Each pair of MAXYWALK footwear is individually handcrafted and quality-checked before dispatch.</p>
+                  
+                  {/* Delivery Phase Info Box */}
+                  <div className="p-5 rounded-2xl border-2 border-primary/20 bg-surface-container-low/60 space-y-4">
+                    {/* Crafting Duration */}
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0 text-secondary">
+                        <span className="material-symbols-outlined text-xl">handyman</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <h3 className="font-bold text-xs sm:text-sm text-primary">Handcrafted Artisanal Production</h3>
+                          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-secondary/15 text-secondary whitespace-nowrap">4 to 5 Days</span>
+                        </div>
+                        <p className="text-xs text-on-surface-variant leading-relaxed">
+                          Precision hand-cutting, leather moulding, and sole bonding at our Avadi workshop.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-outline-variant/30" />
+
+                    {/* Delivery Duration */}
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary">
+                        <span className="material-symbols-outlined text-xl">local_shipping</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <h3 className="font-bold text-xs sm:text-sm text-primary">Express Courier Delivery</h3>
+                          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">2 to 3 Days</span>
+                        </div>
+                        <p className="text-xs text-on-surface-variant leading-relaxed">
+                          Insured doorstep delivery to {address.city ? `${address.city}, ` : ''}{address.state || 'Tamil Nadu'} with live SMS and tracking updates.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-outline-variant/30 flex items-center justify-between text-xs">
+                      <span className="text-on-surface-variant font-medium">
+                        Standard Shipping ({isTamilNadu ? 'Tamil Nadu' : 'Rest of India'})
+                      </span>
+                      <span className="font-bold text-primary text-sm">
+                        ₹{shippingCost}
+                      </span>
+                    </div>
                   </div>
                 </section>
                 <div className="pt-2 flex flex-col sm:flex-row justify-between gap-3">

@@ -418,8 +418,9 @@ router.post('/razorpay/create-order', orderRateLimiter, async (req, res) => {
       subtotal += price * qty;
     }
 
-    const isExpress = shipping === 'express';
-    const shippingCost = isExpress ? 149 : 0;
+    const stateStr = (resolvedShipping.state || '').trim().toLowerCase().replace(/\s+/g, '');
+    const isTN = stateStr === 'tamilnadu';
+    const shippingCost = isTN ? 100 : 250;
     const grandTotal = subtotal + shippingCost;
     const amountInPaise = Math.round(grandTotal * 100);
 

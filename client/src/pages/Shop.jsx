@@ -325,11 +325,15 @@ export default function Shop() {
                 ))}
               </div>
             ) : products.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-white border border-outline-variant/30">
-                <span className="material-symbols-outlined text-5xl text-outline-variant mb-2">search_off</span>
-                <h3 className="font-display text-xl text-primary mb-1">No products match your filters</h3>
-                <p className="text-xs text-on-surface-variant mb-4">Try removing some filters to see the full collection.</p>
-                <button onClick={clearAll} className="btn-primary text-xs h-11">Clear All Filters</button>
+              <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-white border border-outline-variant/30 rounded-2xl shadow-lux">
+                <span className="material-symbols-outlined text-5xl text-secondary mb-3">auto_awesome</span>
+                <h3 className="font-display text-2xl sm:text-3xl text-primary font-bold mb-2">Coming Soon</h3>
+                <p className="text-xs sm:text-sm text-on-surface-variant max-w-md mb-6 leading-relaxed">
+                  {selectedCategory && selectedCategory !== 'all'
+                    ? `New handcrafted styles for ${selectedCategory.toUpperCase()} are currently being crafted in our Avadi workshop. Stay tuned!`
+                    : 'New handcrafted leather footwear designs are currently in preparation. Stay tuned!'}
+                </p>
+                <button onClick={clearAll} className="btn-primary text-xs h-11 px-6">Explore Other Collections</button>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-6">

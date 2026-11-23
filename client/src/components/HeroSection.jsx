@@ -9,28 +9,28 @@ const WHITE     = "#ffffff";
 /* ─── Product catalogue ─────────────────────────────────────── */
 const SLIDES = [
   {
-    id: "slippers", num: "01", label: "Slippers",
-    tagline: "WALK IN COMFORT",
-    desc: "Handcrafted full-grain leather slippers built for all-day ease. Supple, breathable, and built to last.",
-    image: "/products/slipper.png",
+    id: "prism-mosaic", num: "01", label: "Prism Mosaic",
+    tagline: "BOLD ARTISANAL PATTERNS",
+    desc: "Vibrant handcrafted leather footwear featuring intricate geometric mosaic design. Supple, breathable, and built to last.",
+    image: "/products/prism-mosaic.png",
   },
   {
-    id: "shoes", num: "02", label: "Shoes",
-    tagline: "TIMELESS ELEGANCE",
-    desc: "Premium handcrafted leather shoes combining classic artisanal styling with supreme everyday durability.",
-    image: "/products/shoe.png",
+    id: "dragon-cup-flame", num: "02", label: "Dragon Cup - Flame",
+    tagline: "FIERCE LEATHER CRAFTSMANSHIP",
+    desc: "Sculpted full-grain leather footwear featuring striking fiery contours with supreme everyday comfort.",
+    image: "/products/dragon-cup-flame.png",
   },
   {
-    id: "mules", num: "03", label: "Mules",
+    id: "prism-twin", num: "03", label: "Prism Twin",
     tagline: "EFFORTLESS LUXURY",
     desc: "Sophisticated dual-strap leather mules designed for distinct casual luxury and unmatched comfort.",
     image: "/products/mule.png",
   },
   {
-    id: "sandals", num: "04", label: "Sandals",
-    tagline: "STRUCTURED FREEDOM",
-    desc: "Structured outdoor sandals that move with you. Rugged craftsmanship meets modern design.",
-    image: "/products/sandal.png",
+    id: "dragon-cup-claw", num: "04", label: "Dragon Cup - Claw",
+    tagline: "DISTINCT URBAN POWER",
+    desc: "Iconic high-contrast claw silhouette in premium leather. Rugged craftsmanship meets modern design.",
+    image: "/products/dragon-cup-claw.png",
   },
 ];
 

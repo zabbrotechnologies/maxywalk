@@ -190,7 +190,9 @@ export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteU
   const firstName = escapeHtml(resolvedName.split(' ')[0] || 'Customer');
   const total = formatInr(order.total);
   const subtotal = formatInr(order.subtotal || order.total);
-  const shippingCost = order.shippingCost ? formatInr(order.shippingCost) : 'FREE';
+  const stateVal = (shippingAddr.state || '').trim().toLowerCase().replace(/\s+/g, '');
+  const isTN = stateVal === 'tamilnadu';
+  const shippingCost = order.shippingCost ? formatInr(order.shippingCost) : formatInr(isTN ? 100 : 250);
   const viewOrderUrl = `${siteUrl}/account?tab=orders`;
   const paymentMethodLabel = (order.payment_method === 'cod' || order.paymentMethod === 'cod')
     ? 'Cash on Delivery (COD)'
@@ -364,7 +366,9 @@ export function renderPaymentSuccessEmail({
   const firstName = escapeHtml(resolvedCustomerName.split(' ')[0] || 'Customer');
   const formattedAmount = formatInr(amount || order.total || 0);
   const subtotal = formatInr(order.subtotal || order.total || amount || 0);
-  const shippingCost = order.shippingCost ? formatInr(order.shippingCost) : 'FREE';
+  const stateVal = (shippingAddr.state || '').trim().toLowerCase().replace(/\s+/g, '');
+  const isTN = stateVal === 'tamilnadu';
+  const shippingCost = order.shippingCost ? formatInr(order.shippingCost) : formatInr(isTN ? 100 : 250);
   const formattedDate = new Date(date).toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'short',
