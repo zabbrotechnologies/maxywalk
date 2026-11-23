@@ -86,18 +86,26 @@ export default function ProductDetail() {
     );
   }
 
-  // Safely compute variant and price properties NOW that product is guaranteed to exist
-  const variants = product.variants || (product.id === 'urbanedge-pro' ? DEFAULT_EXCLUSIVE_PRODUCT.variants : []);
+  // Safely compute images and variant properties from real product data
+  const images = (Array.isArray(product.images) && product.images.length > 0)
+    ? product.images
+    : (Array.isArray(product.variants) && product.variants.length > 0
+        ? product.variants.map((v) => v.image).filter(Boolean)
+        : [product.image || 'https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK']);
+
+  const variants = (Array.isArray(product.variants) && product.variants.length > 0)
+    ? product.variants
+    : images.map((img, idx) => ({
+        id: `var-${idx}`,
+        name: product.colors?.[idx] || (images.length === 1 ? (product.colors?.[0] || 'Black') : `Style ${idx + 1}`),
+        image: img
+      }));
+
   const currentVariant = variants.length > 0
     ? (variants.find((v) => v.name?.toLowerCase() === selectedColor?.toLowerCase() || v.id?.toLowerCase() === selectedColor?.toLowerCase()) || variants[0])
     : null;
   const currentVariantId = currentVariant?.id || (selectedColor ? selectedColor.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);
-  const currentVariantImage = currentVariant?.image || product.images?.[activeImage] || product.images?.[0] || product.image || null;
-
-  const images = (product.images && product.images.length > 0)
-    ? product.images
-    : (variants.length > 0 ? variants.map((v) => v.image) : [currentVariantImage || product.image || 'https://placehold.co/600x700/f4f3f1/7e7576?text=MAXYWALK']);
-  const displayedImage = currentVariantImage || images[activeImage] || images[0];
+  const displayedImage = images[activeImage] || currentVariant?.image || images[0];
 
   const origPrice = product.originalPrice || product.original_price;
 

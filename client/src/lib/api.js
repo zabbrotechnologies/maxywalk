@@ -61,8 +61,8 @@ export const DEFAULT_EXCLUSIVE_PRODUCT = {
   name: 'UrbanEdge Pro',
   tagline: 'STEP INTO EXCLUSIVITY',
   description: 'A refined blend of style, comfort and durability — made for those who choose more.',
-  price: 4999,
-  original_price: 6499,
+  price: 1499,
+  original_price: 2199,
   category: 'slippers',
   stock: 50,
   featured: true,
@@ -240,10 +240,6 @@ export const getProducts = async (params = {}) => {
 };
 
 export const getProduct = async (id) => {
-  if (id === 'urbanedge-pro') {
-    return { ...DEFAULT_EXCLUSIVE_PRODUCT, sizes: sortSizes(DEFAULT_EXCLUSIVE_PRODUCT.sizes) };
-  }
-
   const cacheKey = `product_${id}`;
   const cached = getCached(cacheKey);
   if (cached) return cached;
@@ -257,6 +253,11 @@ export const getProduct = async (id) => {
     }
   } catch (err) {
     console.warn(`Backend unavailable for product ${id}, using fallback:`, err.message);
+    if (id === 'urbanedge-pro') {
+      const formatted = { ...DEFAULT_EXCLUSIVE_PRODUCT, sizes: sortSizes(DEFAULT_EXCLUSIVE_PRODUCT.sizes) };
+      setCached(cacheKey, formatted);
+      return formatted;
+    }
     const fallback = FALLBACK_PRODUCTS.find((p) => p.id === id);
     if (fallback) {
       const formatted = { ...fallback, sizes: sortSizes(fallback.sizes) };

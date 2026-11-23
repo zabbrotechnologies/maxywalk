@@ -3,8 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import useCartStore from '../store/cartStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
 import useAuthStore from '../store/authStore.js';
-import { getProduct, DEFAULT_EXCLUSIVE_PRODUCT } from '../lib/api.js';
+import { getProduct, getProducts, DEFAULT_EXCLUSIVE_PRODUCT } from '../lib/api.js';
 import toast from 'react-hot-toast';
+
+const COLOR_HEX_MAP = {
+  black: '#1F1E1D',
+  maroon: '#5A2328',
+  sandal: '#C28B53',
+  sandalwood: '#C28B53',
+  wood: '#C28B53',
+  lightblue: '#88A0B5',
+  blue: '#88A0B5',
+  grey: '#6E6C6B',
+  gray: '#6E6C6B',
+  olivegreen: '#535D4A',
+  green: '#535D4A',
+  rose: '#B85B64',
+  lightpink: '#D8A0A6',
+  pink: '#D8A0A6',
+  white: '#FFFFFF',
+  tan: '#A75D28',
+  brown: '#5C381E'
+};
 
 export default function ExclusiveProductSection() {
   const navigate = useNavigate();
@@ -25,14 +45,50 @@ export default function ExclusiveProductSection() {
 
   useEffect(() => {
     // Fetch live product data from database/catalog
-    getProduct('urbanedge-pro').then((data) => {
-      if (data) setProduct(data);
-    }).catch(() => setProduct(DEFAULT_EXCLUSIVE_PRODUCT));
+    const loadExclusiveProduct = async () => {
+      try {
+        const res = await getProducts({ exclusive: true, limit: 1 });
+        const exItem = res?.products?.find((p) => p.is_exclusive || p.isExclusive) || res?.products?.[0];
+        const targetId = exItem?.id || 'urbanedge-pro';
+        const data = await getProduct(targetId);
+        if (data) setProduct(data);
+      } catch {
+        getProduct('urbanedge-pro')
+          .then((d) => d && setProduct(d))
+          .catch(() => setProduct(DEFAULT_EXCLUSIVE_PRODUCT));
+      }
+    };
+    loadExclusiveProduct();
   }, []);
 
-  const variants = product.variants && product.variants.length > 0
-    ? product.variants
-    : DEFAULT_EXCLUSIVE_PRODUCT.variants;
+  const variants = (() => {
+    if (Array.isArray(product.variants) && product.variants.length > 0) {
+      return product.variants;
+    }
+    const imgs = Array.isArray(product.images) && product.images.length > 0
+      ? product.images
+      : (product.image ? [product.image] : []);
+    const colors = Array.isArray(product.colors) && product.colors.length > 0
+      ? product.colors
+      : ['Black'];
+
+    if (imgs.length > 0) {
+      return imgs.map((img, idx) => {
+        const colorName = colors[idx] || (imgs.length === 1 ? (colors[0] || 'Black') : `Style ${idx + 1}`);
+        const cleanKey = String(colorName).toLowerCase().replace(/[^a-z0-9]/g, '');
+        const hex = COLOR_HEX_MAP[cleanKey] || '#1F1E1D';
+        return {
+          id: `var-${idx}-${cleanKey || 'style'}`,
+          name: colorName,
+          label: colorName,
+          image: img,
+          hex,
+          colorHex: hex
+        };
+      });
+    }
+    return DEFAULT_EXCLUSIVE_PRODUCT.variants;
+  })();
 
   const selectedVariant = variants[selectedIndex] || variants[0];
   const selectedVariantId = selectedVariant?.id || (selectedVariant?.name ? selectedVariant.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);

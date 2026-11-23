@@ -260,17 +260,42 @@ router.get('/:id', async (req, res) => {
       images: finalImgs
     };
 
-    if (p.id === 'urbanedge-pro') {
-      normalized.variants = [
-        { id: 'black', name: 'Midnight Black', image: '/products/exclusive/black.png', hex: '#1F1E1D', colorHex: '#1F1E1D' },
-        { id: 'maroon', name: 'Maroon', image: '/products/exclusive/maroon.png', hex: '#5A2328', colorHex: '#5A2328' },
-        { id: 'sandal-wood', name: 'Sandal / Wood', image: '/products/exclusive/sandal_wood.png', hex: '#C28B53', colorHex: '#C28B53' },
-        { id: 'lightblue', name: 'Light Blue', image: '/products/exclusive/lightblue.png', hex: '#88A0B5', colorHex: '#88A0B5' },
-        { id: 'grey', name: 'Slate Grey', image: '/products/exclusive/gray.png', hex: '#6E6C6B', colorHex: '#6E6C6B' },
-        { id: 'olivegreen', name: 'Olive Green', image: '/products/exclusive/olivegreen.png', hex: '#535D4A', colorHex: '#535D4A' },
-        { id: 'rose', name: 'Rose', image: '/products/exclusive/rose.png', hex: '#B85B64', colorHex: '#B85B64' },
-        { id: 'lightpink', name: 'Light Pink', image: '/products/exclusive/lightpink.png', hex: '#D8A0A6', colorHex: '#D8A0A6' }
-      ];
+    const COLOR_HEX_MAP = {
+      black: '#1F1E1D',
+      maroon: '#5A2328',
+      sandal: '#C28B53',
+      sandalwood: '#C28B53',
+      wood: '#C28B53',
+      lightblue: '#88A0B5',
+      blue: '#88A0B5',
+      grey: '#6E6C6B',
+      gray: '#6E6C6B',
+      olivegreen: '#535D4A',
+      green: '#535D4A',
+      rose: '#B85B64',
+      lightpink: '#D8A0A6',
+      pink: '#D8A0A6',
+      white: '#FFFFFF',
+      tan: '#A75D28',
+      brown: '#5C381E'
+    };
+
+    if (p.id === 'urbanedge-pro' || p.is_exclusive) {
+      if (finalImgs.length > 0) {
+        normalized.variants = finalImgs.map((img, idx) => {
+          const colorName = normalized.colors?.[idx] || (finalImgs.length === 1 ? (normalized.colors?.[0] || 'Black') : `Style ${idx + 1}`);
+          const cleanKey = String(colorName).toLowerCase().replace(/[^a-z0-9]/g, '');
+          const hex = COLOR_HEX_MAP[cleanKey] || '#1F1E1D';
+          return {
+            id: `var-${idx}-${cleanKey || 'style'}`,
+            name: colorName,
+            label: colorName,
+            image: img,
+            hex,
+            colorHex: hex
+          };
+        });
+      }
     }
 
     if (productCache.size >= MAX_PRODUCT_CACHE) {
