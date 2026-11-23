@@ -24,7 +24,7 @@ const SLIDES = [
     id: "prism-twin", num: "03", label: "Prism Twin",
     tagline: "EFFORTLESS LUXURY",
     desc: "Sophisticated dual-strap leather mules designed for distinct casual luxury and unmatched comfort.",
-    image: "/products/mule.png",
+    image: "/products/prism-twin.png",
   },
   {
     id: "dragon-cup-claw", num: "04", label: "Dragon Cup - Claw",

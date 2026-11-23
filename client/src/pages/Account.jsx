@@ -309,7 +309,7 @@ export default function Account() {
     const steps = [
       { key: 'placed', label: 'Order Placed' },
       { key: 'confirmed', label: 'Confirmed' },
-      { key: 'crafting', label: 'Packed' },
+      { key: 'crafting', label: 'Crafting' },
       { key: 'dispatched', label: 'Dispatched' },
       { key: 'delivered', label: 'Delivered' },
     ];
