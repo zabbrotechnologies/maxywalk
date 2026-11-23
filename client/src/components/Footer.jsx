@@ -28,15 +28,15 @@ export default function Footer() {
           <div className="flex items-center justify-center md:justify-start gap-2.5">
             <span className="material-symbols-outlined text-secondary text-2xl flex-shrink-0">local_shipping</span>
             <div>
-              <p className="text-xs font-bold text-primary">Free Pan-India Delivery</p>
-              <p className="text-[10px] text-on-surface-variant">On all orders above ₹1,999</p>
+              <p className="text-xs font-bold text-primary">Pan-India Delivery</p>
+              <p className="text-[10px] text-on-surface-variant">Reliable doorstep shipping</p>
             </div>
           </div>
           <div className="flex items-center justify-center md:justify-start gap-2.5">
-            <span className="material-symbols-outlined text-secondary text-2xl flex-shrink-0">published_with_changes</span>
+            <span className="material-symbols-outlined text-secondary text-2xl flex-shrink-0">category</span>
             <div>
-              <p className="text-xs font-bold text-primary">7-Day Free Replacement</p>
-              <p className="text-[10px] text-on-surface-variant">Hassle-free size exchange</p>
+              <p className="text-xs font-bold text-primary">Various Designs & Models</p>
+              <p className="text-[10px] text-on-surface-variant">Distinct styles & custom finishes</p>
             </div>
           </div>
           <div className="flex items-center justify-center md:justify-start gap-2.5">

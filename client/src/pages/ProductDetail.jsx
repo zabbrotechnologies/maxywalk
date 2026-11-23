@@ -391,7 +391,7 @@ export default function ProductDetail() {
               {[
                 { icon: 'verified', text: '100% Genuine Leather' },
                 { icon: 'local_shipping', text: 'Pan-India Delivery' },
-                { icon: 'cached', text: 'Easy Exchange' },
+                { icon: 'category', text: 'Various Designs & Models' },
               ].map((b) => (
                 <div key={b.text} className="flex flex-col items-center p-2 bg-surface-container-low border border-outline-variant/20">
                   <span className="material-symbols-outlined text-secondary text-lg mb-1">{b.icon}</span>

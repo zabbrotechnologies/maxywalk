@@ -31,7 +31,6 @@ export default function ExclusiveProductSection() {
   const navigate = useNavigate();
   const [product, setProduct] = useState(DEFAULT_EXCLUSIVE_PRODUCT);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
 
   const { addItem, openCart } = useCartStore();
   const { user } = useAuthStore();
@@ -60,14 +59,14 @@ export default function ExclusiveProductSection() {
   const selectedVariantId = selectedVariant?.id || (selectedVariant?.name ? selectedVariant.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : null);
   const isWishlisted = checkWishlisted(product.id, selectedVariantId, user);
 
-  // Auto-advance product image variant every 0.7 seconds when not hovered/dragged
+  // Continuous auto-advance loop every 0.7 seconds without stopping
   useEffect(() => {
-    if (isHovered || isDragging.current || variants.length <= 1) return;
+    if (variants.length <= 1) return;
     const interval = setInterval(() => {
       setSelectedIndex((prev) => (prev + 1) % variants.length);
     }, 700);
     return () => clearInterval(interval);
-  }, [isHovered, variants.length]);
+  }, [variants.length]);
 
   // Touch swipe handlers
   const handleTouchStart = (e) => {
@@ -382,8 +381,6 @@ export default function ExclusiveProductSection() {
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeaveCapture={() => setIsHovered(false)}
               >
                 {variants.map((v, idx) => {
                   const isCurrent = selectedIndex === idx;
