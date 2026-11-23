@@ -113,9 +113,9 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex page-enter">
+    <div className="h-screen max-h-screen overflow-hidden flex page-enter">
       {/* Left — Image & Quote */}
-      <div className="hidden lg:block w-1/2 relative overflow-hidden">
+      <div className="hidden lg:block w-1/2 h-full relative overflow-hidden">
         <img
           src="/images/auth-bg.png"
           alt="MAXYWALK"
@@ -130,13 +130,13 @@ export default function Register() {
       </div>
 
       {/* Right — Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-16">
+      <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-6 md:p-10 overflow-y-auto">
         <div className="w-full max-w-md">
           <h1 className="font-display text-3xl text-primary mb-2">Create Account</h1>
-          <p className="text-on-surface-variant mb-8">Join MaxyWalk for exclusive deals.</p>
+          <p className="text-on-surface-variant mb-5">Join MaxyWalk for exclusive deals.</p>
 
           {/* Continue with Google button on top */}
-          <div className="w-full mb-6">
+          <div className="w-full mb-4">
             <div ref={googleBtnRef} className="w-full flex justify-center" />
             {!googleReady && (
               <button
@@ -156,7 +156,7 @@ export default function Register() {
             )}
           </div>
 
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-4 mb-4">
             <div className="flex-1 h-px bg-outline-variant/50" />
             <span className="text-xs text-on-surface-variant uppercase tracking-widest">or</span>
             <div className="flex-1 h-px bg-outline-variant/50" />
@@ -184,7 +184,7 @@ export default function Register() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-on-surface-variant mt-8">
+          <p className="text-center text-sm text-on-surface-variant mt-4">
             Already have an account?{' '}
             <Link to="/login" className="text-primary hover:text-secondary font-medium underline">Sign in</Link>
           </p>

@@ -54,7 +54,7 @@ if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
 router.get('/*', async (req, res) => {
   try {
     const rawPath = req.params[0] || req.path.replace(/^\//, '');
-    const id = decodeURIComponent(rawPath);
+    const id = decodeURIComponent(rawPath.split('?')[0]);
 
     if (!id) {
       return res.status(400).json({ error: 'Asset path is required' });
@@ -68,7 +68,7 @@ router.get('/*', async (req, res) => {
       }
       res.set({
         'Content-Type': cachedAsset.mime,
-        'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
+        'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
         'ETag': cachedAsset.etag
       });
       return res.send(cachedAsset.buffer);
@@ -86,7 +86,7 @@ router.get('/*', async (req, res) => {
 
       res.set({
         'Content-Type': asset.mime_type || 'image/jpeg',
-        'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
+        'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
         'ETag': etag
       });
 
@@ -131,7 +131,7 @@ router.get('/*', async (req, res) => {
 
         res.set({
           'Content-Type': s3Res.ContentType || 'image/jpeg',
-          'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
+          'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
           'ETag': etag
         });
 

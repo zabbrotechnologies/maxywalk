@@ -4,7 +4,16 @@ import { getProducts, createProduct, updateProduct, deleteProduct, compareProduc
 import { formatPrice, sortSizes } from '../../lib/utils.js';
 import toast from 'react-hot-toast';
 
-const CATEGORIES = ['slippers', 'shoes', 'sandals', 'mens', 'womens'];
+const CATEGORIES = ['slippers', 'shoes', 'sandals'];
+
+const getAdminAssetUrl = (url, cacheBuster = '') => {
+  if (!url || typeof url !== 'string') return '';
+  if (url.startsWith('data:')) return url;
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}t=${encodeURIComponent(cacheBuster || 'live')}`;
+};
+
+
 const EMPTY_FORM = { name: '', description: '', category: 'slippers', price: '', originalPrice: '', sizes: [], colors: [], images: [''], stock: 10, featured: false, material: 'Full-Grain Leather', badge: '' };
 
 export default function AdminProducts() {
@@ -242,7 +251,7 @@ export default function AdminProducts() {
             <div key={p.id} className="bg-white border border-outline-variant/50 shadow-lux group hover:border-primary/30 transition-colors">
               <div className="aspect-[4/3] bg-surface-container overflow-hidden relative">
                 <img
-                  src={p.images?.[0] || 'https://placehold.co/400x300/efeeec/7e7576?text=No+Image'}
+                  src={p.images?.[0] ? getAdminAssetUrl(p.images[0], p.id) : 'https://placehold.co/400x300/efeeec/7e7576?text=No+Image'}
                   alt={p.name}
                   className="w-full h-full object-contain drop-shadow-sm p-1 group-hover:scale-105 transition-transform duration-500"
                 />
@@ -373,7 +382,7 @@ export default function AdminProducts() {
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
                     {form.images.filter(Boolean).map((img, idx) => (
                       <div key={idx} className="relative aspect-square border border-outline-variant rounded-xl overflow-hidden group bg-surface-container">
-                        <img src={img} alt="" className="w-full h-full object-contain p-1" />
+                        <img src={getAdminAssetUrl(img, 'modal')} alt="" className="w-full h-full object-contain p-1" />
                         {idx === 0 && (
                           <span className="absolute top-1 left-1 bg-primary text-white text-[9px] font-sans uppercase px-1.5 py-0.5 rounded shadow-sm font-bold">Main</span>
                         )}

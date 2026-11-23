@@ -19,11 +19,12 @@ export function formatInr(amount) {
 }
 
 export function getFullImageUrl(img, siteUrl = 'https://maxywalk.com') {
-  if (!img) return 'https://placehold.co/400x500/1F1E1D/FAF7F2?text=MAXYWALK';
+  if (!img) return '';
   if (img.startsWith('http://') || img.startsWith('https://')) return img;
-  if (img.startsWith('data:')) return 'https://placehold.co/400x500/1F1E1D/FAF7F2?text=MAXYWALK';
+  if (img.startsWith('data:')) return '';
   const cleanPath = img.startsWith('/') ? img : '/' + img;
-  return `${siteUrl}${cleanPath}`;
+  const baseUrl = (process.env.CLIENT_URL || 'https://maxywalk.com').replace(/\/+$/, '');
+  return `${baseUrl}${cleanPath}`;
 }
 
 // Master Layout Wrapper
@@ -168,7 +169,7 @@ export function renderWelcomeEmail({ name = 'Customer', email, siteUrl = 'https:
 // 2. ORDER_PLACED
 export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteUrl = 'https://maxywalk.com' }) {
   const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
-  const subject = `Your MAXYWALK Order Has Been Confirmed! — #${orderId}`;
+  const subject = `Order Confirmation: #${orderId} - MAXYWALK`;
   
   let items = [];
   if (Array.isArray(order.items)) {
@@ -224,14 +225,14 @@ export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteU
   }).join('');
 
   const contentHtml = `
-    <div style="display: inline-block; background-color: #FAF7F2; color: #D35B22; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">
-      Order Placed Successfully
+    <div style="display: inline-block; background-color: #FAF7F2; color: #1F1E1D; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; letter-spacing: 1px; margin-bottom: 12px; border: 1px solid #E8E2D8;">
+      Order Confirmation
     </div>
-    <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 0 0 8px 0; font-weight: bold;">
-      Thank You for Your Order, ${firstName}!
+    <h2 style="font-family: Georgia, serif; font-size: 22px; color: #1F1E1D; margin: 0 0 8px 0; font-weight: bold;">
+      Thank you for your order, ${firstName}.
     </h2>
     <p style="font-size: 14px; line-height: 1.6; color: #57534E; margin: 0 0 24px 0;">
-      We have received your order <strong>#${orderId}</strong>. Our artisans in Avadi have begun preparing your package.
+      We have received order <strong>#${orderId}</strong>. Our workshop in Avadi is preparing your items.
     </p>
 
     <!-- Order Items Table -->
@@ -284,8 +285,8 @@ export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteU
 
     <!-- View & Track Order CTA -->
     <div style="text-align: center; margin-bottom: 24px;">
-      <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 16px 40px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-        TRACK YOUR ORDER &rarr;
+      <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; letter-spacing: 1.5px; padding: 14px 36px; border-radius: 6px; text-decoration: none;">
+        Track Your Order &rarr;
       </a>
     </div>
   `;
@@ -296,7 +297,36 @@ export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteU
     siteUrl
   });
 
-  const text = `Your MAXYWALK Order #${orderId} has been confirmed! Total: ${total}. View your order details at: ${viewOrderUrl}`;
+  const itemsText = items.map(i => {
+    const s = i.size || i.selectedSize || 'Standard';
+    const q = Number(i.qty) || 1;
+    const p = formatInr(Number(i.price) || 0);
+    return ` - ${i.name || 'Footwear'} (Size ${s}, Qty ${q}) : ${p}`;
+  }).join('\n');
+
+  const addrText = `${resolvedName}\n${shippingAddr.address || ''}, ${shippingAddr.city || ''}, ${shippingAddr.state || ''} - ${shippingAddr.pincode || ''}${shippingAddr.phone ? ' | Phone: ' + shippingAddr.phone : ''}`;
+
+  const text = `MAXYWALK Order Confirmation
+
+Order #${orderId}
+Status: Confirmed
+Payment Method: ${paymentMethodLabel}
+
+Items:
+${itemsText}
+
+Subtotal: ${subtotal}
+Shipping: ${shippingCost}
+Total: ${total}
+
+Delivery Destination:
+${addrText}
+
+Track your order status:
+${viewOrderUrl}
+
+MAXYWALK Leather Artisans, Avadi, Chennai, Tamil Nadu.
+Support: shop.maxywalk@gmail.com`;
   return { subject, html, text };
 }
 
@@ -480,8 +510,8 @@ export function renderPaymentSuccessEmail({
 
     <!-- View & Track Order CTA -->
     <div style="text-align: center; margin-bottom: 24px;">
-      <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 16px 40px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-        TRACK YOUR ORDER &rarr;
+      <a href="${viewOrderUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; letter-spacing: 1.5px; padding: 14px 36px; border-radius: 6px; text-decoration: none;">
+        Track Your Order &rarr;
       </a>
     </div>
 

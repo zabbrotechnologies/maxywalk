@@ -109,8 +109,6 @@ export default function Footer() {
                 { to: '/shop?category=slippers', label: 'Slippers & Mules' },
                 { to: '/shop?category=shoes', label: 'Handcrafted Shoes' },
                 { to: '/shop?category=sandals', label: 'Handcrafted Sandals' },
-                { to: '/shop?category=mens', label: "Men's Collection" },
-                { to: '/shop?category=womens', label: "Women's Collection" },
               ].map((l) => (
                 <li key={l.to}>
                   <Link to={l.to} className="text-on-surface-variant hover:text-secondary transition-colors block py-0.5">

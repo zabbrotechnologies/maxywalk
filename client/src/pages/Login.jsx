@@ -130,9 +130,9 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex page-enter">
+    <div className="h-screen max-h-screen overflow-hidden flex page-enter">
       {/* Left — Image (matching Image 5) */}
-      <div className="hidden lg:block w-1/2 relative overflow-hidden">
+      <div className="hidden lg:block w-1/2 h-full relative overflow-hidden">
         <img
           src="/images/auth-bg.png"
           alt="MAXYWALK leather slippers"
@@ -149,17 +149,17 @@ export default function Login() {
       </div>
 
       {/* Right — Form (matching Image 5) */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-16">
+      <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-6 md:p-10 overflow-y-auto">
         <div className="w-full max-w-md">
           <Link to="/" className="font-display text-2xl tracking-widest text-primary block mb-10 lg:hidden">
             MAXYWALK
           </Link>
 
           <h1 className="font-display text-3xl text-primary mb-2">Welcome Back</h1>
-          <p className="text-on-surface-variant mb-8">Sign in to your account</p>
+          <p className="text-on-surface-variant mb-5">Sign in to your account</p>
 
           {/* Continue with Google button on top */}
-          <div className="w-full mb-6">
+          <div className="w-full mb-4">
             <div ref={googleBtnRef} className="w-full flex justify-center" />
             {!googleReady && (
               <button
@@ -179,13 +179,13 @@ export default function Login() {
             )}
           </div>
 
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-4 mb-4">
             <div className="flex-1 h-px bg-outline-variant/50" />
             <span className="text-xs text-on-surface-variant uppercase tracking-widest">or</span>
             <div className="flex-1 h-px bg-outline-variant/50" />
           </div>
 
-          <form onSubmit={handleEmailLogin} className="space-y-6">
+          <form onSubmit={handleEmailLogin} className="space-y-4">
             <div className="relative">
               <label className="font-sans text-label-caps text-on-surface-variant text-[10px] uppercase tracking-widest block mb-2">
                 Email Address
@@ -236,7 +236,7 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-on-surface-variant mt-8">
+          <p className="text-center text-sm text-on-surface-variant mt-4">
             Don't have an account?{' '}
             <Link to="/register" className="text-primary hover:text-secondary font-medium underline">
               Create one

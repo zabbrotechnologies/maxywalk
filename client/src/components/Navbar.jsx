@@ -73,8 +73,6 @@ export default function Navbar() {
     { to: '/shop?category=slippers', label: 'Slippers & Mules' },
     { to: '/shop?category=shoes', label: 'Shoes' },
     { to: '/shop?category=sandals', label: 'Sandals' },
-    { to: '/shop?category=mens', label: "Men's" },
-    { to: '/shop?category=womens', label: "Women's" },
     { to: '/contact', label: 'Contact' },
   ];
 

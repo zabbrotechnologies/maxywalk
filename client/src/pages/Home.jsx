@@ -63,13 +63,13 @@ export default function Home() {
 
   useEffect(() => {
     document.title = 'MAXYWALK | MAXYWALK – Handcrafted Leather Footwear';
-    getProducts({ featured: true, limit: 8 })
+    getProducts({ featured: true, limit: 50 })
       .then((data) => {
         // Exclude the exclusive showcase product to prevent duplication on the homepage
         const filtered = (data.products || []).filter(
           (p) => !p.is_exclusive && !p.isExclusive && p.id !== 'urbanedge-pro'
         );
-        setFeaturedProducts(filtered.slice(0, 4));
+        setFeaturedProducts(filtered);
       })
       .catch(() => setFeaturedProducts([]))
       .finally(() => setLoadingProducts(false));

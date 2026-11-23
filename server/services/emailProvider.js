@@ -157,8 +157,8 @@ class EmailProvider {
       text: text || html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
       replyTo: replyTo || undefined,
       headers: {
-        'X-Entity-Ref-ID': `maxywalk-${Date.now()}`,
-        'X-Mailer': 'MAXYWALK Notification Engine'
+        'Auto-Submitted': 'auto-generated',
+        'X-Auto-Response-Suppress': 'All'
       }
     };
 
