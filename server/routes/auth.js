@@ -58,12 +58,16 @@ router.post('/register', authRateLimiter, async (req, res) => {
     });
 
     // Event-Driven: Welcome Email for newly registered customer
-    sendOrderNotification({
-      order: { id: userId, user_email: cleanEmail },
-      eventType: 'CUSTOMER_REGISTERED',
-      recipientEmail: cleanEmail,
-      customerName: name || cleanEmail.split('@')[0]
-    }).catch((e) => console.warn('[Auth] Welcome email notification notice:', e.message));
+    try {
+      await sendOrderNotification({
+        order: { id: userId, user_email: cleanEmail },
+        eventType: 'CUSTOMER_REGISTERED',
+        recipientEmail: cleanEmail,
+        customerName: name || cleanEmail.split('@')[0]
+      });
+    } catch (e) {
+      console.warn('[Auth] Welcome email notification error:', e.message);
+    }
 
     res.json({
       user: { id: userId, email: cleanEmail, name: name || cleanEmail.split('@')[0], phone, role },
@@ -161,12 +165,16 @@ router.post('/google', async (req, res) => {
       user = { id: userId, email: cleanEmail, name, phone: '', role };
 
       // Event-Driven: Welcome Email for first-time Google sign-up
-      sendOrderNotification({
-        order: { id: userId, user_email: cleanEmail },
-        eventType: 'CUSTOMER_REGISTERED',
-        recipientEmail: cleanEmail,
-        customerName: name || cleanEmail.split('@')[0]
-      }).catch((e) => console.warn('[Auth] Welcome email notification notice:', e.message));
+      try {
+        await sendOrderNotification({
+          order: { id: userId, user_email: cleanEmail },
+          eventType: 'CUSTOMER_REGISTERED',
+          recipientEmail: cleanEmail,
+          customerName: name || cleanEmail.split('@')[0]
+        });
+      } catch (e) {
+        console.warn('[Auth] Welcome email notification error:', e.message);
+      }
     } else {
       user = users[0];
     }

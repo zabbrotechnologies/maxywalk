@@ -1,71 +1,82 @@
 import { Resend } from 'resend';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Multi-path dotenv loader ensuring environment variables load regardless of working directory
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config();
 
 /**
  * Provider-independent Email Service Abstraction
- * Primary Provider: Resend (Official SDK)
- * Fallback Provider: Gmail SMTP via Nodemailer
+ * Primary Provider: Authenticated Gmail SMTP via Nodemailer
+ * Fallback Provider: Resend (Official SDK)
  */
 class EmailProvider {
   constructor() {
     this.resend = null;
-    this.smtpTransporter = null;
-    this.initProviders();
   }
 
-  initProviders() {
-    const resendKey = (process.env.RESEND_API_KEY || '').trim();
-    if (resendKey) {
-      try {
-        this.resend = new Resend(resendKey);
-      } catch (err) {
-        console.warn('[EmailProvider] Warning: Failed to initialize Resend client:', err.message);
-      }
-    }
-
+  getCredentials() {
+    const user = (process.env.SMTP_USER || process.env.GMAIL_USER || process.env.EMAIL_USER || 'shop.maxywalk@gmail.com').trim();
+    const pass = (process.env.SMTP_PASS || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASS || process.env.EMAIL_PASS || '').trim().replace(/\s+/g, '');
     const host = process.env.SMTP_HOST || 'smtp.gmail.com';
     const port = Number(process.env.SMTP_PORT) || 465;
     const secure = process.env.SMTP_SECURE !== 'false';
-    const user = (process.env.SMTP_USER || process.env.GMAIL_USER || process.env.EMAIL_USER || '').trim();
-    // Google App Passwords are 16 characters often copied with spaces like "nqmo qwyn lmhb yplb"
-    const pass = (process.env.SMTP_PASS || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASS || process.env.EMAIL_PASS || '').trim().replace(/\s+/g, '');
+    const resendKey = (process.env.RESEND_API_KEY || '').trim();
 
-    if (user && pass) {
-      try {
-        const transportConfig = host.includes('gmail.com')
-          ? {
-              service: 'gmail',
-              auth: { user, pass }
+    return { user, pass, host, port, secure, resendKey };
+  }
+
+  createTransporter() {
+    const { user, pass, host, port, secure } = this.getCredentials();
+    if (!user || !pass) {
+      return null;
+    }
+
+    try {
+      // In serverless environments (Vercel / Lambda), pool: false is critical
+      // to prevent dead socket reuse after container freezing.
+      const transportConfig = host.includes('gmail.com')
+        ? {
+            service: 'gmail',
+            auth: { user, pass },
+            pool: false,
+            connectionTimeout: 15000,
+            greetingTimeout: 15000,
+            socketTimeout: 20000,
+            tls: {
+              rejectUnauthorized: false
             }
-          : {
-              host,
-              port,
-              secure,
-              auth: { user, pass },
-              pool: true,
-              maxConnections: 3,
-              maxMessages: 100,
-              rateLimit: 5,
-              tls: {
-                rejectUnauthorized: true,
-              },
-            };
+          }
+        : {
+            host,
+            port,
+            secure,
+            auth: { user, pass },
+            pool: false,
+            connectionTimeout: 15000,
+            greetingTimeout: 15000,
+            socketTimeout: 20000,
+            tls: {
+              rejectUnauthorized: false
+            }
+          };
 
-        this.smtpTransporter = nodemailer.createTransport(transportConfig);
-      } catch (err) {
-        console.warn('[EmailProvider] Warning: Failed to initialize SMTP transporter:', err.message);
-      }
+      return nodemailer.createTransport(transportConfig);
+    } catch (err) {
+      console.warn('[EmailProvider] Warning: Failed to create SMTP transporter:', err.message);
+      return null;
     }
   }
 
   getActiveProvider() {
-    const smtpUser = (process.env.SMTP_USER || process.env.GMAIL_USER || process.env.EMAIL_USER || '').trim();
-    const smtpPass = (process.env.SMTP_PASS || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASS || process.env.EMAIL_PASS || '').trim();
-    const resendKey = (process.env.RESEND_API_KEY || '').trim();
-
-    if (smtpUser && smtpPass) {
+    const { user, pass, resendKey } = this.getCredentials();
+    if (user && pass) {
       return 'smtp';
     }
     if (resendKey) {
@@ -77,8 +88,15 @@ class EmailProvider {
   isValidEmail(email) {
     if (!email || typeof email !== 'string') return false;
     const clean = email.trim();
-    // Standard RFC 5322 regex
     return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/.test(clean);
+  }
+
+  async verifyConnection() {
+    const transporter = this.createTransporter();
+    if (!transporter) {
+      throw new Error('SMTP credentials not configured. Please set SMTP_USER and SMTP_PASS in environment variables.');
+    }
+    return await transporter.verify();
   }
 
   async sendMail({ to, subject, html, text, from = null, replyTo = null, fromName = null }) {
@@ -97,21 +115,22 @@ class EmailProvider {
     const sender = from || (defaultFromEmail.includes('<') ? defaultFromEmail : `"${fromName || defaultFromName}" <${defaultFromEmail}>`);
     const resolvedReplyTo = replyTo || process.env.EMAIL_REPLY_TO || defaultFromEmail;
 
-    // 1. PRIMARY: SMTP Transporter (Authenticated Gmail SMTP with Google App Password)
-    if (this.smtpTransporter) {
+    const { user, pass, resendKey } = this.getCredentials();
+
+    // 1. PRIMARY: Authenticated Gmail SMTP with Nodemailer
+    if (user && pass) {
       try {
         return await this.sendViaSmtp({ to: cleanTo, subject: cleanSubject, html, text, sender, replyTo: resolvedReplyTo });
       } catch (smtpErr) {
         console.error(`[EmailProvider] SMTP delivery error to ${cleanTo}:`, smtpErr.message);
-        if (!this.resend && (process.env.RESEND_API_KEY || '').trim()) {
-          this.resend = new Resend(process.env.RESEND_API_KEY.trim());
+        if (!resendKey) {
+          throw smtpErr;
         }
-        if (!this.resend) throw smtpErr;
+        console.warn('[EmailProvider] Falling back to Resend after SMTP error...');
       }
     }
 
     // 2. FALLBACK or PRIMARY if no SMTP: Resend
-    const resendKey = (process.env.RESEND_API_KEY || '').trim();
     if (resendKey) {
       if (!this.resend) {
         this.resend = new Resend(resendKey);
@@ -145,10 +164,15 @@ class EmailProvider {
       };
     }
 
-    throw new Error('No email provider configured. Please set RESEND_API_KEY or SMTP credentials in your environment variables.');
+    throw new Error('No email provider configured. Please set SMTP_USER and SMTP_PASS (or RESEND_API_KEY) in environment variables.');
   }
 
-  async sendViaSmtp({ to, subject, html, text, sender, replyTo }) {
+  async sendViaSmtp({ to, subject, html, text, sender, replyTo }, isRetry = false) {
+    const transporter = this.createTransporter();
+    if (!transporter) {
+      throw new Error('SMTP transporter could not be created. Check SMTP credentials.');
+    }
+
     const mailOptions = {
       from: sender,
       to,
@@ -158,19 +182,30 @@ class EmailProvider {
       replyTo: replyTo || undefined,
       headers: {
         'Auto-Submitted': 'auto-generated',
-        'X-Auto-Response-Suppress': 'All'
+        'X-Auto-Response-Suppress': 'All',
+        'X-Entity-Ref-ID': `maxywalk-${Date.now()}`
       }
     };
 
-    const info = await this.smtpTransporter.sendMail(mailOptions);
-    return {
-      success: true,
-      provider: 'smtp',
-      messageId: info.messageId,
-      response: info.response,
-      accepted: info.accepted,
-      rejected: info.rejected,
-    };
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      return {
+        success: true,
+        provider: 'smtp',
+        messageId: info.messageId,
+        response: info.response,
+        accepted: info.accepted,
+        rejected: info.rejected,
+      };
+    } catch (err) {
+      // If a handshake timeout or socket closure occurred, retry once with a fresh socket
+      if (!isRetry) {
+        console.warn(`[EmailProvider] SMTP attempt 1 failed (${err.message}), retrying once with clean connection...`);
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        return await this.sendViaSmtp({ to, subject, html, text, sender, replyTo }, true);
+      }
+      throw err;
+    }
   }
 }
 
