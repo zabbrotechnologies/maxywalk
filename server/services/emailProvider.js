@@ -179,12 +179,7 @@ class EmailProvider {
       subject,
       html,
       text: text || html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
-      replyTo: replyTo || undefined,
-      headers: {
-        'Auto-Submitted': 'auto-generated',
-        'X-Auto-Response-Suppress': 'All',
-        'X-Entity-Ref-ID': `maxywalk-${Date.now()}`
-      }
+      replyTo: replyTo || undefined
     };
 
     try {

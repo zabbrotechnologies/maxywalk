@@ -42,10 +42,7 @@ function masterLayout({ preheader = '', contentHtml, siteUrl = 'https://maxywalk
   <![endif]-->
 </head>
 <body style="margin: 0; padding: 0; background-color: #FAF7F2; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1F1E1D;">
-  <!-- Preheader text for inbox preview -->
-  <div style="display: none; max-height: 0px; overflow: hidden; opacity: 0; font-size: 1px; line-height: 1px;">
-    ${escapeHtml(preheader)} &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
-  </div>
+
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #FAF7F2; padding: 24px 12px;">
     <tr>
@@ -77,29 +74,28 @@ function masterLayout({ preheader = '', contentHtml, siteUrl = 'https://maxywalk
           <!-- Professional Footer -->
           <tr>
             <td style="padding: 24px 28px; background-color: #FAF7F2; border-top: 1px solid #E8E2D8; font-size: 12px; color: #78716C; text-align: center; line-height: 1.6;">
-              <p style="margin: 0 0 8px 0; font-weight: bold; color: #1F1E1D;">MAXYWALK LEATHER ARTISANS</p>
-              <p style="margin: 0 0 12px 0;">Handcrafted in Avadi, Chennai, Tamil Nadu, India.</p>
+              <p style="margin: 0 0 6px 0; font-weight: bold; color: #1F1E1D;">MAXYWALK FOOTWEAR</p>
+              <p style="margin: 0 0 10px 0;">Handcrafted Leather Footwear Workshop, Avadi, Chennai, Tamil Nadu 600054, India.</p>
               
-              <p style="margin: 0 0 16px 0;">
+              <p style="margin: 0 0 12px 0;">
                 <a href="${siteUrl}/shop" style="color: #D35B22; text-decoration: none; font-weight: bold; margin: 0 8px;">Footwear Collection</a> &bull;
-                <a href="${siteUrl}/account?tab=orders" style="color: #D35B22; text-decoration: none; font-weight: bold; margin: 0 8px;">My Orders</a> &bull;
+                <a href="${siteUrl}/account?tab=orders" style="color: #D35B22; text-decoration: none; font-weight: bold; margin: 0 8px;">Track Orders</a> &bull;
                 <a href="mailto:shop.maxywalk@gmail.com" style="color: #D35B22; text-decoration: none; font-weight: bold; margin: 0 8px;">Customer Support</a>
               </p>
 
               ${isPromotional && unsubscribeUrl ? `
-              <p style="margin: 12px 0 0 0; font-size: 11px; color: #A8A29E;">
-                You received this product announcement because you are a registered customer of MAXYWALK.
+              <p style="margin: 10px 0 0 0; font-size: 11px; color: #A8A29E;">
+                You received this announcement because you are a registered customer of MAXYWALK.
                 <br>
-                <a href="${unsubscribeUrl}" style="color: #78716C; text-decoration: underline;">Unsubscribe from new product announcements</a>.
-                Essential order receipts will continue to be delivered.
+                <a href="${unsubscribeUrl}" style="color: #78716C; text-decoration: underline;">Unsubscribe</a>
               </p>
               ` : `
-              <p style="margin: 12px 0 0 0; font-size: 11px; color: #A8A29E;">
-                This is a transactional communication regarding your MAXYWALK account or purchase.
+              <p style="margin: 10px 0 0 0; font-size: 11px; color: #A8A29E;">
+                This transactional email was sent regarding your MAXYWALK account or order.
               </p>
               `}
               
-              <p style="margin: 12px 0 0 0; font-size: 11px; color: #A8A29E;">
+              <p style="margin: 6px 0 0 0; font-size: 11px; color: #A8A29E;">
                 &copy; ${new Date().getFullYear()} MAXYWALK. All rights reserved.
               </p>
             </td>
@@ -116,60 +112,77 @@ function masterLayout({ preheader = '', contentHtml, siteUrl = 'https://maxywalk
 // 1. CUSTOMER_REGISTERED
 export function renderWelcomeEmail({ name = 'Customer', email, siteUrl = 'https://maxywalk.com' }) {
   const firstName = escapeHtml(name.split(' ')[0] || 'Customer');
-  const subject = 'Welcome to MAXYWALK — Your Journey Starts Here!';
+  const subject = `Welcome to MAXYWALK, ${firstName}`;
   const exploreUrl = `${siteUrl}/shop`;
 
   const contentHtml = `
-    <h2 style="font-family: Georgia, serif; font-size: 24px; color: #1F1E1D; margin: 0 0 16px 0; font-weight: bold;">
-      Welcome to the MAXYWALK Family, ${firstName}!
+    <h2 style="font-family: Georgia, serif; font-size: 22px; color: #1F1E1D; margin: 0 0 16px 0; font-weight: bold;">
+      Hello ${firstName}, welcome to MAXYWALK.
     </h2>
     <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 16px 0;">
-      Your MAXYWALK account has been created successfully. We are delighted to welcome you to our community of discerning individuals who value authentic handcrafted leather craftsmanship.
+      Thank you for creating an account with us. We are proud to welcome you to our community of handcrafted pure leather footwear lovers.
     </p>
-    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 24px 0;">
-      Every pair of MAXYWALK footwear is sculpted from full-grain leather by master artisans in Avadi, engineered for refined elegance, uncompromised comfort, and enduring longevity.
+    <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 20px 0;">
+      Every pair of MAXYWALK footwear is handcrafted in Avadi using full-grain leather, built for comfort and durability.
     </p>
 
     <!-- Key Perks Box -->
-    <div style="background-color: #FAF7F2; border-left: 4px solid #D35B22; padding: 16px 20px; border-radius: 8px; margin-bottom: 28px;">
-      <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: #D35B22; margin: 0 0 8px 0; font-weight: bold;">
-        Your Account Privileges
+    <div style="background-color: #FAF7F2; border-left: 3px solid #D35B22; padding: 14px 18px; border-radius: 6px; margin-bottom: 24px;">
+      <h3 style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: #D35B22; margin: 0 0 8px 0; font-weight: bold;">
+        Account Benefits
       </h3>
       <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #57534E; line-height: 1.6;">
-        <li>1-Click Checkout with multiple saved delivery addresses.</li>
-        <li>Live real-time order tracking from workshop to doorstep.</li>
-        <li>Exclusive access to seasonal limited-edition leather drops.</li>
+        <li>Fast checkout with your saved delivery address</li>
+        <li>Live real-time order tracking from workshop to doorstep</li>
+        <li>Access to new footwear drops and limited editions</li>
       </ul>
     </div>
 
     <!-- CTA Button -->
-    <div style="text-align: center; margin-bottom: 28px;">
-      <a href="${exploreUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; padding: 15px 36px; border-radius: 8px; text-decoration: none;">
+    <div style="text-align: center; margin: 28px 0;">
+      <a href="${exploreUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; padding: 14px 32px; border-radius: 6px; text-decoration: none;">
         Explore Footwear Collection &rarr;
       </a>
     </div>
 
     <p style="font-size: 13px; line-height: 1.6; color: #78716C; margin: 0;">
-      Need any assistance with sizing or styling? Reach out directly to our artisan concierge at
+      If you have questions about sizing or your order, reach out to us at 
       <a href="mailto:shop.maxywalk@gmail.com" style="color: #D35B22; font-weight: bold; text-decoration: none;">shop.maxywalk@gmail.com</a>.
     </p>
   `;
 
   const html = masterLayout({
-    preheader: `Welcome to MAXYWALK, ${firstName}! Step into handcrafted pure leather footwear.`,
     contentHtml,
     siteUrl,
     isPromotional: false
   });
 
-  const text = `Welcome to MAXYWALK, ${name}! Your account was created successfully. Explore our handcrafted pure leather collection at ${exploreUrl}.`;
+  const text = `Hello ${firstName}, welcome to MAXYWALK.
+
+Thank you for creating an account with us. We are proud to welcome you to our community of handcrafted pure leather footwear lovers.
+
+Every pair of MAXYWALK footwear is handcrafted in Avadi using full-grain leather, built for comfort and durability.
+
+Account Benefits:
+- Fast checkout with your saved delivery address
+- Live real-time order tracking from workshop to doorstep
+- Access to new footwear drops and limited editions
+
+Explore Footwear Collection:
+${exploreUrl}
+
+If you have questions about sizing or your order, reach out to us at shop.maxywalk@gmail.com.
+
+MAXYWALK FOOTWEAR
+Handcrafted Leather Footwear Workshop, Avadi, Chennai, Tamil Nadu 600054, India.`;
+
   return { subject, html, text };
 }
 
 // 2. ORDER_PLACED
 export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteUrl = 'https://maxywalk.com' }) {
   const orderId = escapeHtml(order.order_id || order.id || 'MW-ORDER');
-  const subject = `Order Confirmation: #${orderId} - MAXYWALK`;
+  const subject = `Your MAXYWALK Order Confirmation [#${orderId}]`;
   
   let items = [];
   if (Array.isArray(order.items)) {
@@ -310,25 +323,27 @@ export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteU
 
   const text = `MAXYWALK Order Confirmation
 
-Order #${orderId}
-Status: Confirmed
-Payment Method: ${paymentMethodLabel}
+Thank you for your order, ${resolvedName}.
+We have received order #${orderId}. Our workshop in Avadi is preparing your items.
 
-Items:
+Order Summary:
 ${itemsText}
 
 Subtotal: ${subtotal}
-Shipping: ${shippingCost}
-Total: ${total}
+Shipping Charges: ${shippingCost}
+Order Total: ${total}
+
+Payment Method: ${paymentMethodLabel}
 
 Delivery Destination:
 ${addrText}
 
-Track your order status:
+Track Your Order:
 ${viewOrderUrl}
 
-MAXYWALK Leather Artisans, Avadi, Chennai, Tamil Nadu.
-Support: shop.maxywalk@gmail.com`;
+MAXYWALK FOOTWEAR
+Handcrafted Leather Footwear Workshop, Avadi, Chennai, Tamil Nadu 600054, India.
+Customer Support: shop.maxywalk@gmail.com`;
   return { subject, html, text };
 }
 

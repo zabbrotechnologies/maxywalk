@@ -107,11 +107,7 @@ class EmailService {
           subject: cleanSubject,
           html,
           text: text || html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
-          replyTo: resolvedReplyTo,
-          headers: {
-            'X-Entity-Ref-ID': `maxywalk-${Date.now()}`,
-            'X-Mailer': 'MAXYWALK Gmail Automation Engine'
-          }
+          replyTo: resolvedReplyTo
         };
 
         try {
