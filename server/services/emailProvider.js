@@ -99,7 +99,7 @@ class EmailProvider {
     return await transporter.verify();
   }
 
-  async sendMail({ to, subject, html, text, from = null, replyTo = null, fromName = null }) {
+  async sendMail({ to, toName = null, subject, html, text, from = null, replyTo = null, fromName = null }) {
     if (!to || !this.isValidEmail(to)) {
       throw new Error(`Invalid recipient email address: "${to}"`);
     }
@@ -109,6 +109,7 @@ class EmailProvider {
     }
 
     const cleanTo = to.trim().toLowerCase();
+    const formattedTo = toName ? `"${toName.replace(/"/g, '')}" <${cleanTo}>` : cleanTo;
     const cleanSubject = subject.trim();
     const defaultFromName = process.env.EMAIL_FROM_NAME || 'MAXYWALK';
     const defaultFromEmail = process.env.EMAIL_FROM || 'shop.maxywalk@gmail.com';
@@ -120,7 +121,7 @@ class EmailProvider {
     // 1. PRIMARY: Authenticated Gmail SMTP with Nodemailer
     if (user && pass) {
       try {
-        return await this.sendViaSmtp({ to: cleanTo, subject: cleanSubject, html, text, sender, replyTo: resolvedReplyTo });
+        return await this.sendViaSmtp({ to: formattedTo, subject: cleanSubject, html, text, sender, replyTo: resolvedReplyTo });
       } catch (smtpErr) {
         console.error(`[EmailProvider] SMTP delivery error to ${cleanTo}:`, smtpErr.message);
         if (!resendKey) {
@@ -173,13 +174,20 @@ class EmailProvider {
       throw new Error('SMTP transporter could not be created. Check SMTP credentials.');
     }
 
+    const { user } = this.getCredentials();
     const mailOptions = {
       from: sender,
       to,
       subject,
       html,
       text: text || html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
-      replyTo: replyTo || undefined
+      replyTo: replyTo || undefined,
+      headers: {
+        'List-Unsubscribe': `<mailto:${user || 'shop.maxywalk@gmail.com'}?subject=Unsubscribe>`,
+        'X-Auto-Response-Suppress': 'All',
+        'Auto-Submitted': 'auto-generated',
+        'X-Entity-Ref-ID': `mw-${Date.now()}`
+      }
     };
 
     try {

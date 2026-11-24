@@ -42,6 +42,7 @@ function masterLayout({ preheader = '', contentHtml, siteUrl = 'https://maxywalk
   <![endif]-->
 </head>
 <body style="margin: 0; padding: 0; background-color: #FAF7F2; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1F1E1D;">
+  ${preheader ? `<div style="display: none; max-height: 0px; overflow: hidden; font-size: 1px; line-height: 1px; color: #FAF7F2; opacity: 0;">${escapeHtml(preheader)}</div>` : ''}
 
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #FAF7F2; padding: 24px 12px;">
@@ -111,13 +112,18 @@ function masterLayout({ preheader = '', contentHtml, siteUrl = 'https://maxywalk
 
 // 1. CUSTOMER_REGISTERED
 export function renderWelcomeEmail({ name = 'Customer', email, siteUrl = 'https://maxywalk.com' }) {
-  const firstName = escapeHtml(name.split(' ')[0] || 'Customer');
-  const subject = `Welcome to MAXYWALK, ${firstName}`;
+  const cleanName = (name || '').trim();
+  const isEmailOrId = cleanName.includes('@') || /\d/.test(cleanName) || /[._]/.test(cleanName) || cleanName.length > 30;
+  const validName = !isEmailOrId && cleanName.toLowerCase() !== 'customer' && cleanName.toLowerCase() !== 'valued customer' ? cleanName : '';
+  const firstName = validName ? escapeHtml(validName.split(' ')[0]) : '';
+  const greeting = firstName ? `Hello ${firstName}, welcome to MAXYWALK.` : 'Welcome to MAXYWALK.';
+  const subject = firstName ? `Welcome to MAXYWALK, ${firstName}` : 'Welcome to MAXYWALK — Your Account is Ready';
+  const preheader = 'Your MAXYWALK account has been created. Handcrafted pure leather footwear from Avadi, Tamil Nadu.';
   const exploreUrl = `${siteUrl}/shop`;
 
   const contentHtml = `
     <h2 style="font-family: Georgia, serif; font-size: 22px; color: #1F1E1D; margin: 0 0 16px 0; font-weight: bold;">
-      Hello ${firstName}, welcome to MAXYWALK.
+      ${greeting}
     </h2>
     <p style="font-size: 14px; line-height: 1.7; color: #44403C; margin: 0 0 16px 0;">
       Thank you for creating an account with us. We are proud to welcome you to our community of handcrafted pure leather footwear lovers.
@@ -141,7 +147,7 @@ export function renderWelcomeEmail({ name = 'Customer', email, siteUrl = 'https:
     <!-- CTA Button -->
     <div style="text-align: center; margin: 28px 0;">
       <a href="${exploreUrl}" target="_blank" style="display: inline-block; background-color: #1F1E1D; color: #FFFFFF; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; padding: 14px 32px; border-radius: 6px; text-decoration: none;">
-        Explore Footwear Collection &rarr;
+        Explore Footwear Collection
       </a>
     </div>
 
@@ -152,12 +158,13 @@ export function renderWelcomeEmail({ name = 'Customer', email, siteUrl = 'https:
   `;
 
   const html = masterLayout({
+    preheader,
     contentHtml,
     siteUrl,
     isPromotional: false
   });
 
-  const text = `Hello ${firstName}, welcome to MAXYWALK.
+  const text = `${greeting}
 
 Thank you for creating an account with us. We are proud to welcome you to our community of handcrafted pure leather footwear lovers.
 
@@ -205,7 +212,9 @@ export function renderOrderPlacedEmail({ order, customerName = 'Customer', siteU
   const subtotal = formatInr(order.subtotal || order.total);
   const stateVal = (shippingAddr.state || '').trim().toLowerCase().replace(/\s+/g, '');
   const isTN = stateVal === 'tamilnadu';
-  const shippingCost = order.shippingCost ? formatInr(order.shippingCost) : formatInr(isTN ? 100 : 250);
+  const totalItemQty = items.reduce((sum, item) => sum + (Math.max(Number(item.qty) || 1, 1)), 0);
+  const defaultShippingCost = (isTN ? 100 : 250) * Math.max(totalItemQty, 1);
+  const shippingCost = order.shippingCost ? formatInr(order.shippingCost) : (order.shipping_cost ? formatInr(order.shipping_cost) : formatInr(defaultShippingCost));
   const viewOrderUrl = `${siteUrl}/account?tab=orders`;
   const paymentMethodLabel = (order.payment_method === 'cod' || order.paymentMethod === 'cod')
     ? 'Cash on Delivery (COD)'
@@ -383,7 +392,9 @@ export function renderPaymentSuccessEmail({
   const subtotal = formatInr(order.subtotal || order.total || amount || 0);
   const stateVal = (shippingAddr.state || '').trim().toLowerCase().replace(/\s+/g, '');
   const isTN = stateVal === 'tamilnadu';
-  const shippingCost = order.shippingCost ? formatInr(order.shippingCost) : formatInr(isTN ? 100 : 250);
+  const totalItemQty = items.reduce((sum, item) => sum + (Math.max(Number(item.qty) || 1, 1)), 0);
+  const defaultShippingCost = (isTN ? 100 : 250) * Math.max(totalItemQty, 1);
+  const shippingCost = order.shippingCost ? formatInr(order.shippingCost) : (order.shipping_cost ? formatInr(order.shipping_cost) : formatInr(defaultShippingCost));
   const formattedDate = new Date(date).toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'short',

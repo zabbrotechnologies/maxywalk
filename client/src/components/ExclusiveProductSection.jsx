@@ -20,6 +20,7 @@ const COLOR_HEX_MAP = {
   olivegreen: '#535D4A',
   green: '#535D4A',
   rose: '#B85B64',
+  red: '#B85B64',
   lightpink: '#D8A0A6',
   pink: '#D8A0A6',
   white: '#FFFFFF',

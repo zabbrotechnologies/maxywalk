@@ -59,11 +59,13 @@ router.post('/register', authRateLimiter, async (req, res) => {
 
     // Event-Driven: Welcome Email for newly registered customer
     try {
+      const cleanCustomerName = (name || '').trim();
+      const hasValidName = cleanCustomerName && !cleanCustomerName.includes('@');
       await sendOrderNotification({
         order: { id: userId, user_email: cleanEmail },
         eventType: 'CUSTOMER_REGISTERED',
         recipientEmail: cleanEmail,
-        customerName: name || cleanEmail.split('@')[0]
+        customerName: hasValidName ? cleanCustomerName : 'Customer'
       });
     } catch (e) {
       console.warn('[Auth] Welcome email notification error:', e.message);
@@ -166,11 +168,13 @@ router.post('/google', async (req, res) => {
 
       // Event-Driven: Welcome Email for first-time Google sign-up
       try {
+        const cleanGoogleName = (name || payload.name || '').trim();
+        const hasValidGoogleName = cleanGoogleName && !cleanGoogleName.includes('@');
         await sendOrderNotification({
           order: { id: userId, user_email: cleanEmail },
           eventType: 'CUSTOMER_REGISTERED',
           recipientEmail: cleanEmail,
-          customerName: name || cleanEmail.split('@')[0]
+          customerName: hasValidGoogleName ? cleanGoogleName : 'Customer'
         });
       } catch (e) {
         console.warn('[Auth] Welcome email notification error:', e.message);

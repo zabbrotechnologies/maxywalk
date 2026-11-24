@@ -198,6 +198,7 @@ export async function sendOrderNotification({
     try {
       sendResult = await emailProvider.sendMail({
         to: targetEmail,
+        toName: resolvedCustomerName && !resolvedCustomerName.includes('@') && resolvedCustomerName.toLowerCase() !== 'customer' && resolvedCustomerName.toLowerCase() !== 'valued customer' ? resolvedCustomerName : null,
         subject: rendered.subject,
         html: rendered.html,
         text: rendered.text

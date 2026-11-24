@@ -73,7 +73,7 @@ export const DEFAULT_EXCLUSIVE_PRODUCT = {
   review_count: 48,
   created_at: '2026-01-01T00:00:00Z',
   sizes: ['6', '7', '8', '9', '10', '11', '12', '13'],
-  colors: ['Black', 'Burgundy', 'Sandal / Wood', 'Light Blue', 'Grey', 'Olive Green', 'Rose', 'Light Pink'],
+  colors: ['Black', 'Burgundy', 'Sandal / Wood', 'Light Blue', 'Grey', 'Olive Green', 'Red', 'Light Pink'],
   images: [
     '/products/exclusive/black.png',
     '/products/exclusive/maroon.png',
@@ -134,9 +134,9 @@ export const DEFAULT_EXCLUSIVE_PRODUCT = {
       hex: '#535D4A',
     },
     {
-      id: 'rose',
-      name: 'Rose',
-      label: 'Rose',
+      id: 'red',
+      name: 'Red',
+      label: 'Red',
       image: '/products/exclusive/rose.png',
       colorHex: '#B85B64',
       hex: '#B85B64',

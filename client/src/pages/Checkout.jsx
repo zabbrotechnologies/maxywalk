@@ -144,8 +144,10 @@ export default function Checkout() {
     });
   };
 
+  const totalQuantity = items.reduce((sum, i) => sum + (Number(i.qty) || 1), 0);
   const isTamilNadu = (address.state || '').trim().toLowerCase().replace(/\s+/g, '') === 'tamilnadu';
-  const shippingCost = isTamilNadu ? 100 : 250;
+  const shippingPerItem = isTamilNadu ? 100 : 250;
+  const shippingCost = shippingPerItem * Math.max(totalQuantity, 1);
   const total = subtotal + shippingCost;
 
   const isEmailValid = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e?.trim() || '');
@@ -583,7 +585,7 @@ export default function Checkout() {
 
                     <div className="pt-3 border-t border-outline-variant/30 flex items-center justify-between text-xs">
                       <span className="text-on-surface-variant font-medium">
-                        Standard Shipping ({isTamilNadu ? 'Tamil Nadu' : 'Rest of India'})
+                        Standard Shipping ({isTamilNadu ? 'Tamil Nadu' : 'Rest of India'} · ₹{shippingPerItem} × {totalQuantity} item{totalQuantity > 1 ? 's' : ''})
                       </span>
                       <span className="font-bold text-primary text-sm">
                         ₹{shippingCost}

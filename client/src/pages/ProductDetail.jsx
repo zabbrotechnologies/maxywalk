@@ -432,7 +432,7 @@ export default function ProductDetail() {
                   ['Category', product.category?.toUpperCase()],
                   ['Available Sizes', product.sizes?.join(', ') || 'Standard'],
                   ['Available Colors', product.colors?.join(', ') || 'Custom Brown/Black'],
-                  ['Dispatch Time', '1–2 Business Days'],
+                  ['Dispatch Time', '5-7 Business Days'],
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between py-2 border-b border-outline-variant/20 last:border-0">
                     <span className="font-sans uppercase text-on-surface-variant font-medium text-[11px]">{k}</span>

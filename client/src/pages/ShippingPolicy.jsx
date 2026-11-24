@@ -32,7 +32,7 @@ export default function ShippingPolicy() {
             <div className="p-4 bg-surface-container-low rounded-2xl border border-outline-variant/30">
               <span className="material-symbols-outlined text-secondary text-2xl mb-1">local_shipping</span>
               <h3 className="font-bold text-primary text-sm mb-1">Pan-India Delivery</h3>
-              <p className="text-[11px] text-on-surface-variant">Direct doorstep shipping (Tamil Nadu ₹100, other states ₹250).</p>
+              <p className="text-[11px] text-on-surface-variant">Direct doorstep shipping (Tamil Nadu ₹100 per product, other states ₹250 per product).</p>
             </div>
             <div className="p-4 bg-surface-container-low rounded-2xl border border-outline-variant/30">
               <span className="material-symbols-outlined text-secondary text-2xl mb-1">timer</span>
@@ -64,30 +64,24 @@ export default function ShippingPolicy() {
               <table className="w-full text-left border-collapse border border-outline-variant/30 text-xs">
                 <thead>
                   <tr className="bg-surface-container-low text-primary">
-                    <th className="p-3 border border-outline-variant/30">Shipping Method</th>
-                    <th className="p-3 border border-outline-variant/30">Order Value</th>
+                    <th className="p-3 border border-outline-variant/30">Destination</th>
+                    <th className="p-3 border border-outline-variant/30">Rate Structure</th>
                     <th className="p-3 border border-outline-variant/30">Estimated Delivery Time</th>
                     <th className="p-3 border border-outline-variant/30">Cost</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="p-3 border border-outline-variant/30 font-bold">Standard Delivery</td>
-                    <td className="p-3 border border-outline-variant/30">₹1,999 and above</td>
-                    <td className="p-3 border border-outline-variant/30">4–7 business days</td>
-                    <td className="p-3 border border-outline-variant/30 text-green-700 font-bold">FREE</td>
-                  </tr>
-                  <tr>
-                    <td className="p-3 border border-outline-variant/30 font-bold">Standard Delivery</td>
-                    <td className="p-3 border border-outline-variant/30">Under ₹1,999</td>
-                    <td className="p-3 border border-outline-variant/30">4–7 business days</td>
-                    <td className="p-3 border border-outline-variant/30">₹149</td>
-                  </tr>
-                  <tr>
-                    <td className="p-3 border border-outline-variant/30 font-bold">Express Delivery</td>
-                    <td className="p-3 border border-outline-variant/30">All orders</td>
+                    <td className="p-3 border border-outline-variant/30 font-bold">Tamil Nadu</td>
+                    <td className="p-3 border border-outline-variant/30">Per single footwear product</td>
                     <td className="p-3 border border-outline-variant/30">2–3 business days</td>
-                    <td className="p-3 border border-outline-variant/30">₹149</td>
+                    <td className="p-3 border border-outline-variant/30 font-bold text-primary">₹100 / product</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 border border-outline-variant/30 font-bold">Other Indian States &amp; UTs</td>
+                    <td className="p-3 border border-outline-variant/30">Per single footwear product</td>
+                    <td className="p-3 border border-outline-variant/30">4–7 business days</td>
+                    <td className="p-3 border border-outline-variant/30 font-bold text-primary">₹250 / product</td>
                   </tr>
                 </tbody>
               </table>
