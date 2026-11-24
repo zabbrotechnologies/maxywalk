@@ -151,17 +151,6 @@ export default function CartDrawer() {
         {/* Footer with Checkout CTA */}
         {items.length > 0 && (
           <div className="border-t border-outline-variant/30 p-4 sm:p-6 bg-surface-container-low space-y-3">
-            {/* Free shipping bar */}
-            {subtotal < 1999 ? (
-              <div className="bg-white border border-outline-variant/40 p-2 text-[11px] text-on-surface-variant text-center">
-                Add <strong>{formatPrice(1999 - subtotal)}</strong> more for <span className="text-secondary font-bold">Free Shipping</span>
-              </div>
-            ) : (
-              <div className="bg-green-50 border border-green-200 p-2 text-[11px] text-green-800 text-center font-semibold">
-                🎉 You've unlocked FREE Delivery across India!
-              </div>
-            )}
-
             {/* Subtotal */}
             <div className="flex justify-between items-center py-1">
               <span className="font-sans text-xs uppercase tracking-wider text-on-surface-variant font-bold">

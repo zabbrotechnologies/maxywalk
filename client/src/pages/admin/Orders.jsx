@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from './Layout.jsx';
-import { getAllOrders, updateOrderStatus } from '../../lib/api.js';
+import { getAllOrders, updateOrderStatus, deleteOrder } from '../../lib/api.js';
 import { formatPrice, formatDate, getStatusColor } from '../../lib/utils.js';
 import toast from 'react-hot-toast';
 
@@ -13,6 +13,7 @@ export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedId, setExpandedId] = useState(null);
   const [updating, setUpdating] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   const fetchOrders = useCallback(() => {
     setLoading(true);
@@ -26,6 +27,25 @@ export default function AdminOrders() {
     document.title = 'Customer Orders | Admin – MaxyWalk';
     fetchOrders();
   }, [fetchOrders]);
+
+  const handleDeleteOrder = async (docId, orderCode) => {
+    const targetId = docId || orderCode;
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete order #${orderCode}? This will remove it from database records.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(targetId);
+    try {
+      await deleteOrder(targetId);
+      setOrders((prev) => prev.filter((o) => o.id !== targetId && o.order_id !== targetId && o.orderId !== targetId));
+      toast.success(`Order #${orderCode} deleted successfully`);
+    } catch {
+      toast.error('Failed to delete order.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const handleStatusUpdate = async (orderId, docId, newStatus) => {
     const targetId = docId || orderId;
@@ -251,26 +271,45 @@ export default function AdminOrders() {
                     })()}
                   </div>
 
-                  {/* Update Order Status Buttons */}
-                  <div>
-                    <h4 className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-2.5">
-                      Update Order Status:
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {STATUS_OPTIONS.map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => handleStatusUpdate(order.order_id || order.orderId || order.id, order.id, s)}
-                          disabled={order.status === s || updating === order.id}
-                          className={`px-3 py-1.5 text-xs font-sans uppercase tracking-wider font-bold rounded-full transition-colors ${
-                            order.status === s
-                              ? 'bg-primary text-white shadow-md'
-                              : 'bg-white border border-outline-variant/60 text-on-surface hover:border-primary disabled:opacity-40'
-                          }`}
-                        >
-                          {updating === order.id && order.status !== s ? 'Updating...' : s}
-                        </button>
-                      ))}
+                  {/* Update Order Status & Delete Order (Bottom Right Corner) */}
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pt-4 border-t border-outline-variant/20">
+                    <div>
+                      <h4 className="font-sans text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-2.5">
+                        Update Order Status:
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {STATUS_OPTIONS.map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => handleStatusUpdate(order.order_id || order.orderId || order.id, order.id, s)}
+                            disabled={order.status === s || updating === order.id}
+                            className={`px-3 py-1.5 text-xs font-sans uppercase tracking-wider font-bold rounded-full transition-colors ${
+                              order.status === s
+                                ? 'bg-primary text-white shadow-md'
+                                : 'bg-white border border-outline-variant/60 text-on-surface hover:border-primary disabled:opacity-40'
+                            }`}
+                          >
+                            {updating === order.id && order.status !== s ? 'Updating...' : s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Delete Order Action in Bottom Right Corner */}
+                    <div className="self-end sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteOrder(order.id, order.order_id || order.orderId || order.id);
+                        }}
+                        disabled={deletingId === order.id}
+                        className="h-9 px-3.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 text-xs font-bold font-sans uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                        title="Delete order permanently"
+                      >
+                        <span className="material-symbols-outlined text-base">delete</span>
+                        <span>{deletingId === order.id ? 'Deleting...' : 'Delete'}</span>
+                      </button>
                     </div>
                   </div>
                 </div>

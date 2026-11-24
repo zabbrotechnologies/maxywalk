@@ -362,6 +362,14 @@ export const updateOrderStatus = async (id, status) => {
   return res.data;
 };
 
+export const deleteOrder = async (id) => {
+  clearApiCache();
+  const res = await api.delete(`/orders/${id}`, {
+    headers: { 'x-admin-request': 'true' }
+  });
+  return res.data;
+};
+
 export const getAllCustomers = async (params = {}) => {
   const res = await api.get('/customers', {
     params,

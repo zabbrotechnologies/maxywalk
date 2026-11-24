@@ -31,8 +31,8 @@ export default function ShippingPolicy() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-4 bg-surface-container-low rounded-2xl border border-outline-variant/30">
               <span className="material-symbols-outlined text-secondary text-2xl mb-1">local_shipping</span>
-              <h3 className="font-bold text-primary text-sm mb-1">Free Delivery</h3>
-              <p className="text-[11px] text-on-surface-variant">Free standard shipping on orders above ₹1,999 across India.</p>
+              <h3 className="font-bold text-primary text-sm mb-1">Pan-India Delivery</h3>
+              <p className="text-[11px] text-on-surface-variant">Direct doorstep shipping (Tamil Nadu ₹100, other states ₹250).</p>
             </div>
             <div className="p-4 bg-surface-container-low rounded-2xl border border-outline-variant/30">
               <span className="material-symbols-outlined text-secondary text-2xl mb-1">timer</span>
