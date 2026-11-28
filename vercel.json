@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/sitemap.xml",
-      "destination": "/api/sitemap.xml"
+      "destination": "/api/index.js"
     },
     {
       "source": "/api/(.*)",

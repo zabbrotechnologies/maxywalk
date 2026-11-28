@@ -40,6 +40,7 @@ app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(authenticate);
 
 // API Routes
+app.use('/', seoRoutes);
 app.use('/api', paymentRoutes);
 app.use('/api', seoRoutes);
 app.use('/api/auth', authRoutes);
