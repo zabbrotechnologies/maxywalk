@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore.js';
+import { useSeo } from '../lib/seo.js';
 import toast from 'react-hot-toast';
 
 export default function Register() {
+  useSeo({ title: 'Create Account | MAXYWALK', path: '/register', noindex: true });
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -1,9 +1,15 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSeo } from '../lib/seo.js';
 
 export default function ShippingPolicy() {
+  useSeo({
+    title: 'Shipping & Delivery Policy | MAXYWALK',
+    description: 'Pan-India doorstep delivery for MAXYWALK handcrafted leather slippers, shoes, mules, and sandals from our Avadi, Chennai workshop.',
+    path: '/shipping',
+  });
+
   useEffect(() => {
-    document.title = 'Shipping & Delivery Policy | MAXYWALK';
     window.scrollTo(0, 0);
   }, []);
 

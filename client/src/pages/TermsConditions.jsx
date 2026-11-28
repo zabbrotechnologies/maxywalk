@@ -1,9 +1,15 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSeo } from '../lib/seo.js';
 
 export default function TermsConditions() {
+  useSeo({
+    title: 'Terms & Conditions | MAXYWALK',
+    description: 'Terms and conditions governing purchases and custom leather footwear orders at MAXYWALK.',
+    path: '/terms',
+  });
+
   useEffect(() => {
-    document.title = 'Terms & Conditions | MAXYWALK';
     window.scrollTo(0, 0);
   }, []);
 

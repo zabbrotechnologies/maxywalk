@@ -4,6 +4,7 @@ import { getProducts } from '../lib/api.js';
 import ProductCard from '../components/ProductCard.jsx';
 import HeroSection from '../components/HeroSection.jsx';
 import ExclusiveProductSection from '../components/ExclusiveProductSection.jsx';
+import { useSeo } from '../lib/seo.js';
 
 // Intersection Observer hook for fade-in animations
 function useFadeIn() {
@@ -61,8 +62,14 @@ export default function Home() {
   const featuredRef = useFadeIn();
   const reviewRef = useFadeIn();
 
+  useSeo({
+    title: 'MAXYWALK | Handcrafted Leather Footwear Brand in India',
+    description: 'MAXYWALK is an Indian handcrafted leather footwear brand in Avadi, Chennai. Shop 100% genuine full-grain leather slippers, shoes, mules, sandals & custom footwear with pan-India delivery.',
+    keywords: 'MAXYWALK, MaxyWalk, maxywalk footwear, footwear brand, Indian footwear brand, leather footwear, handcrafted leather slippers, leather sandals, leather shoes, leather mules, Avadi Chennai',
+    path: '/',
+  });
+
   useEffect(() => {
-    document.title = 'MAXYWALK | MAXYWALK – Handcrafted Leather Footwear';
     getProducts({ featured: true, limit: 50 })
       .then((data) => {
         // Exclude the exclusive showcase product to prevent duplication on the homepage
@@ -300,7 +307,8 @@ export default function Home() {
               <div className="aspect-[3/4] overflow-hidden bg-surface-container">
                 <img
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgWFFK86T5gmLGWZHLhUaG1cF0-ZMh12kmFHHkKP8zf8Gr0sMBABlXlgWRmZZ8lkT029uBqswFugHrKL8o1QNCxbY2BzztKfqEDQ0Hm8_Vc8uMpo-LOzP6sn4MUjT24AN81n_N26a6t8sUkceHvom18N9yOOF5jEVzx0xsn7olMhAYpZ-gZSegh9zDny7bZQDQCNxtS3svBYjD1E9keYzC2LTtEyz1j4-5Wr36c7vFQq6aGGEEpHpH"
-                  alt="MAXYWALK leather slipper"
+                  alt="MAXYWALK handcrafted genuine leather slipper"
+                  loading="lazy"
                   className="w-full h-full object-contain drop-shadow-md"
                 />
               </div>
@@ -308,14 +316,16 @@ export default function Home() {
                 <div className="aspect-square overflow-hidden bg-surface-container">
                   <img
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkZZLptrzF3_pLJdGwE1D0fzBf9J6BskKwY_creH1fEwQGjpA8E1ZqUMQcf5oG0DPqTdDQOe0jiSWO8xDYWLfLedhMNKW5or3L6QIdT4kNWSpCsGqeM06tYRvuYRe-Y1giC2c_OBy7TTJgqxv_s8CrqRLxmNSIM6YZu8lhceL1wjSjQPg39qPyrz461bIcjc5-OvPVhEnA2eJ7fhvH0yagBHcjNNgrqediDKAK4ax5ilJPk55aRuEG"
-                    alt="Leather belt"
+                    alt="MAXYWALK handcrafted genuine leather belt"
+                    loading="lazy"
                     className="w-full h-full object-contain drop-shadow-md"
                   />
                 </div>
                 <div className="aspect-square overflow-hidden bg-surface-container">
                   <img
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuAy9uIBLtM48fYq1AlBrQamS2Dj7jXFNVNX2n814Z51DiV4LuTj-EnP57VbeZkSNwLHeXpomeiGTawYezijQB25UOFsQ4z4E5llsZz_4RLODXSoe-0bpC4GZ8UN0PUA8d29RmafijMqyq25C6Pdca8Od9nyx5o1-57k8n61Bpm2crxPPHHuicw4XKOKeHmOGtyGTPtds5oHpUnohJj3GRBHBU5dHs6JD-782XyvJ6AkrqjGzheuQ10x"
-                    alt="Leather wallet"
+                    alt="MAXYWALK handcrafted genuine leather wallet"
+                    loading="lazy"
                     className="w-full h-full object-contain drop-shadow-md"
                   />
                 </div>

@@ -15,6 +15,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/sitemap.xml': {
+        target: 'http://localhost:5001/api/sitemap.xml',
+        changeOrigin: true,
+        secure: false,
+        rewrite: () => '/api/sitemap.xml',
+      },
     },
   },
   build: {

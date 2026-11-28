@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { getProducts } from '../lib/api.js';
 import ProductCard from '../components/ProductCard.jsx';
 import { CATEGORIES, SHOE_SIZES, formatPrice } from '../lib/utils.js';
+import { useSeo, SITE_URL } from '../lib/seo.js';
 
 const SORT_OPTIONS = [
   { value: 'featured', label: 'Featured' },
@@ -137,9 +138,24 @@ export default function Shop() {
   const [sort, setSort] = useState('featured');
   const searchQuery = searchParams.get('search') || '';
 
-  useEffect(() => {
-    document.title = 'Shop All Leather Footwear & Goods | MAXYWALK';
-  }, []);
+  const categoryLabel = CATEGORIES.find((c) => c.value === selectedCategory)?.label || 'All Leather Footwear';
+  const shopPath = selectedCategory !== 'all' ? `/shop?category=${encodeURIComponent(selectedCategory)}` : '/shop';
+
+  useSeo({
+    title: selectedCategory !== 'all'
+      ? `${categoryLabel} | MAXYWALK Handcrafted Leather Footwear`
+      : 'Shop All Handcrafted Leather Footwear | MAXYWALK',
+    description: `Browse MAXYWALK ${categoryLabel.toLowerCase()} crafted from 100% genuine full-grain leather in Avadi, Chennai. Custom sizing & pan-India delivery.`,
+    keywords: `MAXYWALK, ${categoryLabel}, leather footwear brand, handcrafted leather slippers, leather shoes, leather sandals, leather mules, buy leather footwear online India`,
+    path: shopPath,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: `${categoryLabel} — MAXYWALK`,
+      url: `${SITE_URL}${shopPath}`,
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+    },
+  });
 
   // Fetch products
   const fetchProducts = useCallback(async () => {

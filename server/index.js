@@ -19,6 +19,7 @@ import customerRoutes from './routes/customers.js';
 import assetRoutes from './routes/assets.js';
 import paymentRoutes from './routes/payment.js';
 import emailRoutes from './routes/emails.js';
+import seoRoutes from './routes/seo.js';
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -40,6 +41,7 @@ app.use(authenticate);
 
 // API Routes
 app.use('/api', paymentRoutes);
+app.use('/api', seoRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);

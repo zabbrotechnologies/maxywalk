@@ -1,9 +1,15 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSeo } from '../lib/seo.js';
 
 export default function RefundPolicy() {
+  useSeo({
+    title: 'Cancellation & Refund Policy | MAXYWALK',
+    description: 'MAXYWALK 7-day return, size replacement, and refund policy for handcrafted leather footwear orders across India.',
+    path: '/refund-policy',
+  });
+
   useEffect(() => {
-    document.title = 'Refund & Cancellation Policy | MAXYWALK';
     window.scrollTo(0, 0);
   }, []);
 

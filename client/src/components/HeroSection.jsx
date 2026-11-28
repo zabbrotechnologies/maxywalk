@@ -473,6 +473,7 @@ export default function HeroSection() {
                   color: WHITE, lineHeight: 1.0,
                   fontWeight: 900, letterSpacing: "-0.025em", margin: 0,
                 }}>
+                  <span className="sr-only">MAXYWALK Handcrafted Leather Footwear Brand — </span>
                   WALK IN<br />
                   <span style={{ color: ORANGE }}>LEATHER.</span>
                 </h1>

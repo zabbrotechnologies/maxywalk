@@ -1,9 +1,15 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSeo } from '../lib/seo.js';
 
 export default function PrivacyPolicy() {
+  useSeo({
+    title: 'Privacy Policy | MAXYWALK',
+    description: 'Read how MAXYWALK collects, uses, and protects your personal information when shopping for handcrafted leather footwear.',
+    path: '/privacy',
+  });
+
   useEffect(() => {
-    document.title = 'Privacy Policy | MAXYWALK';
     window.scrollTo(0, 0);
   }, []);
 

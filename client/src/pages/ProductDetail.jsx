@@ -6,6 +6,7 @@ import useAuthStore from '../store/authStore.js';
 import useWishlistStore from '../store/wishlistStore.js';
 import ProductCard from '../components/ProductCard.jsx';
 import { formatPrice, sortSizes, getSizeSurcharge, getProductPriceForSize } from '../lib/utils.js';
+import { useSeo, SITE_URL } from '../lib/seo.js';
 import toast from 'react-hot-toast';
 
 export default function ProductDetail() {
@@ -26,6 +27,55 @@ export default function ProductDetail() {
   const toggleWishlist = useWishlistStore((s) => s.toggle);
   const isWishlisted = useWishlistStore((s) => s.isWishlisted);
 
+  const primarySeoImage = product?.images?.[0] || product?.variants?.[0]?.image || product?.image;
+  const productJsonLd = product ? {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Product',
+        name: product.name,
+        image: primarySeoImage ? (primarySeoImage.startsWith('http') ? primarySeoImage : `${SITE_URL}${primarySeoImage}`) : `${SITE_URL}/logo.png`,
+        description: product.description || `${product.name} handcrafted leather ${product.category || 'footwear'} by MAXYWALK.`,
+        sku: product.id,
+        brand: { '@type': 'Brand', name: 'MAXYWALK' },
+        material: product.material || 'Genuine Full-Grain Leather',
+        offers: {
+          '@type': 'Offer',
+          url: `${SITE_URL}/product/${product.id}`,
+          priceCurrency: 'INR',
+          price: String(product.price || 0),
+          availability: (product.stock ?? 1) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+          seller: { '@type': 'Organization', name: 'MAXYWALK' },
+        },
+        ...(product.rating > 0 ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: String(product.rating),
+            reviewCount: String(product.reviewCount || product.review_count || 1),
+          },
+        } : {}),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+          { '@type': 'ListItem', position: 2, name: 'Shop', item: `${SITE_URL}/shop` },
+          { '@type': 'ListItem', position: 3, name: product.name, item: `${SITE_URL}/product/${product.id}` },
+        ],
+      },
+    ],
+  } : null;
+
+  useSeo({
+    title: product ? `${product.name} | MAXYWALK Leather Footwear` : 'Product | MAXYWALK',
+    description: product?.description || 'Handcrafted genuine leather footwear by MAXYWALK. Made in Avadi, Chennai with pan-India shipping.',
+    keywords: product ? `${product.name}, MAXYWALK, ${product.category || 'leather footwear'}, ${product.material || 'genuine leather'}, footwear brand` : 'MAXYWALK, leather footwear',
+    path: `/product/${id}`,
+    image: primarySeoImage,
+    type: 'product',
+    jsonLd: productJsonLd,
+  });
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
@@ -42,7 +92,6 @@ export default function ProductDetail() {
           setProduct(data);
           setSelectedColor(data.colors?.[0] || '');
           setSelectedSize(sortedSizes.length > 0 ? sortedSizes[0] : '');
-          document.title = `${data.name || 'Product'} | MAXYWALK`;
           return getProducts({ category: data.category, limit: 4 });
         }
         setProduct(null);
@@ -236,7 +285,7 @@ export default function ProductDetail() {
                       (displayedImage === img || activeImage === idx) ? 'border-secondary' : 'border-outline-variant/40 hover:border-outline'
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-contain p-1 drop-shadow-sm" />
+                    <img src={img} alt={`${product.name} - MAXYWALK leather footwear view ${idx + 1}`} className="w-full h-full object-contain p-1 drop-shadow-sm" />
                   </button>
                 ))}
               </div>

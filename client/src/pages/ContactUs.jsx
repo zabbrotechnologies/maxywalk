@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useSeo } from '../lib/seo.js';
 
 export default function ContactUs() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
 
+  useSeo({
+    title: 'Contact Us | MAXYWALK Handcrafted Leather Footwear',
+    description: 'Contact MAXYWALK in Avadi, Chennai for custom leather slippers, footwear sizing, bulk orders, and customer support. Call +91 94447 43465 or WhatsApp us.',
+    keywords: 'MAXYWALK contact, MAXYWALK Avadi, custom leather slippers Chennai, footwear brand support',
+    path: '/contact',
+  });
+
   useEffect(() => {
-    document.title = 'Contact Us | MAXYWALK';
     window.scrollTo(0, 0);
   }, []);
 

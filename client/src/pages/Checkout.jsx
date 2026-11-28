@@ -4,6 +4,7 @@ import useCartStore from '../store/cartStore.js';
 import useAuthStore from '../store/authStore.js';
 import { placeOrder, getUserProfile, updateUserProfile, createRazorpayOrder, verifyRazorpayPayment } from '../lib/api.js';
 import { formatPrice, INDIAN_STATES } from '../lib/utils.js';
+import { useSeo } from '../lib/seo.js';
 import toast from 'react-hot-toast';
 
 function loadRazorpayScript() {
@@ -29,6 +30,7 @@ const SHIPPING_OPTIONS = [
 ];
 
 export default function Checkout() {
+  useSeo({ title: 'Checkout | MAXYWALK', path: '/checkout', noindex: true });
   const items = useCartStore((s) => s.items) || [];
   const clearCart = useCartStore((s) => s.clearCart);
   const { user, userProfile, setUserProfile } = useAuthStore();
